@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mdes_network
+
+  backend:
+    build: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+    env_file: .env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    networks:
+      - mdes_network
+
+  frontend:
+    build: ./frontend
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - mdes_network
+
+  # Optional: use nginx in dev if needed
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/staticfiles
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - mdes_network
+    # comment this out if not using nginx in dev
+    # restart: always
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  mdes_network:

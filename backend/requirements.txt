@@ -1,0 +1,24 @@
+# Core Django and DB
+Django>=4.2,<5.0
+psycopg2-binary>=2.9
+
+# For REST API
+djangorestframework>=3.14
+
+# For environment variable management
+python-decouple>=3.8
+
+# For CORS support
+django-cors-headers>=4.0
+
+# Optional: Django static file serving in production
+whitenoise>=6.0
+
+# Optional: Debugging tools for development
+django-debug-toolbar>=4.0
+
+# Optional: Gunicorn for production WSGI server
+gunicorn>=21.2
+
+# Optional: If you're using Django's default timezone awareness and want a better parser
+pytz>=2024.1
