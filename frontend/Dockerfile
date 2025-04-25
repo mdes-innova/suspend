@@ -4,9 +4,9 @@ FROM node:20
 WORKDIR /app
 
 # Install dependencies (initially empty, but updated later)
-COPY package*.json ./
+COPY package*.json .
 
-RUN npm install || true  # fallback if no package.json yet
+RUN npm install
 
 EXPOSE 3000
 
