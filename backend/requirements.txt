@@ -22,3 +22,5 @@ gunicorn>=21.2
 
 # Optional: If you're using Django's default timezone awareness and want a better parser
 pytz>=2024.1
+
+python-decouple>=3.8
