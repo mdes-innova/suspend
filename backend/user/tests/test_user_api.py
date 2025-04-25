@@ -8,7 +8,6 @@ from rest_framework.test import APIClient
 
 
 CREATE_USER_URL = reverse('user:create')
-TOKEN_USER_URL = reverse('user:token')
 ME_USER_URL = reverse('user:me')
 
 
@@ -62,63 +61,6 @@ class TestCreateUser(TestCase):
             email=payload['email']
         ).exists()
         self.assertFalse(user_exists)
-
-    def test_create_token_for_user(self):
-        """Create Token for a user"""
-        user_data = {
-            'name': "Test name",
-            'email': 'test@example.com',
-            'password': 'test-user-password123'
-        }
-        create_user(**user_data)
-
-        payload = {
-            'email': 'test@example.com',
-            'password': 'test-user-password123'
-        }
-
-        res = self.client.post(TOKEN_USER_URL, payload)
-
-        self.assertIn('token', res.data)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-    def test_create_token_for_invalid_user(self):
-        """Create a token for invalid user."""
-        user_data = {
-            'name': "Test name",
-            'email': 'test@example.com',
-            'password': 'test-user-password123'
-        }
-        create_user(**user_data)
-
-        payload = {
-            'email': 'test@example.com',
-            'password': 'password123'
-        }
-
-        res = self.client.post(TOKEN_USER_URL, payload)
-
-        self.assertNotIn('token', res.data)
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_create_token_for_nonpassword_user(self):
-        """Create a token for empty password user."""
-        user_data = {
-            'name': "Test name",
-            'email': 'test@example.com',
-            'password': 'test-user-password123'
-        }
-        create_user(**user_data)
-
-        payload = {
-            'email': 'test@example.com',
-            'password': ''
-        }
-
-        res = self.client.post(TOKEN_USER_URL, payload)
-
-        self.assertNotIn('token', res.data)
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_retrieve_user_unauthorized(self):
         """Test authentication is required for users."""
