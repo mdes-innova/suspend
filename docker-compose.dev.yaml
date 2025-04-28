@@ -9,8 +9,9 @@ services:
       - mdes_network
 
   backend:
-    build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
     volumes:
       - ./backend:/app
     env_file: .env
@@ -19,18 +20,24 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - mdes_network
+        - mdes_network
 
   frontend:
-    build: ./frontend
-    command: npm run dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile.dev
     ports:
       - "3000:3000"
-    networks:
-      - mdes_network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Don't override node_modules inside container
+    environment:
+      - NODE_ENV=development
+    develop:
+      watch:
+        - path: ./frontend
+          target: /app
+          action: rebuild
 
   # Optional: use nginx in dev if needed
   nginx:
@@ -46,7 +53,7 @@ services:
     networks:
       - mdes_network
     # comment this out if not using nginx in dev
-    # restart: always
+    restart: always
 
 volumes:
   postgres_data:
