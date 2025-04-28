@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ message: 'No refresh token' }, { status: 401 });
 
     try {
-        const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`,{
             refresh: refresh?.value,
         });
 
