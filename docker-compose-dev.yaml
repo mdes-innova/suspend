@@ -33,6 +33,8 @@ services:
       - /app/node_modules # Don't override node_modules inside container
     environment:
       - NODE_ENV=development
+    networks:
+      - mdes_network
     develop:
       watch:
         - path: ./frontend
@@ -54,6 +56,7 @@ services:
       - mdes_network
     # comment this out if not using nginx in dev
     restart: always
+    command: [ "nginx", "-g", "daemon off;" ]
 
 volumes:
   postgres_data:
