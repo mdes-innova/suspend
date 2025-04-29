@@ -9,7 +9,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         """Meta class for Document serializer."""
         model = Document
         fields = ['id', 'title', 'created_at', 'modified_at']
-        read_only_field = ['id', 'created_at', 'modified_at']
+        read_only_fields = ['id', 'created_at', 'modified_at']
 
 
 class DocumentDetailSerializer(DocumentSerializer):

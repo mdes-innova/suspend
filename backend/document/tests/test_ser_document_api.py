@@ -28,7 +28,7 @@ class DocumentSerializerTest(TestCase):
             password='test1234567890'
         )
 
-    def test_get_document_with_unauthentication(self):
+    def test_get_document_with_unauthentication_fail(self):
         """Get documents with unauthenticated user."""
         res = self.__client.get(DOCUMENT_URL)
         Document.objects.bulk_create([
@@ -56,7 +56,7 @@ class PrivateSerializerTest(TestCase):
         )
         cls.__client.force_authenticate(cls.__user)
 
-    def test_get_documents(self):
+    def test_get_documents_success(self):
         documents = Document.objects.bulk_create([
             Document(
                     title=f'Test title {i}',
@@ -70,7 +70,7 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_get_document(self):
+    def test_get_document_success(self):
         Document.objects.bulk_create([
             Document(
                     title=f'Test title {i}',

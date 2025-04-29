@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'core',
     'user',
     'document',
+    'tag',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
