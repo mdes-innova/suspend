@@ -41,7 +41,6 @@ services:
           target: /app
           action: rebuild
 
-  # Optional: use nginx in dev if needed
   nginx:
     image: nginx:latest
     ports:
@@ -54,9 +53,7 @@ services:
       - frontend
     networks:
       - mdes_network
-    # comment this out if not using nginx in dev
     restart: always
-    command: [ "nginx", "-g", "daemon off;" ]
 
 volumes:
   postgres_data:
