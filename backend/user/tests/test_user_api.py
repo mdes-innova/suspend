@@ -1,7 +1,11 @@
 """Test create user module."""
+import time
+from datetime import datetime, timedelta, timezone
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from rest_framework_simplejwt.tokens import RefreshToken
+from unittest import mock
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -9,6 +13,8 @@ from rest_framework.test import APIClient
 
 CREATE_USER_URL = reverse('user:create')
 ME_USER_URL = reverse('user:me')
+TOKEN_URL = reverse('token_obtain_pair')
+REFRESH_TOKEN_URL = reverse('token_refresh')
 
 
 def create_user(**params):
@@ -70,8 +76,7 @@ class TestCreateUser(TestCase):
             'name': 'Test name'
         }
         get_user_model().objects.create_user(**payload)
-        url = reverse('token_obtain_pair')
-        res = self.client.post(url, {
+        res = self.client.post(TOKEN_URL, {
             'email': payload['email'],
             'password': payload['password']
         })
@@ -94,12 +99,11 @@ class TestCreateUser(TestCase):
         }
 
         get_user_model().objects.create_user(**payload)
-        url = reverse('token_obtain_pair')
-        res = self.client.post(url, {
+        res = self.client.post(TOKEN_URL, {
             'email': payload['email'],
             'password': payload['password']
         })
-        fake_res = self.client.post(url, {
+        fake_res = self.client.post(TOKEN_URL, {
             'email': fake_payload['email'],
             'password': fake_payload['password']
         })
@@ -109,7 +113,63 @@ class TestCreateUser(TestCase):
         self.assertTrue(all(bool(value) for value in res.data.values()))
         self.assertEqual(fake_res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    # def test_get_refresh_tokens_
+    def test_get_refresh_token_success(self):
+        """Test to get refresh token success."""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'test_password',
+            'name': 'Test name'
+        }
+        get_user_model().objects.create_user(**payload)
+        res = self.client.post(TOKEN_URL, {
+            'email': payload['email'],
+            'password': payload['password']
+        })
+        refresh = res.data['refresh']
+        new_res = self.client.post(REFRESH_TOKEN_URL, {
+            'refresh': refresh
+        })
+
+        self.assertEqual(new_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(new_res.data.keys()), {'access'})
+        self.assertTrue(bool(new_res.data['access']))
+    
+    def test_get_access_token_with_non_expired_refresh_success(self):
+        """Test to get access token with non-expired refresh token successful."""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'test_password',
+            'name': 'Test name'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        refresh = RefreshToken.for_user(user)
+        refresh.set_exp(from_time=datetime.now(timezone.utc) - timedelta(days=1))  # Expired 10 days ago
+        expired_refresh_token = str(refresh)
+
+        # Use the expired refresh token
+        res = self.client.post(REFRESH_TOKEN_URL, {'refresh': expired_refresh_token})
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(res.data.keys()), {'access'})
+        self.assertTrue(bool(res.data['access']))
+
+    def test_get_access_token_with_expired_refresh_fail(self):
+        """Test to get access token with expired refresh token failure."""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'test_password',
+            'name': 'Test name'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        refresh = RefreshToken.for_user(user)
+        refresh.set_exp(from_time=datetime.now(timezone.utc) - timedelta(days=10))  # Expired 10 days ago
+        expired_refresh_token = str(refresh)
+
+        # Use the expired refresh token
+        res = self.client.post(REFRESH_TOKEN_URL, {'refresh': expired_refresh_token})
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn('token_not_valid', str(res.content))
 
     def test_retrieve_user_unauthorized(self):
         """Test authentication is required for users."""
