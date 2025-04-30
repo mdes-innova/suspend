@@ -1,11 +1,11 @@
 """Test create user module."""
-import time
 from datetime import datetime, timedelta, timezone
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework_simplejwt.tokens import RefreshToken
-from unittest import mock
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from unittest.mock import patch
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -133,9 +133,10 @@ class TestCreateUser(TestCase):
         self.assertEqual(new_res.status_code, status.HTTP_200_OK)
         self.assertEqual(set(new_res.data.keys()), {'access'})
         self.assertTrue(bool(new_res.data['access']))
-    
+
     def test_get_access_token_with_non_expired_refresh_success(self):
-        """Test to get access token with non-expired refresh token successful."""
+        """Test to get access token with non-expired refresh token successful.
+        """
         payload = {
             'email': 'test@example.com',
             'password': 'test_password',
@@ -143,11 +144,13 @@ class TestCreateUser(TestCase):
         }
         user = get_user_model().objects.create_user(**payload)
         refresh = RefreshToken.for_user(user)
-        refresh.set_exp(from_time=datetime.now(timezone.utc) - timedelta(days=1))  # Expired 10 days ago
+        refresh.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(days=1))
         expired_refresh_token = str(refresh)
 
         # Use the expired refresh token
-        res = self.client.post(REFRESH_TOKEN_URL, {'refresh': expired_refresh_token})
+        res = self.client.post(REFRESH_TOKEN_URL,
+                               {'refresh': expired_refresh_token})
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(set(res.data.keys()), {'access'})
@@ -162,11 +165,13 @@ class TestCreateUser(TestCase):
         }
         user = get_user_model().objects.create_user(**payload)
         refresh = RefreshToken.for_user(user)
-        refresh.set_exp(from_time=datetime.now(timezone.utc) - timedelta(days=10))  # Expired 10 days ago
+        refresh.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(days=10))
         expired_refresh_token = str(refresh)
 
         # Use the expired refresh token
-        res = self.client.post(REFRESH_TOKEN_URL, {'refresh': expired_refresh_token})
+        res = self.client.post(REFRESH_TOKEN_URL,
+                               {'refresh': expired_refresh_token})
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertIn('token_not_valid', str(res.content))
@@ -188,6 +193,7 @@ class PrivateUserApiTest(TestCase):
             password='test-user-password123'
         )
         self.client = APIClient()
+        self.client_for_token = APIClient()
         self.client.force_authenticate(self.user)
 
     def test_retrieve_profile_success(self):
@@ -199,6 +205,62 @@ class PrivateUserApiTest(TestCase):
             'name': self.user.name,
             'email': self.user.email
         })
+
+    def test_retriveve_profile_fail(self):
+        """Test to get profile with no unauthenticated user."""
+        res = self.client_for_token.get(ME_USER_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_retriveve_profile_success(self):
+        """Test to get profile with access token user."""
+        payload = {
+            'email': 'token@example.com',
+            'password': 'tokenpass123',
+            'name': 'Token name'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        response = self.client_for_token.post(TOKEN_URL, payload)
+        access_token = response.data['access']
+        self.client_for_token.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {access_token}'
+            )
+        response = self.client_for_token.get(ME_USER_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data,
+                         {k: v for k, v in payload.items() if k != 'password'})
+
+        access_token = AccessToken.for_user(user)
+        access_token.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(seconds=4*60))
+        access_token = str(access_token)
+        self.client_for_token.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {access_token}'
+            )
+        response = self.client_for_token.get(ME_USER_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data,
+                         {k: v for k, v in payload.items() if k != 'password'})
+
+    def test_retriveve_profile_expired_token_fail(self):
+        """Test to get profile with expired access token failure."""
+        payload = {
+            'email': 'token@example.com',
+            'password': 'tokenpass123',
+            'name': 'Token name'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        access_token = AccessToken.for_user(user)
+        access_token.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(seconds=6*60)
+        )
+        access_token = str(access_token)
+        self.client_for_token.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {access_token}'
+        )
+        response = self.client_for_token.get(ME_USER_URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_me_not_allowed(self):
         """Test not allowed post method in ME endpoints."""
@@ -239,3 +301,49 @@ class PrivateUserApiTest(TestCase):
 
         self.user.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TwoFactorTest(TestCase):
+    """Test for 2FA admin login."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup for class test."""
+        super().setUpClass()
+        cls.__super_payload = {
+            'email': 'super@example.com',
+            'password': 'super_password123',
+        }
+        cls.__user_payload = {
+            'email': 'user@example.com',
+            'password': 'user_password123',
+            'name': 'User name'
+        }
+        cls.__super_user = get_user_model()\
+            .objects.create_superuser(
+                **cls.__super_payload
+            )
+        cls.__user = get_user_model()\
+            .objects.create_user(
+                **cls.__user_payload
+            )
+
+    def test_qr_code_setup_creates_device(self):
+        """Test to setup qrcode."""
+        self.client.login(
+            email=self.__super_payload['email'],
+            password=self.__super_payload['password']
+        )
+        TOTPDevice.objects.filter(user=self.__super_user).delete()
+        response = self.client.get(reverse('two_factor:setup'))
+        self.assertContains(response, 'Enable Two-Factor Authentication')
+        response = self.client.post(reverse('two_factor:setup'), {
+            'setup_view-current_step': 'welcome',
+        })
+
+        qr_response = self.client.get('/account/two_factor/qrcode/')
+
+        self.assertEqual(qr_response.status_code, 200)
+        self.assertEqual(qr_response['Content-Type'],
+                         'image/svg+xml; charset=utf-8')
+        self.assertGreater(len(qr_response.content), 100)
