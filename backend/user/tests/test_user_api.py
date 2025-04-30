@@ -62,6 +62,55 @@ class TestCreateUser(TestCase):
         ).exists()
         self.assertFalse(user_exists)
 
+    def test_get_access_token_success(self):
+        """Test get tokens from a user successful."""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'test_password',
+            'name': 'Test name'
+        }
+        get_user_model().objects.create_user(**payload)
+        url = reverse('token_obtain_pair')
+        res = self.client.post(url, {
+            'email': payload['email'],
+            'password': payload['password']
+        })
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(res.data.keys()), {'access', 'refresh'})
+        self.assertTrue(all(bool(value) for value in res.data.values()))
+
+    def test_get_access_token_fake_user_fail(self):
+        """Test to get tokens from a fake user failure."""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'test_password',
+            'name': 'Test name'
+        }
+        fake_payload = {
+            'email': 'fake@example.com',
+            'password': 'fake_password',
+            'name': 'Fake name'
+        }
+
+        get_user_model().objects.create_user(**payload)
+        url = reverse('token_obtain_pair')
+        res = self.client.post(url, {
+            'email': payload['email'],
+            'password': payload['password']
+        })
+        fake_res = self.client.post(url, {
+            'email': fake_payload['email'],
+            'password': fake_payload['password']
+        })
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(res.data.keys()), {'access', 'refresh'})
+        self.assertTrue(all(bool(value) for value in res.data.values()))
+        self.assertEqual(fake_res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    # def test_get_refresh_tokens_
+
     def test_retrieve_user_unauthorized(self):
         """Test authentication is required for users."""
         res = self.client.get(ME_USER_URL)
