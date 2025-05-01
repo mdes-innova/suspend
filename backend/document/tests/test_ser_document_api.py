@@ -1,4 +1,6 @@
 """Test for Document serializer API."""
+from datetime import datetime
+
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -11,7 +13,6 @@ from rest_framework import status
 
 
 DOCUMENT_URL = reverse('document:document-list')
-
 
 class DocumentSerializerTest(TestCase):
     """Test class for document serializer"""
@@ -161,10 +162,21 @@ class PrivateSerializerTest(TestCase):
         url = reverse('document:document-tags-by-title',
                       kwargs={'title': 'Title'})
         res = self.__client.get(url)
+        res_data = res.data
         docs = DocumentSerializer(Document.objects.filter(title='Title'),
                                   many=True).data
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), len(docs))
+        self.assertEqual(
+           {
+                res_data[0]['title'], res_data[0]['created_at'],
+                res_data[1]['title'], res_data[1]['created_at']
+           },
+            {
+                docs[0]['title'], datetime.fromisoformat(docs[0]['created_at'].replace('Z', '+00:00')),
+                docs[1]['title'], datetime.fromisoformat(docs[1]['created_at'].replace('Z', '+00:00')),
+            }
+        )
 
     def test_get_documents_from_tag_success(self):
         """Test to get documents from a tag."""
