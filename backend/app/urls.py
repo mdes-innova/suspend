@@ -34,8 +34,10 @@ admin.site.__class__ = AdminSiteOTPRequired
 urlpatterns = [
     path('', include(tf_urls)),  # replaces the login view with a 2FA flow
     path('admin/', admin.site.urls),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/', TokenObtainPairView.as_view(),
+         name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(),
+         name='token_refresh'),
     path('api/user/', include('user.urls')),
     path('api/document/', include('document.urls')),
     path('api/tag', include('tag.urls')),

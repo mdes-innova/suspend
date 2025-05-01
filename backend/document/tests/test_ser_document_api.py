@@ -1,5 +1,4 @@
 """Test for Document serializer API."""
-import os
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -138,4 +137,51 @@ class PrivateSerializerTest(TestCase):
         serializers = DocumentDetailSerializer(documents, many=True)
         self.assertEqual(sorted(serializers.data, key=lambda x: x['id']),
                          sorted(res_data, key=lambda x: x['id']))
-    
+
+    def test_get_tags_from_document_success(self):
+        """Test to get tags from a document."""
+        payload = {
+            'title': 'Title',
+            'tags': ['Tag 1', 'Tag 2']
+        }
+
+        res_create = self.__client.post(DOCUMENT_URL, payload, format='json')
+        created_id = res_create.data['id']
+        url = reverse('document:document-tags',
+                      kwargs={'pk': created_id})
+        res_tags = self.__client.get(url)
+        tags = res_tags.data
+        doc = DocumentSerializer(Document.objects.get(pk=created_id))
+
+        self.assertEqual(res_tags.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(tags, key=lambda x: x['id']),
+                         sorted(doc.data['tags'], key=lambda x: x['id']))
+
+        res_create = self.__client.post(DOCUMENT_URL, payload, format='json')
+        url = reverse('document:document-tags-by-title',
+                      kwargs={'title': 'Title'})
+        res = self.__client.get(url)
+        docs = DocumentSerializer(Document.objects.filter(title='Title'),
+                                  many=True).data
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), len(docs))
+
+    def test_get_documents_from_tag_success(self):
+        """Test to get documents from a tag."""
+        pass
+        # payloads = [
+        #     {
+        #         'title': 'Title 1',
+        #         'tags': ['Tag 1', 'Tag 2']
+        #     },
+        #     {
+        #         'title': 'Title 2',
+        #         'tags': ['Tag 1', 'Tag 3']
+        #     }
+        # ]
+
+        # for payload in payloads:
+        #     res_create = self.__client.post(DOCUMENT_URL, payload,
+        #                                     format='json')
+        
+        # res_docs = self.__client.get(url)

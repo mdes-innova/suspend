@@ -1,12 +1,19 @@
 """Document model module."""
 from django.db import models
+from core.models.category import Category
 
 
 class Document(models.Model):
     """Document model class."""
     title = models.CharField(max_length=512)
-    tags = models.ManyToManyField('Tag')
-    description = models.TextField(blank=True) 
+    document = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name='documents',
+        null=True
+    )
+    tags = models.ManyToManyField('Tag', related_name='documents')
+    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
