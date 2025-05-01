@@ -2,7 +2,7 @@ import { ThemToggle } from "./theme-toggle";
 
 export default function Navbar() {
     return (
-        <div className="absolute top-0 left-0">
+        <div className="absolute top-0 right-0 p-4">
             <ThemToggle />
         </div>
     );

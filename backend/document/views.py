@@ -6,8 +6,7 @@ from rest_framework import (
 
 
 class DocumentView(viewsets.ModelViewSet):
-    """"Document view."""
-    serializer_class = DocumentDetailSerializer
+    """Document view."""
     queryset = Document.objects.all().order_by('-id')
 
     def get_serializer_class(self):

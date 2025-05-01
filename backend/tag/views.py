@@ -7,4 +7,3 @@ class TagView(viewsets.ModelViewSet):
     """Tag view."""
     serializer_class = TagSerializer
     queryset = Tag.objects.all().order_by('id')
-    

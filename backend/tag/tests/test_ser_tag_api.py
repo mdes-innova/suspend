@@ -31,9 +31,9 @@ class TagSerializerTest(TestCase):
         Tag.objects.bulk_create(
             [
                Tag(
-                   title=f'Title {i}'
+                   name=f'Name {i}'
                ) for i in range(3)
-            ] 
+            ]
         )
         res = self.__client.get(TAG_URL)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -59,7 +59,7 @@ class PrivateTagSerializerTest(TestCase):
         Tag.objects.bulk_create(
             [
                 Tag(
-                    title=f'Title {i}'
+                    name=f'Name {i}'
                 ) for i in range(3)
             ]
         )
@@ -74,7 +74,7 @@ class PrivateTagSerializerTest(TestCase):
         """test to get a tag with success."""
         Tag.objects.bulk_create(
             [
-                Tag(title=f'Title {i}') for i in range(3)
+                Tag(name=f'Name {i}') for i in range(3)
             ]
         )
 
@@ -84,3 +84,26 @@ class PrivateTagSerializerTest(TestCase):
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_create_tag_with_success(self):
+        """Test to create tag successful."""
+        payload = {
+            'name': 'Tag 1'
+        }
+
+        res = self.__client.post(TAG_URL, payload, format='json')
+        tag = Tag.objects.all().order_by('-id').first()
+        serializer = TagSerializer(tag)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_existing_tag_with_fail(self):
+        """Test to create existing tag failure."""
+        payload = {
+            'name': 'Tag 1'
+        }
+        self.__client.post(TAG_URL, payload, format='json')
+        res = self.__client.post(TAG_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.data['name'][0].code, 'unique')

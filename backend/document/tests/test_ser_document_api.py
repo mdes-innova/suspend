@@ -84,3 +84,58 @@ class PrivateSerializerTest(TestCase):
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_create_document_with_tags_success(self):
+        """Test to create documents with tags."""
+        payloads = [{
+            'title': f'New title {i}',
+            'description': f'New description {i}',
+            'tags': [
+                {'name': f'Tag {j}'}
+                for j in range(i)
+            ]
+        } for i in range(3)]
+        res_data = []
+        for payload in payloads:
+            res_create = self.__client.post(
+                    DOCUMENT_URL, payload, format='json'
+                )
+            res_data.append(res_create.data)
+            self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+
+        payloads = [{
+            'title': f'New title {3 + i}',
+            'description': f'New description {3 + i}',
+            'tags': [
+                f'Tag {3 + j}'
+                for j in range(i)
+            ]
+        } for i in range(3)]
+
+        for payload in payloads:
+            res_create = self.__client.post(
+                    DOCUMENT_URL, payload, format='json'
+                )
+            res_data.append(res_create.data)
+            self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+
+        payloads = [{
+            'title': f'New title {6 + i}',
+            'description': f'New description {6 + i}',
+            'tags': [
+                'Tag 6', {'name': 'Tag 7'}, 'Tag 8'
+            ]
+        } for i in range(3)]
+
+        for payload in payloads:
+            res_create = self.__client.post(
+                    DOCUMENT_URL, payload, format='json'
+                )
+            res_data.append(res_create.data)
+            self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+
+        documents = Document.objects.all()
+        serializers = DocumentDetailSerializer(documents, many=True)
+        self.assertEqual(sorted(serializers.data, key=lambda x: x['id']),
+                         sorted(res_data, key=lambda x: x['id']))
+    
