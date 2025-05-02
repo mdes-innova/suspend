@@ -1,11 +1,19 @@
 """Category model class for category app."""
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=512, unique=True)
+    name = models.CharField(max_length=512)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                Lower('name'),
+                name='unique_category_name_ci'
+            )
+        ]
 
     def __str__(self):
         """Str return."""

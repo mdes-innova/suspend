@@ -2,6 +2,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from psycopg2.errors import UniqueViolation
 
 from core.models import Tag
 from tag.serializer import TagSerializer
@@ -98,12 +99,16 @@ class PrivateTagSerializerTest(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_create_existing_tag_with_fail(self):
-        """Test to create existing tag failure."""
-        payload = {
-            'name': 'Tag 1'
-        }
+        """Test creating a duplicate tag fails case-insensitively."""
+        payload = {'name': 'Tag 1'}
         self.__client.post(TAG_URL, payload, format='json')
-        res = self.__client.post(TAG_URL, payload, format='json')
 
+        # Try again with same casing
+        res = self.__client.post(TAG_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.data['name'][0].code, 'unique')
+
+        # Try again with different casing
+        res = self.__client.post(TAG_URL, {'name': 'tag 1'}, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(res.data['name'][0].code, 'unique')

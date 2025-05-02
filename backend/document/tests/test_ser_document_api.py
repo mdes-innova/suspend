@@ -227,3 +227,124 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res_docs.data), 1)
         self.assertEqual('Title 2', res_docs.data[0]['title'])
+    
+    def test_create_document_with_category_success(self):
+        """Test to create documents with category successful."""
+        payloads = [
+            {
+                'title': 'Document 1',
+            },
+            {
+                'title': 'Document 2',
+                'category': 'Category 1'
+            },
+            {
+                'title': 'Document 3',
+                'category': 'Category 1'
+            },
+            {
+                'title': 'Document 4',
+                'category': 'Category 2'
+            },
+            {
+                'title': 'Document 4',
+                'category': {
+                    'name': 'Category 3'
+                }
+            }
+        ]
+
+        res_data = []
+        for payload in payloads:
+            res = self.__client.post(DOCUMENT_URL, payload, format='json')
+            self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+            del res.data['description']
+            res_data.append(res.data)
+        docs = Document.objects.order_by('title').all()
+        serializers = DocumentSerializer(docs, many=True)
+        self.assertEqual(sorted(res_data, key=lambda x: x['id']),
+                        serializers.data)
+
+    def test_get_documents_by_category_name_success(self):
+        """Test to get a document by category' name successful."""
+        payloads = [
+            {
+                'title': 'Title 1',
+                'category': 'Category 1'
+            },
+            {
+                'title': 'Title 2',
+                'category': 'Category 1'
+            }
+        ]
+
+        for payload in payloads:
+            self.__client.post(DOCUMENT_URL, payload, format='json')
+        
+        url = reverse('category:category-documents-by-name',
+                      kwargs={'name': 'Category 1'})
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+        self.assertEqual(set([d['title'] for d in res.data]), {'Title 1', 'Title 2'})
+
+        url = reverse('category:category-documents-by-name',
+                      kwargs={'name': 'category 1'})
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+        self.assertEqual(set([d['title'] for d in res.data]), {'Title 1', 'Title 2'})
+        
+    def test_get_documnet_by_category_name_fail(self):
+        """Test to get a document by category' name failure."""
+        payloads = [
+            {
+                'title': 'Title 1',
+                'category': 'Category 1'
+            },
+            {
+                'title': 'Title 2',
+                'category': 'Category 2'
+            }
+        ]
+
+        for payload in payloads:
+            self.__client.post(DOCUMENT_URL, payload, format='json')
+        
+        url = reverse('category:category-documents-by-name',
+                      kwargs={'name': 'Category 3'})
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+    
+    def test_get_category_by_document_title_success(self):
+        """Test to get a category by document's title successful."""
+        payload = {
+            'title': 'Title',
+            'category': 'Category'
+        }
+        self.__client.post(DOCUMENT_URL, payload, format='json')
+
+        url = reverse('document:document-category-by-title',
+                      kwargs={'title': 'Title'})
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['name'], 'Category')
+
+        url = reverse('document:document-category-by-title',
+                      kwargs={'title': 'title'})
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['name'], 'Category')
+
+    def test_get_category_by_document_title_fail(self):
+        """Test to get a category by document's title failure."""
+        payload = {
+            'title': 'Title',
+            'category': 'Category'
+        }
+        self.__client.post(DOCUMENT_URL, payload, format='json')
+
+        url = reverse('document:document-category-by-title',
+                      kwargs={'title': 'Title1'})
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)

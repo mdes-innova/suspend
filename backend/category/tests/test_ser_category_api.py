@@ -75,3 +75,8 @@ class PrivateCategorySerialzierTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(res.data['name'][0].code, 'unique')
+
+        payload = {'name': 'new category'}
+        res = self.__client.post(CATEGORY_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(res.data['name'][0].code, 'unique')

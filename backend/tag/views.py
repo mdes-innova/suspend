@@ -21,7 +21,7 @@ class TagView(viewsets.ModelViewSet):
     def documents_by_name(self, request, name=None):
         """Get documents from a tag by title view."""
         try:
-            tag = Tag.objects.get(name=name)
+            tag = Tag.objects.get(name__iexact=name)
         except Tag.DoesNotExist:
             return Response({'detail': 'Tag not found.'},
                      status=status.HTTP_404_NOT_FOUND)

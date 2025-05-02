@@ -1,18 +1,20 @@
 """Document serializer module."""
 from rest_framework import serializers
-from core.models import Document, Tag
+from core.models import Document, Tag, Category
 from tag.serializer import TagSerializer
+from category.serializer import CategorySerializer
 from django.db.utils import IntegrityError
 
 
 class DocumentSerializer(serializers.ModelSerializer):
     """Document seriaizer class without a description field."""
     tags = TagSerializer(many=True, required=False, read_only=True)
+    category = CategorySerializer(required=False, read_only=True)
 
     class Meta:
         """Meta class for Document serializer."""
         model = Document
-        fields = ['id', 'title', 'tags', 'created_at', 'modified_at']
+        fields = ['id', 'title', 'category', 'tags', 'created_at', 'modified_at']
         read_only_fields = ['id', 'created_at', 'modified_at']
 
 
@@ -24,7 +26,22 @@ class DocumentDetailSerializer(DocumentSerializer):
 
     def create(self, validated_data):
         tags_data = self.initial_data.get('tags', [])
+        category_data = self.initial_data.get('category', None)
         doc = Document.objects.create(**validated_data)
+
+        if category_data:
+            category_obj = None
+            if isinstance(category_data, str):
+                category_obj = Category.objects.get_or_create(name=category_data)[0]
+            elif isinstance(category_data, dict):
+                category_obj = Category.objects.get_or_create(**category_data)[0]
+            else:
+                raise serializers.ValidationError({
+                        'error': 'Bad Request - Integrity constraint violation'
+                    })
+            doc.category = category_obj
+            doc.save()
+
         tag_objects = []
         try:
             for tag in tags_data:

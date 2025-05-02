@@ -5,6 +5,7 @@ from rest_framework import (
 )
 from rest_framework.decorators import action
 from tag.serializer import TagSerializer
+from category.serializer import CategorySerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -35,9 +36,8 @@ class DocumentView(viewsets.ModelViewSet):
     )
     def tags_by_title(self, request, title=None):
         """Return tags for a specific document with title."""
-        try:
-            docs = Document.objects.filter(title=title).all()
-        except Document.DoesNotExist:
+        docs = Document.objects.filter(title__iexact=title)
+        if not docs.exists():
             return Response({'detail': 'Document not found'},
                             status=status.HTTP_404_NOT_FOUND)
 
@@ -48,3 +48,19 @@ class DocumentView(viewsets.ModelViewSet):
                                 'tags': TagSerializer(doc.tags.all(),
                                                       many=True).data})
         return Response(serializers)
+    
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-title/(?P<title>[^/]+)/category',
+        name='document-category-by-title'
+    )
+    def category_by_title(self, request, title=None):
+        """Get category by document's name view."""
+        try:
+            doc = Document.objects.get(title__iexact=title)
+        except Document.DoesNotExist:
+            return Response({'detail': 'Document does not exists.'},
+                            status.HTTP_404_NOT_FOUND)
+        
+        return Response(CategorySerializer(doc.category).data)
