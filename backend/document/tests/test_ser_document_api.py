@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 
 from core.models import Document
 from document.serializer import DocumentSerializer, DocumentDetailSerializer
+from tag.serializer import TagSerializer, Tag
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -180,20 +181,49 @@ class PrivateSerializerTest(TestCase):
 
     def test_get_documents_from_tag_success(self):
         """Test to get documents from a tag."""
-        pass
-        # payloads = [
-        #     {
-        #         'title': 'Title 1',
-        #         'tags': ['Tag 1', 'Tag 2']
-        #     },
-        #     {
-        #         'title': 'Title 2',
-        #         'tags': ['Tag 1', 'Tag 3']
-        #     }
-        # ]
+        payloads = [
+            {
+                'title': 'Title 1',
+                'tags': ['Tag 1', 'Tag 2']
+            },
+            {
+                'title': 'Title 2',
+                'tags': ['Tag 1', 'Tag 3']
+            }
+        ]
 
-        # for payload in payloads:
-        #     res_create = self.__client.post(DOCUMENT_URL, payload,
-        #                                     format='json')
+        for payload in payloads:
+            res_create = self.__client.post(DOCUMENT_URL, payload,
+                                            format='json')
+            self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
         
-        # res_docs = self.__client.get(url)
+        tags = ['Tag 1', 'Tag 2', 'Tag 3']
+        seriailizer_tags = TagSerializer(Tag.objects.all(), many=True)
+        self.assertEqual(set(tags),
+                         set([s['name'] for s in seriailizer_tags.data]))
+        
+        tag = Tag.objects.first()
+        serializer = TagSerializer(tag) 
+        url = reverse('tag:tag-detail', args=(serializer.data['id'],))
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+        url = reverse('tag:tag-documents-by-name', kwargs={'name': 'Tag 1'})
+        res_docs = self.__client.get(url)
+        self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_docs.data), 2)
+        self.assertEqual({'Title 1', 'Title 2'},
+                         set([res_docs.data[0]['title'], res_docs.data[1]['title']]))
+
+        url = reverse('tag:tag-documents-by-name', kwargs={'name': 'Tag 2'})
+        res_docs = self.__client.get(url)
+        self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_docs.data), 1)
+        self.assertEqual('Title 1', res_docs.data[0]['title'])
+
+        url = reverse('tag:tag-documents-by-name', kwargs={'name': 'Tag 3'})
+        res_docs = self.__client.get(url)
+        self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_docs.data), 1)
+        self.assertEqual('Title 2', res_docs.data[0]['title'])
