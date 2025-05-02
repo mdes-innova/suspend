@@ -1,11 +1,14 @@
 """Test for Document serializer API."""
+import os
+import tempfile
 from datetime import datetime
+from PIL import Image
 
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from core.models import Document
+from core.models import Document, Category
 from document.serializer import DocumentSerializer, DocumentDetailSerializer
 from tag.serializer import TagSerializer, Tag
 
@@ -14,6 +17,7 @@ from rest_framework import status
 
 
 DOCUMENT_URL = reverse('document:document-list')
+
 
 class DocumentSerializerTest(TestCase):
     """Test class for document serializer"""
@@ -196,12 +200,12 @@ class PrivateSerializerTest(TestCase):
             res_create = self.__client.post(DOCUMENT_URL, payload,
                                             format='json')
             self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
-        
+
         tags = ['Tag 1', 'Tag 2', 'Tag 3']
         seriailizer_tags = TagSerializer(Tag.objects.all(), many=True)
         self.assertEqual(set(tags),
                          set([s['name'] for s in seriailizer_tags.data]))
-        
+
         tag = Tag.objects.first()
         serializer = TagSerializer(tag) 
         url = reverse('tag:tag-detail', args=(serializer.data['id'],))
@@ -227,7 +231,7 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res_docs.data), 1)
         self.assertEqual('Title 2', res_docs.data[0]['title'])
-    
+
     def test_create_document_with_category_success(self):
         """Test to create documents with category successful."""
         payloads = [
@@ -280,7 +284,7 @@ class PrivateSerializerTest(TestCase):
 
         for payload in payloads:
             self.__client.post(DOCUMENT_URL, payload, format='json')
-        
+
         url = reverse('category:category-documents-by-name',
                       kwargs={'name': 'Category 1'})
         res = self.__client.get(url)
@@ -294,7 +298,7 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 2)
         self.assertEqual(set([d['title'] for d in res.data]), {'Title 1', 'Title 2'})
-        
+
     def test_get_documnet_by_category_name_fail(self):
         """Test to get a document by category' name failure."""
         payloads = [
@@ -310,12 +314,12 @@ class PrivateSerializerTest(TestCase):
 
         for payload in payloads:
             self.__client.post(DOCUMENT_URL, payload, format='json')
-        
+
         url = reverse('category:category-documents-by-name',
                       kwargs={'name': 'Category 3'})
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_get_category_by_document_title_success(self):
         """Test to get a category by document's title successful."""
         payload = {
@@ -348,3 +352,71 @@ class PrivateSerializerTest(TestCase):
                       kwargs={'title': 'Title1'})
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class ImageUploadTest(TestCase):
+    """Testcase for image uploading."""
+    @classmethod
+    def setUpClass(cls):
+        """Setup for testcase"""
+        super().setUpClass()
+        user = {
+            'email': 'test1@example.com',
+            'password': 'Password_123'
+        }
+        user = get_user_model().objects.create_user(**user)
+        cls.__client = APIClient()
+        cls.__client.force_authenticate(user)
+
+        document_payload = {
+            'title': 'Title',
+            'description': 'Description',
+            'tags': ['Tag 1', 'Tag 2'],
+            'category': 'Category 1'
+        }
+
+        cls.__document = Document.objects.create(
+            title=document_payload['title'],
+            description=document_payload['description']
+        )
+        tags = Tag.objects.bulk_create(
+            [
+                Tag(name=tag_name)
+                for tag_name in document_payload['tags']
+            ]
+        )
+        cls.__document.tags.set(tags)
+        cls.__document.category =\
+            Category.objects.create(name=document_payload['category'])
+        cls.__document.save()
+        cls.__document.refresh_from_db()
+
+    def tearDown(self):
+        """Clear testcase after finished."""
+        super().tearDown()
+        self.__document.image.delete()
+
+    def test_upload_image(self):
+        """Test uploading an image to a recipe."""
+        url = reverse('document:document-image-upload',
+                      args=[self.__document.pk])
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB', (10, 10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+            payload = {'image': image_file}
+            res = self.__client.post(url, payload, format='multipart')
+
+        self.__document.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.__document.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading invalid image."""
+        url = reverse('document:document-image-upload',
+                      args=[self.__document.pk])
+        payload = {'image': 'notanimage'}
+        res = self.__client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

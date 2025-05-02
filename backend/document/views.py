@@ -1,5 +1,9 @@
 from core.models import Document
-from .serializer import DocumentDetailSerializer, DocumentSerializer
+from .serializer import (
+    DocumentDetailSerializer,
+    DocumentSerializer,
+    ImageSerializer
+    )
 from rest_framework import (
     viewsets
 )
@@ -18,6 +22,8 @@ class DocumentView(viewsets.ModelViewSet):
         """Return the serializer class for request."""
         if self.action == 'list':
             return DocumentSerializer
+        elif self.action == 'image_upload':
+            return ImageSerializer
         return DocumentDetailSerializer
 
     @action(detail=True, methods=['get'])
@@ -48,7 +54,7 @@ class DocumentView(viewsets.ModelViewSet):
                                 'tags': TagSerializer(doc.tags.all(),
                                                       many=True).data})
         return Response(serializers)
-    
+
     @action(
         detail=False,
         methods=['get'],
@@ -62,5 +68,19 @@ class DocumentView(viewsets.ModelViewSet):
         except Document.DoesNotExist:
             return Response({'detail': 'Document does not exists.'},
                             status.HTTP_404_NOT_FOUND)
-        
+
         return Response(CategorySerializer(doc.category).data)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        name='document-image-upload'
+    )
+    def image_upload(self, request, pk=None):
+        document = self.get_object()
+        serializer = self.get_serializer(document, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status.HTTP_200_OK)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)

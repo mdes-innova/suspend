@@ -14,7 +14,8 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class for Document serializer."""
         model = Document
-        fields = ['id', 'title', 'category', 'tags', 'created_at', 'modified_at']
+        fields = ['id', 'title', 'category', 'tags', 'created_at',
+                  'modified_at']
         read_only_fields = ['id', 'created_at', 'modified_at']
 
 
@@ -32,9 +33,11 @@ class DocumentDetailSerializer(DocumentSerializer):
         if category_data:
             category_obj = None
             if isinstance(category_data, str):
-                category_obj = Category.objects.get_or_create(name=category_data)[0]
+                category_obj =\
+                    Category.objects.get_or_create(name=category_data)[0]
             elif isinstance(category_data, dict):
-                category_obj = Category.objects.get_or_create(**category_data)[0]
+                category_obj =\
+                    Category.objects.get_or_create(**category_data)[0]
             else:
                 raise serializers.ValidationError({
                         'error': 'Bad Request - Integrity constraint violation'
@@ -61,3 +64,13 @@ class DocumentDetailSerializer(DocumentSerializer):
                 })
         doc.tags.set(tag_objects)
         return doc
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    """Image serializer class."""
+    class Meta:
+        """Meta class for ImageSerializer."""
+        model = Document
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image': {'required': 'True'}}
