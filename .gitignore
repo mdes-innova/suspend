@@ -1,3 +1,9 @@
+# === ai (FastAPI) ===
+ai/__pycache__/
+ai/*.pyc
+ai/*.pyo
+ai/*.log
+
 # === Python (Django - backend/) ===
 backend/__pycache__/
 backend/*.pyc
@@ -34,6 +40,7 @@ venv/
 *.env
 
 # === Docker-related ===
+.dockerignore
 docker-compose.override.yml
 Dockerfile.dev
 docker-compose-dev.yml

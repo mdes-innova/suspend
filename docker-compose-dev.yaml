@@ -21,6 +21,20 @@ services:
       - "8000:8000"
     networks:
         - mdes_network
+  
+  backendai:
+    build:
+      context: ./backendai
+      dockerfile: ./Dockerfile.dev
+    volumes:
+      - ./ai:/app
+    env_file: .env
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    networks:
+        - mdes_network
 
   frontend:
     build:

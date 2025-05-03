@@ -5,7 +5,7 @@ from .views import CategoryView
 
 
 routers = DefaultRouter()
-routers.register('routers', CategoryView)
+routers.register('categories', CategoryView)
 
 app_name = 'category'
 urlpatterns = [

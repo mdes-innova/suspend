@@ -40,8 +40,8 @@ urlpatterns = [
          name='token_refresh'),
     path('api/user/', include('user.urls')),
     path('api/document/', include('document.urls')),
-    path('api/tag', include('tag.urls')),
-    path('api/category', include('category.urls')),
+    path('api/tag/', include('tag.urls')),
+    path('api/category/', include('category.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
     path(
         'api/docs/',
