@@ -2,7 +2,7 @@ from core.models import Document
 from .serializer import (
     DocumentDetailSerializer,
     DocumentSerializer,
-    ImageSerializer
+    FileSerializer
     )
 from rest_framework import (
     viewsets
@@ -22,8 +22,8 @@ class DocumentView(viewsets.ModelViewSet):
         """Return the serializer class for request."""
         if self.action == 'list':
             return DocumentSerializer
-        elif self.action == 'image_upload':
-            return ImageSerializer
+        elif self.action == 'file_upload':
+            return FileSerializer
         return DocumentDetailSerializer
 
     @action(detail=True, methods=['get'])
@@ -74,9 +74,9 @@ class DocumentView(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=['post'],
-        name='document-image-upload'
+        name='document-file-upload'
     )
-    def image_upload(self, request, pk=None):
+    def file_upload(self, request, pk=None):
         document = self.get_object()
         serializer = self.get_serializer(document, data=request.data)
 

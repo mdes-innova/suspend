@@ -1,6 +1,8 @@
 """Test for Document serializer API."""
 import os
-import tempfile
+from tempfile import NamedTemporaryFile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files import File
 from datetime import datetime
 from PIL import Image
 
@@ -32,6 +34,12 @@ class DocumentSerializerTest(TestCase):
             email='test@example.com',
             password='test1234567890'
         )
+        cls.__categories = Category.objects.bulk_create(
+            [
+                Category(name=f'Category {i}')
+                for i in range(3)
+            ]
+        )
 
     def test_get_document_with_unauthentication_fail(self):
         """Get documents with unauthenticated user."""
@@ -39,7 +47,8 @@ class DocumentSerializerTest(TestCase):
         Document.objects.bulk_create([
             Document(
                 title=f'Test title {i}',
-                description=f'Test description {i}'
+                description=f'Test description {i}',
+                category=self.__categories[i]
             ) for i in range(3)
         ])
 
@@ -59,13 +68,20 @@ class PrivateSerializerTest(TestCase):
             email='test@example.com',
             password='test1234567890'
         )
-        cls.__client.force_authenticate(cls.__user)
+        cls.__client.force_authenticate(cls.__user) 
+        cls.__categories = Category.objects.bulk_create(
+            [
+                Category(name=f'Category {i}')
+                for i in range(3)
+            ]
+        )
 
     def test_get_documents_success(self):
         documents = Document.objects.bulk_create([
             Document(
                     title=f'Test title {i}',
-                    description=f'Test description {i}'
+                    description=f'Test description {i}',
+                    category=self.__categories[i]
                 ) for i in range(3)
             ])
         res = self.__client.get(DOCUMENT_URL)
@@ -79,7 +95,8 @@ class PrivateSerializerTest(TestCase):
         Document.objects.bulk_create([
             Document(
                     title=f'Test title {i}',
-                    description=f'Test description {i}'
+                    description=f'Test description {i}',
+                    category=self.__categories[i]
                 ) for i in range(3)
             ])
 
@@ -95,6 +112,7 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {i}',
             'description': f'New description {i}',
+            'category': self.__categories[i].name,
             'tags': [
                 {'name': f'Tag {j}'}
                 for j in range(i)
@@ -110,7 +128,8 @@ class PrivateSerializerTest(TestCase):
 
         payloads = [{
             'title': f'New title {3 + i}',
-            'description': f'New description {3 + i}',
+            'description': f'New description {3 + i}', 
+            'category': self.__categories[i].name,
             'tags': [
                 f'Tag {3 + j}'
                 for j in range(i)
@@ -127,6 +146,7 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {6 + i}',
             'description': f'New description {6 + i}',
+            'category': self.__categories[i].name,
             'tags': [
                 'Tag 6', {'name': 'Tag 7'}, 'Tag 8'
             ]
@@ -148,6 +168,7 @@ class PrivateSerializerTest(TestCase):
         """Test to get tags from a document."""
         payload = {
             'title': 'Title',
+            'category': 'Category 1',
             'tags': ['Tag 1', 'Tag 2']
         }
 
@@ -188,10 +209,12 @@ class PrivateSerializerTest(TestCase):
         payloads = [
             {
                 'title': 'Title 1',
+                'category': 'Category 1',
                 'tags': ['Tag 1', 'Tag 2']
             },
             {
                 'title': 'Title 2',
+                'category': 'Category 2',
                 'tags': ['Tag 1', 'Tag 3']
             }
         ]
@@ -237,6 +260,7 @@ class PrivateSerializerTest(TestCase):
         payloads = [
             {
                 'title': 'Document 1',
+                'category': 'Category 1'
             },
             {
                 'title': 'Document 2',
@@ -371,12 +395,17 @@ class ImageUploadTest(TestCase):
         document_payload = {
             'title': 'Title',
             'description': 'Description',
-            'tags': ['Tag 1', 'Tag 2'],
-            'category': 'Category 1'
+            'category': 'Category',
+            'tags': ['Tag 1', 'Tag 2']
         }
+
+        category = Category.objects.create(
+            name=document_payload['category']
+        )
 
         cls.__document = Document.objects.create(
             title=document_payload['title'],
+            category=category,
             description=document_payload['description']
         )
         tags = Tag.objects.bulk_create(
@@ -386,37 +415,43 @@ class ImageUploadTest(TestCase):
             ]
         )
         cls.__document.tags.set(tags)
-        cls.__document.category =\
-            Category.objects.create(name=document_payload['category'])
-        cls.__document.save()
-        cls.__document.refresh_from_db()
 
     def tearDown(self):
         """Clear testcase after finished."""
         super().tearDown()
-        self.__document.image.delete()
+        self.__document.file.delete()
 
-    def test_upload_image(self):
+    def test_upload_file_success(self):
         """Test uploading an image to a recipe."""
-        url = reverse('document:document-image-upload',
+        url = reverse('document:document-file-upload',
                       args=[self.__document.pk])
-        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
-            img = Image.new('RGB', (10, 10))
-            img.save(image_file, format='JPEG')
-            image_file.seek(0)
-            payload = {'image': image_file}
+        with NamedTemporaryFile(suffix='.pdf') as temp:
+            temp.write(b'Test file content')
+            temp.seek(0)
+            django_file = File(temp, name='example.pdf') 
+            payload = {'file': django_file}
             res = self.__client.post(url, payload, format='multipart')
 
         self.__document.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertIn('image', res.data)
-        self.assertTrue(os.path.exists(self.__document.image.path))
+        self.assertIn('file', res.data)
+        self.assertTrue(os.path.exists(self.__document.file.path))
 
-    def test_upload_image_bad_request(self):
+    def test_upload_file_bad_request(self):
         """Test uploading invalid image."""
-        url = reverse('document:document-image-upload',
+        url = reverse('document:document-file-upload',
                       args=[self.__document.pk])
-        payload = {'image': 'notanimage'}
+        payload = {'file': 'nofile'}
         res = self.__client.post(url, payload, format='multipart')
 
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+        with NamedTemporaryFile(suffix='.png') as temp:
+            temp.write(b'Test file content')
+            temp.seek(0)
+            django_file = File(temp, name='example.png') 
+            payload = {'file': django_file}
+            res = self.__client.post(url, payload, format='multipart')
+
+        self.__document.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
