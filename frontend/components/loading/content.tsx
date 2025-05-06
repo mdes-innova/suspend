@@ -10,7 +10,7 @@ export default function ContentLoading() {
                     Array.from({length: 20}).map((_, index: number) => {
                         return (
                             <Card className="w-full bg-[linear-gradient(to_right,var(--card)_20%,var(--card-foreground)_49%,var(--card-foreground)_50%,var(--card-foreground)_51%,var(--card)_80%)]
-                                bg-[length:400%_400%] animate-[gradient-x_8s_ease_infinite]">
+                                bg-[length:400%_400%] animate-[gradient-x_8s_ease_infinite]" key={`loading-card-key-${index}`}>
                                 <div key={`content-${index}`} className="w-full px-4">
                                     <a className="w-6 h-6 block" href="#">
                                     </a>

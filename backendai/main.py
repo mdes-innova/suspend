@@ -11,7 +11,7 @@ from app.database import SessionLocal, engine
 from app.models import Base, Item
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-ALGORITHM = "HS256"
+ALGORITHM = os.environ.get('JWT_ALGORITHM')
 security = HTTPBearer()
 app = FastAPI()
 

@@ -5,43 +5,24 @@ from django.utils.translation import gettext_lazy as _
 
 from .models import User, Document, Category, Tag
 
-
 class UserAdmin(BaseUserAdmin):
-    """ Define the admin pages for users. """
     ordering = ['id']
-    list_display = ['email', 'name']
+    list_display = ['username']
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        (
-            _('Permission'),
-            {
-                'fields': (
-                    'is_active',
-                    'is_staff',
-                    'is_superuser'
-                )
-            }
-        ),
-        (_('Important dates'), {'fields': ('last_login',)}),
+        (None, {'fields': ('username', 'password')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
     )
-    readonly_fields = ['last_login']
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': (
-                'email',
-                'password1',
-                'password2',
-                'name',
-                'is_active',
-                'is_staff',
-                'is_superuser'
-            )
+            'fields': ('username', 'password1', 'password2', 'is_active',
+                       'is_staff', 'is_superuser'),
         }),
     )
 
 
 admin.site.register(User, UserAdmin)
+
 admin.site.register(Document)
 admin.site.register(Category)
 admin.site.register(Tag)

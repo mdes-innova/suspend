@@ -32,7 +32,9 @@ class Document(models.Model):
                     FileExtensionValidator(
                             allowed_extensions=['pdf', 'docx', 'txt']
                         )
-                ]
+                ],
+            blank=True,
+            null=True
         )
 
     class Meta:

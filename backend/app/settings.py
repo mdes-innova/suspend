@@ -176,7 +176,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
+    'ALGORITHM': config('JWT_ALGORITHM', default='HS256'),
     'SIGNING_KEY': os.getenv('DJANGO_SECRET_KEY'),
 }
 

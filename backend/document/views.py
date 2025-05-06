@@ -7,6 +7,7 @@ from .serializer import (
 from rest_framework import (
     viewsets
 )
+from django.http import FileResponse
 from rest_framework.decorators import action
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
@@ -84,3 +85,21 @@ class DocumentView(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status.HTTP_200_OK)
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=True,
+        methods=['get'],
+        name='document-file-download'
+    )
+    def file_download(self, request, pk):
+        try:
+            document = Document.objects.get(pk=pk)
+        except Document.DoesNotExist:
+            return Response({'detail': "Document not available"},
+                            status.HTTP_404_NOT_FOUND)
+        else:
+            if not document.file:
+                return Response({'detail': "File not available"},
+                                status.HTTP_404_NOT_FOUND)
+
+            return FileResponse(document.file.open('rb'), as_attachment=True)

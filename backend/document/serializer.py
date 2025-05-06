@@ -45,7 +45,6 @@ class DocumentDetailSerializer(DocumentSerializer):
             raise serializers.ValidationError({
                 'error': 'Bad Request - Category field is required.'
                 })
-
         validated_data['category'] = category_obj
         doc = Document.objects.create(**validated_data)
         tag_objects = []
