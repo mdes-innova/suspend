@@ -25,6 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
+        if get_user_model().objects.filter(username=validated_data.get('username')).exists():
+            raise serializers.ValidationError("Duplicate entry.")
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):

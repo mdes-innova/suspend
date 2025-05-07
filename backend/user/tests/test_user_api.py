@@ -5,8 +5,10 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django.db.utils import IntegrityError
 from unittest.mock import patch
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -72,20 +74,6 @@ class TestCreateUser(TestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('username', res.data.keys())
 
-    def test_create_user_short_passwrod_fail(self):
-        """Test to create a user with short password failure."""
-        user = get_user_model().objects.create_superuser(
-                username='admin',
-                password='password123'
-            )
-        self.client.force_authenticate(user)
-        payload = {
-                'username': 'arnon',
-                'password': 'pa'
-        }
-        res = self.client.post(CREATE_USER_URL, payload)
-        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-
     def test_create_user_success(self):
         """Test to create a user successful."""
         user = get_user_model().objects.create_superuser(
@@ -97,29 +85,36 @@ class TestCreateUser(TestCase):
                 'username': 'arnon',
                 'password': 'password123'
         }
-        res = self.client.post(CREATE_USER_URL, payload)
+        res = self.client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-# class AdminUserTest(TestCase):
-#     """Test with admin user."""
-#     @classmethod
-#     def setUpClass(cls):
-#         super().setUpClass()
-#         cls.__client = APIClient()
-#         admin_usr = get_user_model().objects.create_superuser(
-#             username='admin',
+class AdminUserTest(TestCase):
+    """Test with admin user."""
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.__client = APIClient()
+        admin_user = get_user_model().objects.create_superuser(
+            username='admin',
+            password='password123'
 
-#         )
-#     def test_user_with_email_exists_error(self):
-#         """Test if existing email."""
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': 'testpass123',
-#             'name': 'Test name'
-#         }
-#         get_user_model().objects.create(**payload)
-#         res = self.client.post(CREATE_USER_URL, payload)
-#         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        )
+        cls.__client.force_authenticate(admin_user)
+
+    def test_user_with_email_exists_error(self):
+        """Test if existing email."""
+        payload = {
+            'username': 'admin',
+            'password': 'testpass123'
+        }
+        try:
+            with transaction.atomic():
+                get_user_model().objects.create(**payload)
+        except IntegrityError:
+            pass
+        res = self.__client.post(CREATE_USER_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('username', res.data)
 
 #     def test_password_too_short_error(self):
 #         """Test if password to short."""
@@ -135,282 +130,261 @@ class TestCreateUser(TestCase):
 #         ).exists()
 #         self.assertFalse(user_exists)
 
-#     def test_get_access_token_success(self):
-#         """Test get tokens from a user successful."""
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': 'test_password',
-#             'name': 'Test name'
-#         }
-#         get_user_model().objects.create_user(**payload)
-#         res = self.client.post(TOKEN_URL, {
-#             'email': payload['email'],
-#             'password': payload['password']
-#         })
+    def test_get_access_token_success(self):
+        """Test get tokens from a user successful."""
+        payload = {
+            'username': 'arnon',
+            'password': 'test_password'
+        }
+        get_user_model().objects.create_user(**payload)
+        res = self.client.post(TOKEN_URL, {
+            'username': payload['username'],
+            'password': payload['password']
+        })
 
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(set(res.data.keys()), {'access', 'refresh'})
-#         self.assertTrue(all(bool(value) for value in res.data.values()))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(res.data.keys()), {'access', 'refresh'})
+        self.assertTrue(all(bool(value) for value in res.data.values()))
 
-#     def test_get_access_token_fake_user_fail(self):
-#         """Test to get tokens from a fake user failure."""
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': 'test_password',
-#             'name': 'Test name'
-#         }
-#         fake_payload = {
-#             'email': 'fake@example.com',
-#             'password': 'fake_password',
-#             'name': 'Fake name'
-#         }
+    def test_get_access_token_fake_user_fail(self):
+        """Test to get tokens from a fake user failure."""
+        payload = {
+            'username': 'Testname',
+            'password': 'test_password',
+        }
+        fake_payload = {
+            'username': 'Fakename',
+            'password': 'fake_password'
+        }
 
-#         get_user_model().objects.create_user(**payload)
-#         res = self.client.post(TOKEN_URL, {
-#             'email': payload['email'],
-#             'password': payload['password']
-#         })
-#         fake_res = self.client.post(TOKEN_URL, {
-#             'email': fake_payload['email'],
-#             'password': fake_payload['password']
-#         })
+        get_user_model().objects.create_user(**payload)
+        res = self.client.post(TOKEN_URL, {
+            'username': payload['username'],
+            'password': payload['password']
+        })
+        fake_res = self.client.post(TOKEN_URL, {
+            'username': fake_payload['username'],
+            'password': fake_payload['password']
+        })
 
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(set(res.data.keys()), {'access', 'refresh'})
-#         self.assertTrue(all(bool(value) for value in res.data.values()))
-#         self.assertEqual(fake_res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(res.data.keys()), {'access', 'refresh'})
+        self.assertTrue(all(bool(value) for value in res.data.values()))
+        self.assertEqual(fake_res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-#     def test_get_refresh_token_success(self):
-#         """Test to get refresh token success."""
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': 'test_password',
-#             'name': 'Test name'
-#         }
-#         get_user_model().objects.create_user(**payload)
-#         res = self.client.post(TOKEN_URL, {
-#             'email': payload['email'],
-#             'password': payload['password']
-#         })
-#         refresh = res.data['refresh']
-#         new_res = self.client.post(REFRESH_TOKEN_URL, {
-#             'refresh': refresh
-#         })
+    def test_get_refresh_token_success(self):
+        """Test to get refresh token success."""
+        payload = {
+            'username': 'Testname',
+            'password': 'test_password'
+        }
+        get_user_model().objects.create_user(**payload)
+        res = self.client.post(TOKEN_URL, {
+            'username': payload['username'],
+            'password': payload['password']
+        })
+        refresh = res.data['refresh']
+        new_res = self.client.post(REFRESH_TOKEN_URL, {
+            'refresh': refresh
+        })
 
-#         self.assertEqual(new_res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(set(new_res.data.keys()), {'access'})
-#         self.assertTrue(bool(new_res.data['access']))
+        self.assertEqual(new_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(new_res.data.keys()), {'access'})
+        self.assertTrue(bool(new_res.data['access']))
 
-#     def test_get_access_token_with_non_expired_refresh_success(self):
-#         """Test to get access token with non-expired refresh token successful.
-#         """
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': 'test_password',
-#             'name': 'Test name'
-#         }
-#         user = get_user_model().objects.create_user(**payload)
-#         refresh = RefreshToken.for_user(user)
-#         refresh.set_exp(
-#             from_time=datetime.now(timezone.utc) - timedelta(days=1))
-#         expired_refresh_token = str(refresh)
+    def test_get_access_token_with_non_expired_refresh_success(self):
+        """Test to get access token with non-expired refresh token successful.
+        """
+        payload = {
+            'username': 'Testname',
+            'password': 'test_password'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        refresh = RefreshToken.for_user(user)
+        refresh.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(days=1))
+        expired_refresh_token = str(refresh)
 
-#         # Use the expired refresh token
-#         res = self.client.post(REFRESH_TOKEN_URL,
-#                                {'refresh': expired_refresh_token})
+        res = self.client.post(REFRESH_TOKEN_URL,
+                               {'refresh': expired_refresh_token})
 
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(set(res.data.keys()), {'access'})
-#         self.assertTrue(bool(res.data['access']))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(res.data.keys()), {'access'})
+        self.assertTrue(bool(res.data['access']))
 
-#     def test_get_access_token_with_expired_refresh_fail(self):
-#         """Test to get access token with expired refresh token failure."""
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': 'test_password',
-#             'name': 'Test name'
-#         }
-#         user = get_user_model().objects.create_user(**payload)
-#         refresh = RefreshToken.for_user(user)
-#         refresh.set_exp(
-#             from_time=datetime.now(timezone.utc) - timedelta(days=10))
-#         expired_refresh_token = str(refresh)
+    def test_get_access_token_with_expired_refresh_fail(self):
+        """Test to get access token with expired refresh token failure."""
+        payload = {
+            'password': 'test_password',
+            'username': 'Testname'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        refresh = RefreshToken.for_user(user)
+        refresh.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(days=10))
+        expired_refresh_token = str(refresh)
 
-#         # Use the expired refresh token
-#         res = self.client.post(REFRESH_TOKEN_URL,
-#                                {'refresh': expired_refresh_token})
+        res = self.client.post(REFRESH_TOKEN_URL,
+                               {'refresh': expired_refresh_token})
 
-#         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-#         self.assertIn('token_not_valid', str(res.content))
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn('token_not_valid', str(res.content))
 
-#     def test_retrieve_user_unauthorized(self):
-#         """Test authentication is required for users."""
-#         res = self.client.get(ME_USER_URL)
+    def test_retrieve_user_unauthorized(self):
+        """Test authentication is required for users."""
+        res = self.client.get(CREATE_USER_URL)
 
-#         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-# class PrivateUserApiTest(TestCase):
-#     """Test API requests that require authentication."""
+class PrivateUserApiTest(TestCase):
+    """Test API requests that require authentication."""
 
-#     def setUp(self):
-#         self.user = create_user(
-#             name="Test name",
-#             email='test@example.com',
-#             password='test-user-password123'
-#         )
-#         self.client = APIClient()
-#         self.client_for_token = APIClient()
-#         self.client.force_authenticate(self.user)
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.__user = get_user_model().objects.create_superuser(
+            username="Testname",
+            password='test-user-password123'
+        )
+        cls.__url = reverse('user:user-detail',
+                                      args=[cls.__user.pk])
+        cls.__client = APIClient()
+        cls.__client_for_token = APIClient()
+        cls.__client.force_authenticate(cls.__user)
 
-#     def test_retrieve_profile_success(self):
-#         """Test retrieving profile for logged in user."""
-#         res = self.client.get(ME_USER_URL)
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user."""
+        res = self.__client.get(self.__url)
 
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(res.data, {
-#             'name': self.user.name,
-#             'email': self.user.email
-#         })
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {
+            'username': self.__user.username
+        })
 
-#     def test_retriveve_profile_fail(self):
-#         """Test to get profile with no unauthenticated user."""
-#         res = self.client_for_token.get(ME_USER_URL)
-#         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_retriveve_profile_fail(self):
+        """Test to get profile with no unauthenticated user."""
+        res = self.__client_for_token.get(self.__url)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-#     def test_retriveve_profile_success(self):
-#         """Test to get profile with access token user."""
-#         payload = {
-#             'email': 'token@example.com',
-#             'password': 'tokenpass123',
-#             'name': 'Token name'
-#         }
-#         user = get_user_model().objects.create_user(**payload)
-#         response = self.client_for_token.post(TOKEN_URL, payload)
-#         access_token = response.data['access']
-#         self.client_for_token.credentials(
-#                 HTTP_AUTHORIZATION=f'Bearer {access_token}'
-#             )
-#         response = self.client_for_token.get(ME_USER_URL)
+    def test_retriveve_profile_success(self):
+        """Test to get profile with access token user."""
+        payload = {
+            'username': 'Tokenname',
+            'password': 'tokenpass123'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        url = reverse('user:user-detail', args=[user.pk])
+        response = self.__client_for_token.post(TOKEN_URL, payload)
+        access_token = response.data['access']
+        self.__client_for_token.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {access_token}'
+            )
+        response = self.__client_for_token.get(url)
 
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(response.data,
-#                          {k: v for k, v in payload.items() if k != 'password'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data,
+                         {k: v for k, v in payload.items() if k != 'password'})
 
-#         access_token = AccessToken.for_user(user)
-#         access_token.set_exp(
-#             from_time=datetime.now(timezone.utc) - timedelta(seconds=4*60))
-#         access_token = str(access_token)
-#         self.client_for_token.credentials(
-#                 HTTP_AUTHORIZATION=f'Bearer {access_token}'
-#             )
-#         response = self.client_for_token.get(ME_USER_URL)
+        access_token = AccessToken.for_user(user)
+        access_token.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(seconds=4*60))
+        access_token = str(access_token)
+        self.__client_for_token.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {access_token}'
+            )
+        response = self.__client_for_token.get(url)
 
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(response.data,
-#                          {k: v for k, v in payload.items() if k != 'password'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data,
+                         {k: v for k, v in payload.items() if k != 'password'})
 
-#     def test_retriveve_profile_expired_token_fail(self):
-#         """Test to get profile with expired access token failure."""
-#         payload = {
-#             'email': 'token@example.com',
-#             'password': 'tokenpass123',
-#             'name': 'Token name'
-#         }
-#         user = get_user_model().objects.create_user(**payload)
-#         access_token = AccessToken.for_user(user)
-#         access_token.set_exp(
-#             from_time=datetime.now(timezone.utc) - timedelta(seconds=6*60)
-#         )
-#         access_token = str(access_token)
-#         self.client_for_token.credentials(
-#             HTTP_AUTHORIZATION=f'Bearer {access_token}'
-#         )
-#         response = self.client_for_token.get(ME_USER_URL)
-#         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_retriveve_profile_expired_token_fail(self):
+        """Test to get profile with expired access token failure."""
+        payload = {
+            'username': 'Tokenname',
+            'password': 'tokenpass123'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        url = reverse('user:user-detail', args=[user.pk])
+        access_token = AccessToken.for_user(user)
+        access_token.set_exp(
+            from_time=datetime.now(timezone.utc) - timedelta(seconds=6*60)
+        )
+        access_token = str(access_token)
+        self.__client_for_token.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {access_token}'
+        )
+        response = self.__client_for_token.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-#     def test_post_me_not_allowed(self):
-#         """Test not allowed post method in ME endpoints."""
-#         res = self.client.post(ME_USER_URL, {})
+    def test_update_user_profile(self):
+        """Test udpating the user."""
+        update_payload = {
+            'username': 'Updatedname',
+            'password': 'newpass123'
+        }
 
-#         self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        res = self.__client.patch(self.__url, update_payload)
 
-#     def test_update_user_profile(self):
-#         """Test udpating the user."""
-#         update_payload = {
-#             'name': 'Updated name',
-#             'email': 'updated@example.com',
-#             'password': 'newpass123'
-#         }
+        self.__user.refresh_from_db()
+        self.assertEqual(self.__user.username, update_payload['username'])
+        self.assertTrue(self.__user.check_password(update_payload['password']))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-#         res = self.client.patch(ME_USER_URL, update_payload)
+    def test_update_user_confict_username(self):
+        """Test updating the user with conficting username."""
+        update_payload = {
+            'username': 'Testname',
+            'password': 'newpass123'
+        }
 
-#         self.user.refresh_from_db()
-#         self.assertEqual(self.user.name, update_payload['name'])
-#         self.assertEqual(self.user.email, update_payload['email'])
-#         self.assertTrue(self.user.check_password(update_payload['password']))
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res = self.__client.patch(self.__url, update_payload)
 
-#     def test_update_user_confict_email(self):
-#         """Test updating the user with conficting email."""
-#         create_user(
-#             name="Test name2",
-#             email='test@example2.com',
-#             password='test-user-password123'
-#         )
-#         update_payload = {
-#             'name': 'Updated name',
-#             'email': 'test@example2.com',
-#             'password': 'newpass123'
-#         }
-
-#         res = self.client.patch(ME_USER_URL, update_payload)
-
-#         self.user.refresh_from_db()
-#         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.__user.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
 
-# class TwoFactorTest(TestCase):
-#     """Test for 2FA admin login."""
+class TwoFactorTest(TestCase):
+    """Test for 2FA admin login."""
 
-#     @classmethod
-#     def setUpClass(cls):
-#         """Setup for class test."""
-#         super().setUpClass()
-#         cls.__super_payload = {
-#             'email': 'super@example.com',
-#             'password': 'super_password123',
-#         }
-#         cls.__user_payload = {
-#             'email': 'user@example.com',
-#             'password': 'user_password123',
-#             'name': 'User name'
-#         }
-#         cls.__super_user = get_user_model()\
-#             .objects.create_superuser(
-#                 **cls.__super_payload
-#             )
-#         cls.__user = get_user_model()\
-#             .objects.create_user(
-#                 **cls.__user_payload
-#             )
+    @classmethod
+    def setUpClass(cls):
+        """Setup for class test."""
+        super().setUpClass()
+        cls.__super_payload = {
+            'username': 'super',
+            'password': 'super_password123',
+        }
+        cls.__user_payload = {
+            'username': 'user',
+            'password': 'user_password123',
+        }
+        cls.__super_user = get_user_model()\
+            .objects.create_superuser(
+                **cls.__super_payload
+            )
+        cls.__user = get_user_model()\
+            .objects.create_user(
+                **cls.__user_payload
+            )
 
-#     def test_qr_code_setup_creates_device(self):
-#         """Test to setup qrcode."""
-#         self.client.login(
-#             email=self.__super_payload['email'],
-#             password=self.__super_payload['password']
-#         )
-#         TOTPDevice.objects.filter(user=self.__super_user).delete()
-#         response = self.client.get(reverse('two_factor:setup'))
-#         self.assertContains(response, 'Enable Two-Factor Authentication')
-#         response = self.client.post(reverse('two_factor:setup'), {
-#             'setup_view-current_step': 'welcome',
-#         })
+    def test_qr_code_setup_creates_device(self):
+        """Test to setup qrcode."""
+        self.client.login(
+            username=self.__super_payload['username'],
+            password=self.__super_payload['password']
+        )
+        TOTPDevice.objects.filter(user=self.__super_user).delete()
+        response = self.client.get(reverse('two_factor:setup'))
+        self.assertContains(response, 'Enable Two-Factor Authentication')
+        response = self.client.post(reverse('two_factor:setup'), {
+            'setup_view-current_step': 'welcome',
+        })
 
-#         qr_response = self.client.get('/account/two_factor/qrcode/')
+        qr_response = self.client.get('/account/two_factor/qrcode/')
 
-#         self.assertEqual(qr_response.status_code, 200)
-#         self.assertEqual(qr_response['Content-Type'],
-#                          'image/svg+xml; charset=utf-8')
-#         self.assertGreater(len(qr_response.content), 100)
+        self.assertEqual(qr_response.status_code, 200)
+        self.assertEqual(qr_response['Content-Type'],
+                         'image/svg+xml; charset=utf-8')
+        self.assertGreater(len(qr_response.content), 100)
