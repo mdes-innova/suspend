@@ -27,7 +27,10 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
     return (
         <div className="w-full h-[150%] flex justify-start items-start relative">
             <div className="fixed top-0 left-0 w-full h-36 bg-blue-400 z-30 flex justify-between items-center px-4">
-                <div className="w-32 h-32 block relative">
+                <div className="w-32 h-32 block relative selection:none cursor-pointer"
+                    onClick={(e: any) => {
+                        if (window) window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND}`;
+                    }}>
                     <Image 
                         src="/images/logo.png"
                         alt="Home logo"
