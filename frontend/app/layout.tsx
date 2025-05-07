@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import DefaultBar from "@/components/default-bar";
 import Providers from './providers';
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,9 +40,11 @@ export default function RootLayout({
       >
           <div className="w-full h-full relative">
               <Providers>
-                <DefaultBar user={"user"}>
-                  {children}
-                </DefaultBar>
+                <SidebarProvider>
+                  <DefaultBar user={"user"}>
+                    {children}
+                  </DefaultBar>
+                </SidebarProvider>
               </Providers>
           </div>
         </ThemeProvider>

@@ -2,7 +2,10 @@
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import UserDropdown from './user-dropdown';
+import UserDropdown, { DropdownMenuDemo } from './user-dropdown';
+import { Button } from "@/components/ui/button";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import SlideBar from './slidebar';
 
 type DefaultBarProps = {
   user: any;
@@ -22,9 +25,9 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
     }
 
     return (
-        <div className="w-full h-[150%] flex justify-start items-start bg-red-400 relative">
-            <div className="fixed top-0 left-0 w-full h-36 bg-blue-400 block z-30 flex justify-between items-center">
-                <div className="ml-4 w-32 h-32 block relative">
+        <div className="w-full h-[150%] flex justify-start items-start relative">
+            <div className="fixed top-0 left-0 w-full h-36 bg-blue-400 z-30 flex justify-between items-center px-4">
+                <div className="w-32 h-32 block relative">
                     <Image 
                         src="/images/logo.png"
                         alt="Home logo"
@@ -33,7 +36,8 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                         priority
                     />
                 </div>
-                <div className="flex flex-col justify-center items-center">
+                <DropdownMenuDemo user={user} />
+                {/* <div className="flex flex-col justify-center items-center">
                     <div className="text-xl font-bold mr-4 cursor-pointer select-none hover:underline"
                         onClick={(e: any) => {
                             e.preventDefault();
@@ -45,9 +49,11 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                             <UserDropdown />
                         }
                     </div>
-                </div>
+                </div> */}
             </div>
-            <div className="fixed top-36 left-0 block h-full w-60 bg-green-400"></div>
+            <div className="fixed top-0 left-0 h-full  w-96">
+                <SlideBar />
+            </div>
             { children }
         </div>
     );
