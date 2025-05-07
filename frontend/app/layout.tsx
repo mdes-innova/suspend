@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
-import Navbar from "@/components/nav";
+import DefaultBar from "@/components/default-bar";
 import Providers from './providers';
 
 const geistSans = Geist({
@@ -31,14 +31,18 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
       <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false} // Disable system theme detection
+        forcedTheme="light" // Force the theme to always be light
+        disableTransitionOnChange
+      >
           <div className="w-full h-full relative">
-            <Navbar />
-              <Providers>{children}</Providers>
+              <Providers>
+                <DefaultBar user={"user"}>
+                  {children}
+                </DefaultBar>
+              </Providers>
           </div>
         </ThemeProvider>
       </body>

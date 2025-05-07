@@ -5,9 +5,9 @@ import ContentLoading from "@/components/loading/content";
 export default function Home() {
   return (
     <>
-      <Suspense fallback={<ContentLoading />}>
+      {/* <Suspense fallback={<ContentLoading />}>
         <Content />
-      </Suspense>
+      </Suspense> */}
     </>
   );
 }

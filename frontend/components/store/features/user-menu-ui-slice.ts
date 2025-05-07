@@ -8,8 +8,8 @@ const initialState: UIState = {
   modalOpen: false,
 };
 
-const passwordResetUiSlice = createSlice({
-  name: 'password-reset-ui',
+const userMenuUiSlice = createSlice({
+  name: 'user-menu-ui',
   initialState,
   reducers: {
     toggleModal(state: UIState) {
@@ -24,5 +24,5 @@ const passwordResetUiSlice = createSlice({
   },
 });
 
-export const { toggleModal, openModal, closeModal } = passwordResetUiSlice.actions;
-export default passwordResetUiSlice.reducer;
+export const { toggleModal, openModal, closeModal } = userMenuUiSlice.actions;
+export default userMenuUiSlice.reducer;

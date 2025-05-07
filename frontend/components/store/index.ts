@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import passwordResetUiReducer from './features/password-reset-ui-slice';
+import userMenuUiReducer from './features/user-menu-ui-slice';
 
 export const store = configureStore({
   reducer: {
-    ui: passwordResetUiReducer,
+    passwordResetUi: passwordResetUiReducer,
+    userMenuUi: userMenuUiReducer
   },
 });
 

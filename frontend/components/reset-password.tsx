@@ -7,7 +7,7 @@ import { CircleX } from 'lucide-react';
 
 export default function ResetPassword() {
     const dispatch = useAppDispatch();
-    const isModalOpen = useAppSelector((state: any) => state.ui.modalOpen);
+    const isModalOpen = useAppSelector((state: any) => state.passwordResetUi.modalOpen);
 
     const [errorMessage, setErrorMessage] = useState('');
 
