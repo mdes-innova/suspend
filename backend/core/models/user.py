@@ -1,6 +1,12 @@
 """ Core app models. """
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from django.core.validators import RegexValidator
+
+username_validator = RegexValidator(
+    regex=r'^[a-zA-Z0-9_]+$',
+    message="Username can only contain letters, numbers, and underscores. No spaces or special characters."
+)
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -8,6 +14,7 @@ class UserManager(BaseUserManager):
             raise ValueError('Username is required')
         user = self.model(username=username, **extra_fields)
         user.set_password(password)
+        user.full_clean()
         user.save(using=self._db)
         return user
 
@@ -18,7 +25,12 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=150, unique=True, null=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        null=True,
+        validators=[username_validator],
+    )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'document',
     'tag',
     'category',
+    'link',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

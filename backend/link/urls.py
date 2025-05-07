@@ -1,12 +1,12 @@
-"""URLS module for user app"""
+"""Urls module of link app."""
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet
+from .views import LinkView
 
 routers = DefaultRouter()
-routers.register('users', UserViewSet)
+routers.register('links', LinkView)
 
-app_name = 'user'
+app_name = 'link'
 
 urlpatterns = [
     path('', include(routers.urls))

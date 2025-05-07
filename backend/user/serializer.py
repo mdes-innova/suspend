@@ -3,8 +3,9 @@ from django.contrib.auth import (
     get_user_model, authenticate
 )
 from django.utils.translation import gettext as _
-
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from core.models.user import username_validator
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -14,6 +15,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ['username', 'password']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+    
+    def validate_username(self, value):
+        try:
+            username_validator(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)  # raise DRF's HTTP 400 error
+        return value
 
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
