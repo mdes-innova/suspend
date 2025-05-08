@@ -19,10 +19,14 @@ class Document(models.Model):
     title = models.CharField(max_length=512)
     category = models.ForeignKey(
         Category,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='documents',
+        null=True,
+        blank=True,
+        default=None
     )
     tags = models.ManyToManyField('Tag', related_name='documents')
+    links = models.ManyToManyField('Link', related_name='documents')
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

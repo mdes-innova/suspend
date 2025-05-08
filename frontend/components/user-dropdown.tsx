@@ -15,22 +15,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Button } from "./ui/button";
+import { useRouter } from 'next/navigation';
 
-export function DropdownMenuDemo({user}: {user: any}) {
+export function DropdownMenuUser({user}: {user: any}) {
+  const router = useRouter();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="text-xl">{user}</Button>
+        <Button variant="outline" className="text-xl">{user.username}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>บัญชีของฉัน</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
-            Profile
+            โปรไฟล์ 
           </DropdownMenuItem>
           <DropdownMenuItem>
-            Billing
+            เพิ่มผู้ใช้งาน 
           </DropdownMenuItem>
           <DropdownMenuItem>
             Settings
@@ -40,8 +42,24 @@ export function DropdownMenuDemo({user}: {user: any}) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Log out
+        <DropdownMenuItem onClick={async (e: any)=>{
+          e.preventDefault();
+          try {
+            const res = await fetch('/api/auth/logout', {
+              method: 'POST',
+              credentials: 'include', // ⬅️ Important to send cookies
+            });
+
+            if (res.ok) {
+              window.location.href = '/login';
+            } else {
+              console.error('Logout failed:', await res.json());
+            }
+          } catch (err) {
+            console.error('Logout error:', err);
+          }
+        }}>
+          ลงชื่อออก
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

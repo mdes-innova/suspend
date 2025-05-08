@@ -5,26 +5,28 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from urllib.parse import unquote
 
 
 class LinkView(viewsets.ModelViewSet):
     """Link view."""
-    serializer_class = LinkSerializer 
+    serializer_class = LinkSerializer
     queryset = Link.objects.all().order_by('id')
 
     @action(
         detail=False,
         methods=['get'],
-        url_path='by-name/(?P<name>[^/]+)/documents',
-        name='link-documents-by-name' 
+        url_path=r'by-url/(?P<url>.+)/documents',
+        name='link-documents-by-url'
     )
-    def documents_by_name(self, request, name=None):
+    def documents_by_url(self, request, url=None):
         """Get documents from a tag by title view."""
+        url = unquote(url)
         try:
-            tag = Link.objects.get(name__iexact=name)
+            link = Link.objects.get(url=url)
         except Link.DoesNotExist:
-            return Response({'detail': 'Tag not found.'},
-                     status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Link not found.'},
+                            status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response(DocumentSerializer(tag.documents.all(),
+            return Response(DocumentSerializer(link.documents.all(),
                                                many=True).data)

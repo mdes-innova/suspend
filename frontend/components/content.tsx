@@ -23,12 +23,12 @@ function sleep(ms: number): Promise<void> {
 
 async function getData() {
     // try {
-        const content: Document[] = await axios.get(
-            `${process.env.NEXT_PUBLIC_FRONTEND}/api/content/`,
-            {
-                withCredentials: true
-            }
-        );
+        // const content: Document[] = await axios.get(
+        //     `${process.env.NEXT_PUBLIC_FRONTEND}/api/content/`,
+        //     {
+        //         withCredentials: true
+        //     }
+        // );
         // return (
         //     content?.map((e, index) => {
         //         return (
@@ -63,23 +63,23 @@ async function getData() {
             //     );
             // })
     // } catch (error) {
-        return <ContentLoading />
+        // return <ContentLoading />
     // }
-    // await sleep(3000);
-    // return (
-    //     Array.from({length: 10}).map((_, index: number) => {
-    //         return (
-    //             <Card>
-    //                 <div key={`content-${index}`} className="w-full flex justify-between px-4">
-    //                     <div>Topic</div>
-    //                     <a className="w-6 h-6" href="#">
-    //                         <img src="/PDF_file_icon.svg" alt="pdf" />
-    //                     </a>
-    //                 </div>
-    //             </Card>
-    //         );
-    //     })
-    // );
+    await sleep(3000);
+    return (
+        Array.from({length: 10}).map((_, index: number) => {
+            return (
+                <Card>
+                    <div key={`content-${index}`} className="w-full flex justify-between px-4">
+                        <div>Topic</div>
+                        <a className="w-6 h-6" href="#">
+                            <img src="/PDF_file_icon.svg" alt="pdf" />
+                        </a>
+                    </div>
+                </Card>
+            );
+        })
+    );
 }
 
 export default async function Content() {

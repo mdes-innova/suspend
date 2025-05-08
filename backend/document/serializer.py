@@ -1,20 +1,22 @@
 """Document serializer module."""
 from rest_framework import serializers
-from core.models import Document, Tag, Category
+from core.models import Document, Tag, Category, Link
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
+from link.serializer import LinkSerializer
 from django.db.utils import IntegrityError
 
 
 class DocumentSerializer(serializers.ModelSerializer):
     """Document seriaizer class without a description field."""
     tags = TagSerializer(many=True, required=False, read_only=True)
+    links = LinkSerializer(many=True, required=False, read_only=True)
     category = CategorySerializer(read_only=True)
 
     class Meta:
         """Meta class for Document serializer."""
         model = Document
-        fields = ['id', 'title', 'category', 'tags', 'created_at',
+        fields = ['id', 'title', 'category', 'links', 'tags', 'created_at',
                   'modified_at']
         read_only_fields = ['id', 'created_at', 'modified_at']
 
@@ -27,6 +29,7 @@ class DocumentDetailSerializer(DocumentSerializer):
 
     def create(self, validated_data):
         tags_data = self.initial_data.get('tags', [])
+        links_data = self.initial_data.get('links', [])
         category_data = self.initial_data.get('category', None)
 
         category_obj = None
@@ -41,12 +44,14 @@ class DocumentDetailSerializer(DocumentSerializer):
                 raise serializers.ValidationError({
                         'error': 'Bad Request - Integrity constraint violation'
                     })
-        if not category_obj:
-            raise serializers.ValidationError({
-                'error': 'Bad Request - Category field is required.'
-                })
+
+            if not category_obj:
+                raise serializers.ValidationError({
+                    'error': 'Bad Request - Category field is required.'
+                    })
         validated_data['category'] = category_obj
         doc = Document.objects.create(**validated_data)
+
         tag_objects = []
         try:
             for tag in tags_data:
@@ -65,6 +70,26 @@ class DocumentDetailSerializer(DocumentSerializer):
                 'error': 'Bad Request - Integrity constraint violation'
                 })
         doc.tags.set(tag_objects)
+
+        link_objects = []
+        try:
+            for link in links_data:
+                if isinstance(link, str):
+                    link_objects.append(Link.objects.get_or_create(
+                        url=link)[0])
+                elif isinstance(link, dict):
+                    link_objects.append(Link.objects.get_or_create(
+                        url=link['url'])[0])
+                else:
+                    raise serializers.ValidationError({
+                        'error': 'Bad Request - Integrity constraint violation'
+                        })
+        except (IntegrityError, KeyError):
+            raise serializers.ValidationError({
+                'error': 'Bad Request - Integrity constraint violation'
+                })
+        doc.links.set(link_objects)
+
         return doc
 
 

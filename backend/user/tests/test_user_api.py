@@ -88,6 +88,7 @@ class TestCreateUser(TestCase):
         res = self.client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
+
 class AdminUserTest(TestCase):
     """Test with admin user."""
     @classmethod
@@ -115,6 +116,45 @@ class AdminUserTest(TestCase):
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('username', res.data)
+
+    def test_create_user_with_isp_success(self):
+        """Test to create user with isp."""
+        payload = {
+            'username': 'admin1',
+            'password': 'testpass123',
+        }
+        res = self.__client.post(CREATE_USER_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data, {
+            'username': 'admin1',
+            'isp': None
+        })
+
+        payload = {
+            'username': 'admin2',
+            'password': 'testpass123',
+            'isp': None
+        }
+        res = self.__client.post(CREATE_USER_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data, {
+            'username': 'admin2',
+            'isp': None
+        })
+
+        payload = {
+            'username': 'admin3',
+            'password': 'testpass123',
+            'isp': 'ISP1'
+        }
+        res = self.__client.post(CREATE_USER_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        isp = res.data['isp']
+        self.assertEqual({'username': res.data['username'],
+                          'isp': isp['name']}, {
+            'username': 'admin3',
+            'isp': 'ISP1'
+        })
 
 #     def test_password_too_short_error(self):
 #         """Test if password to short."""
@@ -245,7 +285,8 @@ class PrivateUserApiTest(TestCase):
         super().setUpClass()
         cls.__user = get_user_model().objects.create_superuser(
             username="Testname",
-            password='test-user-password123'
+            password='test-user-password123',
+            isp=None
         )
         cls.__url = reverse('user:user-detail',
                                       args=[cls.__user.pk])
@@ -259,7 +300,8 @@ class PrivateUserApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, {
-            'username': self.__user.username
+            'username': self.__user.username,
+            'isp': None
         })
 
     def test_retriveve_profile_fail(self):
@@ -271,11 +313,13 @@ class PrivateUserApiTest(TestCase):
         """Test to get profile with access token user."""
         payload = {
             'username': 'Tokenname',
-            'password': 'tokenpass123'
+            'password': 'tokenpass123',
+            'isp': None
         }
         user = get_user_model().objects.create_user(**payload)
         url = reverse('user:user-detail', args=[user.pk])
-        response = self.__client_for_token.post(TOKEN_URL, payload)
+        response = self.__client_for_token.post(TOKEN_URL, payload,
+                                                format='json')
         access_token = response.data['access']
         self.__client_for_token.credentials(
                 HTTP_AUTHORIZATION=f'Bearer {access_token}'
@@ -298,6 +342,14 @@ class PrivateUserApiTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data,
                          {k: v for k, v in payload.items() if k != 'password'})
+
+    def test_retrive_me_profile_success(self):
+        """Test to get the profile of me."""
+        url = reverse('user:user-me')
+        print(url)
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {'username': 'Testname', 'isp': None})
 
     def test_retriveve_profile_expired_token_fail(self):
         """Test to get profile with expired access token failure."""

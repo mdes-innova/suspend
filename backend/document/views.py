@@ -11,6 +11,7 @@ from django.http import FileResponse
 from rest_framework.decorators import action
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
+from link.serializer import LinkSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -54,6 +55,35 @@ class DocumentView(viewsets.ModelViewSet):
                                 'created_at': doc.created_at,
                                 'tags': TagSerializer(doc.tags.all(),
                                                       many=True).data})
+        return Response(serializers)
+
+    @action(detail=True, methods=['get'])
+    def links(self, request, pk=None):
+        """Return links for a specific document with id."""
+        document = self.get_object()
+        links = document.links.all()
+        serializer = LinkSerializer(links, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-title/(?P<title>[^/]+)/links',
+        name='document-links-by-title'
+    )
+    def links_by_title(self, request, title=None):
+        """Return links for a specific document with title."""
+        docs = Document.objects.filter(title__iexact=title)
+        if not docs.exists():
+            return Response({'detail': 'Document not found'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializers = []
+        for doc in docs:
+            serializers.append({'title': doc.title,
+                                'created_at': doc.created_at,
+                                'links': LinkSerializer(doc.links.all(),
+                                                        many=True).data})
         return Response(serializers)
 
     @action(

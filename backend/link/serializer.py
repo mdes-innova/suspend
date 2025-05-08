@@ -9,16 +9,10 @@ class LinkSerializer(serializers.ModelSerializer):
         model = Link
         fields = '__all__'
         read_only_fields = ['id', 'created_at', 'modified_at']
-    
-    def validate_name(self, value):
-        # Case-insensitive uniqueness check
-        qs = Link.objects.filter(name__iexact=value)
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
 
-        if qs.exists():
-            raise serializers.ValidationError(
-                "A tag with this name already exists.",
-                code='unique'
-            )
-        return value
+    def create(self, validated_data):
+        """create new link."""
+        if Link.objects.filter(
+                url=validated_data.get('url')).exists():
+            raise serializers.ValidationError("Duplicate entry.")
+        return Link.objects.create(**validated_data)

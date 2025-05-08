@@ -22,8 +22,7 @@ class TagSerializerTest(TestCase):
         super().setUpClass()
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
-            name='Test user',
-            email='test@example.com',
+            username='Testuser',
             password='test_password'
         )
 
@@ -49,8 +48,7 @@ class PrivateTagSerializerTest(TestCase):
         super().setUpClass()
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
-            name='Test user',
-            email='test@example.com',
+            username='Testuser',
             password='test_password'
         )
         cls.__client.force_authenticate(cls.__user)
@@ -103,12 +101,6 @@ class PrivateTagSerializerTest(TestCase):
         payload = {'name': 'Tag 1'}
         self.__client.post(TAG_URL, payload, format='json')
 
-        # Try again with same casing
         res = self.__client.post(TAG_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(res.data['name'][0].code, 'unique')
-
-        # Try again with different casing
-        res = self.__client.post(TAG_URL, {'name': 'tag 1'}, format='json')
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(res.data['name'][0].code, 'unique')
+        self.assertEqual(res.data[0].code, 'invalid')

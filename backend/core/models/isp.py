@@ -1,9 +1,9 @@
-"""Category model class for category app."""
+"""ISP model class for category app."""
 from django.db import models
 from django.db.models.functions import Lower
 
 
-class Category(models.Model):
+class ISP(models.Model):
     name = models.CharField(max_length=512)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -12,7 +12,7 @@ class Category(models.Model):
         constraints = [
             models.UniqueConstraint(
                 Lower('name'),
-                name='unique_category_name_ci'
+                name='unique_isp_name_ci'
             )
         ]
 

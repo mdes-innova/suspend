@@ -5,17 +5,19 @@ from django.contrib.auth import (
 from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from isp.serializer import ISPSerializer, ISP
 from core.models.user import username_validator
 
 
 class UserSerializer(serializers.ModelSerializer):
     """UserSerializer class."""
+    isp = ISPSerializer(required=False, allow_null=True, read_only=True)
 
     class Meta:
         model = get_user_model()
-        fields = ['username', 'password']
+        fields = ['username', 'password', 'isp']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
-    
+
     def validate_username(self, value):
         try:
             username_validator(value)
@@ -25,8 +27,30 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
-        if get_user_model().objects.filter(username=validated_data.get('username')).exists():
+        if get_user_model().objects.filter(
+                username=validated_data.get('username')).exists():
             raise serializers.ValidationError("Duplicate entry.")
+
+        isp_data = self.initial_data.get('isp', None)
+        isp_obj = None
+        if isp_data:
+            if isinstance(isp_data, str):
+                isp_obj =\
+                    ISP.objects.get_or_create(name=isp_data)[0]
+            elif isinstance(isp_data, dict):
+                isp_obj =\
+                    ISP.objects.get_or_create(**isp_data)[0]
+            else:
+                raise serializers.ValidationError({
+                        'error': 'Bad Request - Integrity constraint violation'
+                    })
+
+            if not isp_obj:
+                raise serializers.ValidationError({
+                    'error': 'Bad Request - ISP field is required.'
+                    })
+
+        validated_data['isp'] = isp_obj
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):

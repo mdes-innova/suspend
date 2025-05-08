@@ -38,11 +38,14 @@ urlpatterns = [
          name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(),
          name='token_refresh'),
+
     path('api/user/', include('user.urls')),
     path('api/document/', include('document.urls')),
     path('api/tag/', include('tag.urls')),
     path('api/link/', include('link.urls')),
     path('api/category/', include('category.urls')),
+    path('api/isp/', include('isp.urls')),
+
     path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
     path(
         'api/docs/',

@@ -2,20 +2,16 @@ import axios from 'axios';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-    const cookieStore = cookies();
-    const refresh = cookieStore.get('refresh'); // get the cookie named 'refresh'
-    if (!refresh || !refresh?.value) 
-        return NextResponse.json({ message: 'No refresh token' }, { status: 401 });
-
+export async function POST(req: NextRequest) {
     try {
+        const params = await req.json();
         const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`,{
-            refresh: refresh?.value,
+            refresh: params?.refresh
         });
-
         const { access } = response.data;
+        const nextResponse = NextResponse.json({ data: { access }});
 
-        cookies().set('access', access, {
+        nextResponse.cookies.set('access', access, {
             httpOnly: true,       // 🛡️ Prevent JS access
             secure: process.env.NODE_ENV === 'production',  // 🛡️ HTTPS only in prod
             sameSite: 'Lax',   // 🛡️ Mitigate CSRF
@@ -23,7 +19,7 @@ export async function GET(req: NextRequest) {
             maxAge: 60 * 5, // 5 minutes
         });
 
-        return NextResponse.json({ data: { isAuthenticated: true }});
+        return nextResponse;
     } catch (error) {
         return NextResponse.json({ message: 'Invalid refresh token' }, { status: 403 });
     }

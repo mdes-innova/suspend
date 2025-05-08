@@ -1,12 +1,18 @@
 """ Core app models. """
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.contrib.auth.models import (
+        AbstractBaseUser, PermissionsMixin, BaseUserManager
+    )
 from django.db import models
 from django.core.validators import RegexValidator
+from core.models.isp import ISP
+
 
 username_validator = RegexValidator(
     regex=r'^[a-zA-Z0-9_]+$',
-    message="Username can only contain letters, numbers, and underscores. No spaces or special characters."
+    message="Username can only contain letters, numbers," +
+    " and underscores. No spaces or special characters."
 )
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -21,7 +27,9 @@ class UserManager(BaseUserManager):
     def create_superuser(self, username, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(username=username, password=password, **extra_fields)
+        return self.create_user(username=username,
+                                password=password, **extra_fields)
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.AutoField(primary_key=True)
@@ -30,6 +38,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         null=True,
         validators=[username_validator],
+    )
+    isp = models.ForeignKey(
+        ISP,
+        on_delete=models.SET_NULL,
+        related_name='users',
+        null=True,
+        default=None,
+        blank=True
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

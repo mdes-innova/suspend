@@ -4,3 +4,4 @@ from .document import Document
 from .tag import Tag
 from .category import Category
 from .link import Link
+from .isp import ISP

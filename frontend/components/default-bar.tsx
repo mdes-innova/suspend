@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import UserDropdown, { DropdownMenuDemo } from './user-dropdown';
+import UserDropdown, { DropdownMenuUser } from './user-dropdown';
 import { Button } from "@/components/ui/button";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import SlideBar from './slidebar';
@@ -36,10 +36,11 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                         alt="Home logo"
                         fill
                         className="object-cover"
+                        sizes="100vw"
                         priority
                     />
                 </div>
-                <DropdownMenuDemo user={user} />
+                <DropdownMenuUser user={user} />
                 {/* <div className="flex flex-col justify-center items-center">
                     <div className="text-xl font-bold mr-4 cursor-pointer select-none hover:underline"
                         onClick={(e: any) => {

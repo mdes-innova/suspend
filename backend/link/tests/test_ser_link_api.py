@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 
-TAG_URL = reverse('link:link-list')
+LINK_URL = reverse('link:link-list')
 
 
 class LinkSerializerTest(TestCase):
@@ -22,8 +22,7 @@ class LinkSerializerTest(TestCase):
         super().setUpClass()
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
-            name='Test user',
-            email='test@example.com',
+            username='Testuser',
             password='test_password'
         )
 
@@ -32,11 +31,11 @@ class LinkSerializerTest(TestCase):
         Link.objects.bulk_create(
             [
                Link(
-                   name=f'Name {i}'
+                url=f'https://example{i}.com'
                ) for i in range(3)
             ]
         )
-        res = self.__client.get(TAG_URL)
+        res = self.__client.get(LINK_URL)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
@@ -49,8 +48,7 @@ class PrivateLinkSerializerTest(TestCase):
         super().setUpClass()
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
-            name='Test user',
-            email='test@example.com',
+            username='Testuser',
             password='test_password'
         )
         cls.__client.force_authenticate(cls.__user)
@@ -60,12 +58,12 @@ class PrivateLinkSerializerTest(TestCase):
         Link.objects.bulk_create(
             [
                 Link(
-                    name=f'Name {i}'
+                    url=f'https://example{i}.com'
                 ) for i in range(3)
             ]
         )
 
-        res = self.__client.get(TAG_URL)
+        res = self.__client.get(LINK_URL)
         links = Link.objects.all().order_by('id')
         serializers = LinkSerializer(links, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -75,7 +73,9 @@ class PrivateLinkSerializerTest(TestCase):
         """test to get a link with success."""
         Link.objects.bulk_create(
             [
-                Link(name=f'Name {i}') for i in range(3)
+                Link(
+                        url=f'https://example{i}.com'
+                    ) for i in range(3)
             ]
         )
 
@@ -89,26 +89,23 @@ class PrivateLinkSerializerTest(TestCase):
     def test_create_link_with_success(self):
         """Test to create link successful."""
         payload = {
-            'name': 'Link 1'
+            'url': 'https://example.com'
         }
 
-        res = self.__client.post(TAG_URL, payload, format='json')
+        res = self.__client.post(LINK_URL, payload, format='json')
         link = Link.objects.all().order_by('-id').first()
         serializer = LinkSerializer(link)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data, serializer.data)
 
     def test_create_existing_link_with_fail(self):
-        """Test creating a duplicate link fails case-insensitively."""
-        payload = {'name': 'Link 1'}
-        self.__client.post(TAG_URL, payload, format='json')
+        """Test creating a duplicate link fails."""
+        payload = {
+                'url': 'https://example.com'
+            }
+        self.__client.post(LINK_URL, payload, format='json')
 
         # Try again with same casing
-        res = self.__client.post(TAG_URL, payload, format='json')
+        res = self.__client.post(LINK_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(res.data['name'][0].code, 'unique')
-
-        # Try again with different casing
-        res = self.__client.post(TAG_URL, {'name': 'link 1'}, format='json')
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(res.data['name'][0].code, 'unique')
+        self.assertEqual(res.data['url'][0].code, 'unique')

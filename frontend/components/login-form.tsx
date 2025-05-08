@@ -5,12 +5,14 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '../components/store/hooks';
 import { openModal } from '../components/store/features/password-reset-ui-slice';
+import {RotatingLines} from 'react-loader-spinner';
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
 
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,7 +24,8 @@ export default function LoginPage() {
     };
 
     try {
-      const response = await axios.post('api/auth/login/', rawFormData,
+      setLoginLoading(true);
+      const _ = await axios.post('api/auth/login/', rawFormData,
         {
           withCredentials: true
         }
@@ -30,6 +33,7 @@ export default function LoginPage() {
         router.replace('/');
         router.refresh();
     } catch (error) {
+      setLoginLoading(false);
       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
     }
   }
@@ -72,10 +76,24 @@ export default function LoginPage() {
         <div>
         <button
             type="submit"
-            className="w-full bg-[#34c6b7] text-background font-bold
-              py-2 rounded-xl hover:ring hover:ring-border transition duration-300"
+            className="w-full bg-[#34c6b7] text-background font-bold h-12 relative items-center
+              py-2 rounded-xl hover:ring hover:ring-border transition duration-300 flex justify-center"
         >
-            เข้าสู่ระบบ
+          {!loginLoading &&
+            <div>
+              เข้าสู่ระบบ
+            </div>
+          }
+          {loginLoading &&
+            <RotatingLines 
+              visible={true}
+              height="40"
+              width="40"
+              strokeColor="#FFFFFF"
+              strokeWidth="5"
+              animationDuration="0.75"
+            />
+          }
         </button>
         </div>
         {errorMessage != '' && <div className="text-destructive">{errorMessage}</div>}
