@@ -1,3 +1,5 @@
+'use client';
+
 import {
     Table,
     TableBody,
@@ -20,6 +22,9 @@ import {
 } from "./ui/pagination"
 
 import Image from 'next/image';
+import { DeleteDialog } from "./delete-dialog";
+import { useState } from "react";
+import { DocumentSheet } from "./document-sheet";
   
   const invoices = [
     {
@@ -81,90 +86,80 @@ import Image from 'next/image';
   ]
   
   export function TableContent() {
+    const [delDocumentId, setDelDocumentId] = useState(0);
+    const [editDocumentId, setEditDocumentId] = useState(0);
     return (
-      <Table>
-        <TableCaption>A list of your recent invoices.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[80px]">Actions</TableHead>
-            <TableHead className="w-[150px]">Name</TableHead>
-            <TableHead className="w-[100px]">Date</TableHead>
-            <TableHead>Notice</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Submit</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoices.map((invoice) => (
-            <TableRow key={invoice.invoice}>
-              <TableCell className="font-medium">
-                <div className="flex justify-between cursor-pointer">
-                    <div>
-                        <Image
-                            src="/images/icons/delete.png"  // relative to the `public/` folder
-                            alt="App logo"
-                            width={24}
-                            height={24}
-                            priority  // optional: load immediately
-                            />
-                    </div>
-                    <div>
-                        <Image
-                            src="/images/icons/pencil.png"  // relative to the `public/` folder
-                            alt="App logo"
-                            width={24}
-                            height={24}
-                            priority  // optional: load immediately
-                            />
-                    </div>
-                </div>
-              </TableCell>
-              <TableCell>{invoice.topic}</TableCell>
-              <TableCell>{invoice.date}</TableCell>
-              <TableCell>{invoice.notice}</TableCell>
-              <TableCell>{invoice.type}</TableCell>
-              <TableCell className="text-center text-background flex flex-col cursor-pointer">
-                <div className={`py-2
-                    rounded-md ${invoice.submit === 0? "bg-gray-500": "bg-blue-600"}`}>
-                    <div>
-                        {invoice.submit === 0? "บันทึกฉบับร่าง": "ส่งให้ ISP ดำเนินการ"}
-                    </div>
-                </div>
-                </TableCell>
+      <div className="h-full w-full">
+        {delDocumentId != 0 && <DeleteDialog documentId={delDocumentId} 
+          setDocumentId={setDelDocumentId} /> }
+        <Table>
+          <TableCaption>A list of your recent invoices.</TableCaption>
+          <TableHeader>
+            <TableRow className="hover:bg-background">
+              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead className="w-[150px]">Name</TableHead>
+              <TableHead className="w-[100px]">Date</TableHead>
+              <TableHead>Notice</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-right">Submit</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={6}>
-                <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                            <PaginationPrevious href="#" />
-                            </PaginationItem>
-                            <PaginationItem>
-                            <PaginationLink href="#">1</PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                            <PaginationLink href="#" isActive>
-                                2
-                            </PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                            <PaginationLink href="#">3</PaginationLink>
-                            </PaginationItem>
-                            <PaginationItem>
-                            <PaginationEllipsis />
-                            </PaginationItem>
-                            <PaginationItem>
-                            <PaginationNext href="#" />
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-            </TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {invoices.map((invoice: any, idx: number) => (
+              <TableRow key={invoice.invoice}>
+                <TableCell className="font-medium">
+                  <div className="flex justify-between w-full">
+                    <DeleteDialog />
+                    <DocumentSheet />
+                  </div>
+                </TableCell>
+                <TableCell>{invoice.topic}</TableCell>
+                <TableCell>{invoice.date}</TableCell>
+                <TableCell>{invoice.notice}</TableCell>
+                <TableCell>{invoice.type}</TableCell>
+                <TableCell className="text-center text-background flex flex-col cursor-pointer">
+                  <div className={`py-2
+                      rounded-md ${invoice.submit === 0? "bg-gray-500": "bg-blue-600"}`}>
+                      <div>
+                          {invoice.submit === 0? "บันทึกฉบับร่าง": "ส่งให้ ISP ดำเนินการ"}
+                      </div>
+                  </div>
+                  </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={6}>
+                  <Pagination>
+                          <PaginationContent>
+                              <PaginationItem>
+                              <PaginationPrevious href="#" />
+                              </PaginationItem>
+                              <PaginationItem>
+                              <PaginationLink href="#">1</PaginationLink>
+                              </PaginationItem>
+                              <PaginationItem>
+                              <PaginationLink href="#" isActive>
+                                  2
+                              </PaginationLink>
+                              </PaginationItem>
+                              <PaginationItem>
+                              <PaginationLink href="#">3</PaginationLink>
+                              </PaginationItem>
+                              <PaginationItem>
+                              <PaginationEllipsis />
+                              </PaginationItem>
+                              <PaginationItem>
+                              <PaginationNext href="#" />
+                              </PaginationItem>
+                          </PaginationContent>
+                      </Pagination>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
     )
   }
   

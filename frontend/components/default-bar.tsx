@@ -35,7 +35,7 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
     }
 
     return (
-        <div className="w-full h-dvh flex flex-col justify-start items-start ">
+        <div className="w-full h-dvh flex flex-col justify-start items-start relative">
             <div className="w-full h-36 bg-blue-400 flex justify-between items-center px-4">
                 <div className="w-32 h-32 block relative selection:none cursor-pointer"
                     onClick={(e: any) => {

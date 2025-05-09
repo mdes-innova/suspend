@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from './ui/select';
 
-export default function RegisterForm() {
+export default function NewdocForm() {
     const user = useAppSelector((state: any) => state.userAuth.user);
     const [isp, setIsp] = useState('')
     const router = useRouter();
@@ -23,8 +23,8 @@ export default function RegisterForm() {
     const [success, setSuccess] = useState(false);
     const [registerLoading, setRegisterLoading] = useState(false);
 
-    if (user && (!user?.isStaff || !user.isActive))
-        router.back();
+    // if (user && (!user?.isStaff || !user.isActive))
+    //     router.back();
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
