@@ -10,40 +10,62 @@ import {
     SidebarMenuItem,
     SidebarMenuButton
 } from "./ui/sidebar"
+
+import { usePathname } from 'next/navigation'
+
 export default function SlideBar() {
+    const pathname = usePathname();
+    console.log(pathname);
     const projects = [
         {
-            url: "#",
-            name: "Design Engineering"
+            pathname: "/",
+            name: "เมนูตรวจสอบหลักฐาน"
         },
         {
-            url: "#",
-            name: "Sales & Marketing"
+            pathname: "/#",
+            name: "ตั้งค่าระบบ"
         },
         {
-            url: "#",
-            name: "Travel"
+            pathname: "/#",
+            name: "ค้นหาเอกสาร"
         },
         {
-            url: "#",
-            name: "Support"
+            pathname: "/#",
+            name: "ข้อมูลพื้นฐาน"
         },
         {
-            url: "#",
-            name: "Feedback"
+            pathname: "/#",
+            name: "ค้นหาข้อมูล"
+        },
+        {
+            pathname: "/#",
+            name: "อัพโหลดคำสั่งสาร"
+        },
+        {
+            pathname: "/#",
+            name: "สถานะการดำเนินการของ ISP"
+        },
+        {
+            pathname: "/#",
+            name: "ค้นหา URL"
+        },
+        {
+            pathname: "/#",
+            name: "รายงานผลการดำเนินงานการระงับ"
         },
     ]
     return (
-        <div className="">
-            <Sidebar className="mt-36 w-72">
+        <div className="h-full bg-sidebar border-r-2 border-sidebar-border">
+            <Sidebar className="w-72">
                 <SidebarContent>
                     <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
                         {projects.map((project) => (
                             <SidebarMenuItem key={project.name}>
-                            <SidebarMenuButton asChild>
-                                <a href={project.url}>
+                            <SidebarMenuButton asChild 
+                                className={`${pathname === project.pathname? "bg-gray-300": ""}`}>
+                                <a href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
                                 <span>{project.name}</span>
                                 </a>
                             </SidebarMenuButton>

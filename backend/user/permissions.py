@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsAdminOrStaff(permissions.BasePermission):
     """
     Allows access only to staff or admin users.
@@ -9,3 +10,13 @@ class IsAdminOrStaff(permissions.BasePermission):
         return request.user and request.user.is_authenticated and (
             request.user.is_staff or request.user.is_superuser
         )
+
+
+class IsActiveUser(permissions.BasePermission):
+    """
+    Allows access only to active user.
+    """
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and\
+            request.user.is_active

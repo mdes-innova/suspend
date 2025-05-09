@@ -31,9 +31,12 @@ export function DropdownMenuUser({user}: {user: any}) {
           <DropdownMenuItem>
             โปรไฟล์ 
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            เพิ่มผู้ใช้งาน 
-          </DropdownMenuItem>
+          {
+            user?.isStaff &&
+            <DropdownMenuItem>
+              เพิ่มผู้ใช้งาน 
+            </DropdownMenuItem>
+          }
           <DropdownMenuItem>
             Settings
           </DropdownMenuItem>

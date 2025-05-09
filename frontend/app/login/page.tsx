@@ -10,7 +10,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center bg-background
         w-full max-md:flex max-md:flex-col max-md:gap-y-6">
         <div className="flex-1 flex flex-col justify-center items-center h-full">
-          <div className="w-[640px] h-[640px] relative max-lg:w-[420px] max-lg:h-[420px]">
+          <div className="w-[540px] h-[540px] relative max-lg:w-[360px] max-lg:h-[360px]">
             <Image 
               src="/images/logo.png"
               alt="Login logo"
@@ -19,6 +19,8 @@ export default function LoginPage() {
               priority
             />
           </div>
+          <div className="text-3xl max-lg:text-xl">กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม</div>
+          <div className="text-3xl max-lg:text-xl">Ministry of Digital Economy and Society</div>
         </div>
         <div className="flex-1 flex flex-col h-full justify-center items-center">
           <div className="flex flex-col w-[420px] gap-y-4">

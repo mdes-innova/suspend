@@ -127,7 +127,9 @@ class AdminUserTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data, {
             'username': 'admin1',
-            'isp': None
+            'isp': None,
+            'is_staff': False,
+            'is_active': True
         })
 
         payload = {
@@ -139,13 +141,17 @@ class AdminUserTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data, {
             'username': 'admin2',
-            'isp': None
+            'isp': None,
+            'is_staff': False,
+            'is_active': True
         })
 
         payload = {
             'username': 'admin3',
             'password': 'testpass123',
-            'isp': 'ISP1'
+            'isp': 'ISP1',
+            'is_staff': False,
+            'is_active': True
         }
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -301,7 +307,9 @@ class PrivateUserApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, {
             'username': self.__user.username,
-            'isp': None
+            'isp': None,
+            'is_staff': True,
+            'is_active': True
         })
 
     def test_retriveve_profile_fail(self):
@@ -316,6 +324,13 @@ class PrivateUserApiTest(TestCase):
             'password': 'tokenpass123',
             'isp': None
         }
+        payload_check = {
+            'username': 'Tokenname',
+            'password': 'tokenpass123',
+            'isp': None,
+            'is_staff': False,
+            'is_active': True
+        }
         user = get_user_model().objects.create_user(**payload)
         url = reverse('user:user-detail', args=[user.pk])
         response = self.__client_for_token.post(TOKEN_URL, payload,
@@ -328,7 +343,8 @@ class PrivateUserApiTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data,
-                         {k: v for k, v in payload.items() if k != 'password'})
+                         {k: v for k, v in payload_check.items()
+                          if k != 'password'})
 
         access_token = AccessToken.for_user(user)
         access_token.set_exp(
@@ -341,15 +357,35 @@ class PrivateUserApiTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data,
-                         {k: v for k, v in payload.items() if k != 'password'})
+                         {k: v for k, v in payload_check.items()
+                          if k != 'password'})
 
     def test_retrive_me_profile_success(self):
         """Test to get the profile of me."""
         url = reverse('user:user-me')
-        print(url)
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, {'username': 'Testname', 'isp': None})
+        self.assertEqual(res.data,
+                         {
+                            'username': 'Testname', 'isp': None,
+                            'is_staff': True, 'is_active': True
+                            })
+
+    def test_retrive_me_profile_with_non_active_fail(self):
+        """Test to get the profile of me with non active failure."""
+        url = reverse('user:user-me')
+        user = {
+            'username': 'Nonadmin',
+            'password': 'password123'
+        }
+        nonadmin_user = get_user_model().objects.create_user(
+            **user
+        )
+        client = APIClient()
+        client.force_authenticate(nonadmin_user)
+        res = client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(res.data['detail'].code, 'permission_denied')
 
     def test_retriveve_profile_expired_token_fail(self):
         """Test to get profile with expired access token failure."""
@@ -386,11 +422,11 @@ class PrivateUserApiTest(TestCase):
 
     def test_update_user_confict_username(self):
         """Test updating the user with conficting username."""
+        self.__user.refresh_from_db()
         update_payload = {
             'username': 'Testname',
             'password': 'newpass123'
         }
-
         res = self.__client.patch(self.__url, update_payload)
 
         self.__user.refresh_from_db()

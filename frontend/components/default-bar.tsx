@@ -25,8 +25,8 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
     }
 
     return (
-        <div className="w-full h-[150%] flex justify-start items-start relative">
-            <div className="fixed top-0 left-0 w-full h-36 bg-blue-400 z-30 flex justify-between items-center px-4">
+        <div className="w-full h-dvh flex flex-col justify-start items-start ">
+            <div className="w-full h-36 bg-blue-400 flex justify-between items-center px-4">
                 <div className="w-32 h-32 block relative selection:none cursor-pointer"
                     onClick={(e: any) => {
                         if (window) window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND}`;
@@ -40,25 +40,18 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                         priority
                     />
                 </div>
+                <div className="flex flex-col h-full justify-center items-start mr-auto pl-10">
+                    <div className="text-2xl font-bold">ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์</div>
+                    <div>กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ</div>
+                </div>
                 <DropdownMenuUser user={user} />
-                {/* <div className="flex flex-col justify-center items-center">
-                    <div className="text-xl font-bold mr-4 cursor-pointer select-none hover:underline"
-                        onClick={(e: any) => {
-                            e.preventDefault();
-                            setShowMenu(prev => !prev);
-                        }}
-                    >{user}</div>
-                    <div className="relative h-0 w-0">
-                        { showMenu &&
-                            <UserDropdown />
-                        }
-                    </div>
-                </div> */}
             </div>
-            <div className="fixed top-0 left-0 h-full  w-96">
+            <div className="flex justify-start items-start w-full h-full ">
                 <SlideBar />
+                <div className="w-full">
+                    { children }
+                </div>
             </div>
-            { children }
         </div>
     );
 }

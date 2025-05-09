@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import DefaultBar from "@/components/default-bar";
@@ -15,6 +15,14 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+
+const notoThai = Noto_Sans_Thai({
+  subsets: ['thai'],  // include Thai glyphs
+  weight: ['400', '700'], // choose available font weights
+  variable: '--font-noto-thai', // optional CSS variable
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -51,8 +59,10 @@ export default async function RootLayout({
       }
     }
 
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    // <html lang="en" suppressHydrationWarning>
+      <html lang="th" className={notoThai.className} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
