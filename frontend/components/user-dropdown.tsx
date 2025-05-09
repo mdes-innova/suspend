@@ -16,11 +16,13 @@ import {
 
 import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
+import { useState } from 'react'
 
 export function DropdownMenuUser({user}: {user: any}) {
   const router = useRouter();
+  const [open, setOpen] = useState(false)
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="text-xl">{user.username}</Button>
       </DropdownMenuTrigger>
@@ -33,15 +35,16 @@ export function DropdownMenuUser({user}: {user: any}) {
           </DropdownMenuItem>
           {
             user?.isStaff &&
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={(e: any) => {
+              e.preventDefault();
+              setOpen(false);
+              router.push('/register');
+            }}>
               เพิ่มผู้ใช้งาน 
             </DropdownMenuItem>
           }
           <DropdownMenuItem>
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Keyboard shortcuts
+            ตั้งค่า 
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

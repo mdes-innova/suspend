@@ -16,7 +16,6 @@ import Link from 'next/link';
 
 export default function SlideBar() {
     const pathname = usePathname();
-    console.log(pathname);
     const projects = [
         {
             pathname: "/",

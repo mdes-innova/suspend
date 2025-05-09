@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const refresh = request.cookies.get('refresh')?.value;
+  const isLoginPage = pathname === '/login';
 
   // Allow public paths (you can customize this list)
-  const publicPaths = ['/login', '/register'];
+  const publicPaths = ['/login'];
   const isPublic = publicPaths.includes(pathname);
 
   // If no refresh token and not on a public route, redirect
@@ -17,30 +17,40 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  
   const access = request.cookies.get('access')?.value;
   if (!access && refresh) {
-  const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND}/api/auth/refresh`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ refresh }),
-  });
-
-  if (tokenRes.ok) {
-    const response = NextResponse.next();
-    const data = await tokenRes.json();
-    response.cookies.set('access', data.data.access, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'Lax',
-      path: '/',
-      maxAge: 60 * 5,
+    const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh }),
+      credentials: 'include',
     });
-    return response;
-  }
+    
+    if (tokenRes.ok) {
+      const response = isLoginPage
+      ? NextResponse.redirect(new URL('/', request.url))
+      : NextResponse.next();
+      
+      const data = await tokenRes.json();
+      response.cookies.set('access', data.access, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'Lax',
+        path: '/',
+        maxAge: 60 * 5,
+      });
+      return response;
+    }
 }
-
+    if (access) {
+      const response = isLoginPage
+        ? NextResponse.redirect(new URL('/', request.url))
+        : NextResponse.next();
+      return response;
+  }
   return NextResponse.next(); // allow request to proceed
 }
 

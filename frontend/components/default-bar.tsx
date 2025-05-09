@@ -1,11 +1,11 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import UserDropdown, { DropdownMenuUser } from './user-dropdown';
-import { Button } from "@/components/ui/button";
-import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import { DropdownMenuUser } from './user-dropdown';
 import SlideBar from './slidebar';
+import { useAppDispatch } from '../components/store/hooks';
+import { setUser } from '../components/store/features/user-auth-slice';
 
 type DefaultBarProps = {
   user: any;
@@ -16,7 +16,15 @@ const HIDDEN_ROUTES = ['/login', '/secret', '/no-navbar'];
 
 export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>) {
     const pathname = usePathname();
-    const [showMenu, setShowMenu] = useState(false);
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        dispatch(setUser({
+            username: user?.username,
+            isStaff: user?.isStaff,
+            isActive: user?.isActive
+        }));
+    }, []);
 
     if (HIDDEN_ROUTES.includes(pathname)) {
         return (
@@ -48,7 +56,7 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
             </div>
             <div className="flex justify-start items-start w-full h-full ">
                 <SlideBar />
-                <div className="w-full">
+                <div className="w-full pt-2">
                     { children }
                 </div>
             </div>

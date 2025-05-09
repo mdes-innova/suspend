@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch } from '../components/store/hooks';
 import { openModal } from '../components/store/features/password-reset-ui-slice';
+import { setUser } from '../components/store/features/user-auth-slice';
 import {RotatingLines} from 'react-loader-spinner';
 
 export default function LoginPage() {
@@ -13,6 +14,10 @@ export default function LoginPage() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
+  useEffect(() => {
+    dispatch(setUser(null));
+  }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,7 +35,7 @@ export default function LoginPage() {
           withCredentials: true
         }
       );
-        router.replace('/');
+        router.push('/');
         router.refresh();
     } catch (error) {
       setLoginLoading(false);
@@ -64,6 +69,7 @@ export default function LoginPage() {
         <input
             type="password"
             name="password"
+            id="password"
             required
             className="mt-1 text-foreground w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-border"
             placeholder="••••••••"
@@ -87,7 +93,6 @@ export default function LoginPage() {
           {loginLoading &&
             <RotatingLines 
               visible={true}
-              height="40"
               width="40"
               strokeColor="#FFFFFF"
               strokeWidth="5"
