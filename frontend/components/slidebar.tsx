@@ -11,10 +11,12 @@ import {
     SidebarMenuButton
 } from "./ui/sidebar"
 
+import React from 'react';
+
 import { usePathname } from 'next/navigation'
 import Link from 'next/link';
 
-export default function SlideBar() {
+function SlideBar() {
     const pathname = usePathname();
     const projects = [
         {
@@ -80,3 +82,5 @@ export default function SlideBar() {
         </div>
         );
     }
+
+export default React.memo(SlideBar);
