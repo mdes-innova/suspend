@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { DropdownMenuUser } from './user-dropdown';
 import SlideBar from './slidebar';
-import { useAppDispatch } from '../components/store/hooks';
+import { useAppDispatch, useAppSelector  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
 
 type DefaultBarProps = {
@@ -18,13 +18,15 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
     const pathname = usePathname();
     const dispatch = useAppDispatch();
 
+    const reduxUser = useAppSelector(state => state.userAuth.user);
+
     useEffect(() => {
-        dispatch(setUser({
-            username: user?.username,
-            isStaff: user?.isStaff,
-            isActive: user?.isActive
-        }));
-    }, []);
+        const userChanged = JSON.stringify(reduxUser) !== JSON.stringify(user);
+
+        if (userChanged) {
+            dispatch(setUser(user ?? null));
+        }
+    }, [user, dispatch, reduxUser]);
 
     if (HIDDEN_ROUTES.includes(pathname)) {
         return (
