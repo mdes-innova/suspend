@@ -12,6 +12,7 @@ import {
 } from "./ui/sidebar"
 
 import { usePathname } from 'next/navigation'
+import Link from 'next/link';
 
 export default function SlideBar() {
     const pathname = usePathname();
@@ -65,9 +66,9 @@ export default function SlideBar() {
                             <SidebarMenuItem key={project.name}>
                             <SidebarMenuButton asChild 
                                 className={`${pathname === project.pathname? "bg-gray-300": ""}`}>
-                                <a href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
+                                <Link href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
                                 <span>{project.name}</span>
-                                </a>
+                                </Link>
                             </SidebarMenuButton>
                             </SidebarMenuItem>
                         ))}
