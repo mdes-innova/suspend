@@ -40,7 +40,7 @@ function SlideBar() {
             name: "ค้นหาข้อมูล"
         },
         {
-            pathname: "/#",
+            pathname: "/court-order",
             name: "อัพโหลดคำสั่งสาร"
         },
         {
@@ -57,28 +57,18 @@ function SlideBar() {
         },
     ]
     return (
-        <div className="h-full bg-sidebar border-r-2 border-sidebar-border">
-            <Sidebar className="w-72">
-                <SidebarContent>
-                    <SidebarGroup>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                        {projects.map((project) => (
-                            <SidebarMenuItem key={project.name}>
-                            <SidebarMenuButton asChild 
-                                className={`${pathname === project.pathname? "bg-gray-300": ""}`}>
-                                <Link href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
-                                <span>{project.name}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        ))}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                    </SidebarGroup>
-                </SidebarContent>
-            </Sidebar>
-
+        <div className="h-full w-54 bg-sidebar border-r-2 border-sidebar-border flex flex-col justify-start items-start">
+            <div>
+            {projects.map((project: any, idx: number) => (
+                <div
+                    key={`sidebar-div-${idx}`}
+                    className={`px-2 py-1 cursor-pointer ${pathname === project.pathname? "bg-gray-300": "hover:bg-gray-200"}`}>
+                    <Link href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
+                    <span>{project.name}</span>
+                    </Link>
+                </div>
+            ))}
+            </div>
         </div>
         );
     }

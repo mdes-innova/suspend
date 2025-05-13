@@ -5,7 +5,7 @@ import Image from 'next/image';
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col justify-between max-md:gap-y-4 relative w-full">
-      <ResetPassword />
+      {/* <ResetPassword /> */}
       <div className="block w-full h-16 bg-[#34c6b7]"></div>
       <div className="flex items-center justify-center bg-background
         w-full max-md:flex max-md:flex-col max-md:gap-y-6">

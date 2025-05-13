@@ -31,7 +31,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV001",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 0
     },
@@ -39,7 +39,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV002",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 0
     },
@@ -47,7 +47,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV003",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 0
     },
@@ -55,7 +55,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV004",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 1
     },
@@ -63,7 +63,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV005",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 1
     },
@@ -71,7 +71,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV006",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 1
     },
@@ -79,7 +79,7 @@ import { DocumentSheet } from "./document-sheet";
       invoice: "INV007",
       topic: "พนัน 888",
       date: "02 พ.ค. 2568",
-      notice: "แจ้งระงับการทำให้แพราหลายซึ่ข้อมูลคอมพิวเตอร์",
+      notice: "แจ้งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์",
       type: "งานระงับการแพร่หลายซึ่งข้อมูลคอมพิวเตอร์ซึ่งมีความผิดตาม พ.ร.บ.",
       submit: 1
     },
@@ -90,18 +90,17 @@ import { DocumentSheet } from "./document-sheet";
     const [editDocumentId, setEditDocumentId] = useState(0);
     return (
       <div className="h-full w-full">
-        {delDocumentId != 0 && <DeleteDialog documentId={delDocumentId} 
-          setDocumentId={setDelDocumentId} /> }
+        {delDocumentId != 0 && <DeleteDialog /> }
         <Table>
-          <TableCaption>A list of your recent invoices.</TableCaption>
+          {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
           <TableHeader>
             <TableRow className="hover:bg-background">
-              <TableHead className="w-[100px]">Actions</TableHead>
-              <TableHead className="w-[150px]">Name</TableHead>
-              <TableHead className="w-[100px]">Date</TableHead>
-              <TableHead>Notice</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="text-right">Submit</TableHead>
+              <TableHead className="w-[100px]">แก้ไข</TableHead>
+              <TableHead className="w-[150px]">ชื่อ</TableHead>
+              <TableHead className="w-[100px]">วันที่</TableHead>
+              <TableHead>ชนิด</TableHead>
+              <TableHead>คำอธิบาย</TableHead>
+              <TableHead className="text-right">ดำเนินการ</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -109,7 +108,8 @@ import { DocumentSheet } from "./document-sheet";
               <TableRow key={invoice.invoice}>
                 <TableCell className="font-medium">
                   <div className="flex justify-between w-full">
-                    <DeleteDialog />
+                    {invoices[idx].submit === 0 && <DeleteDialog />}
+                    {invoices[idx].submit != 0 && <div className="flex-1"></div>}
                     <DocumentSheet />
                   </div>
                 </TableCell>

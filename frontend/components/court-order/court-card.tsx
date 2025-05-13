@@ -1,0 +1,120 @@
+'use client';
+
+import * as React from "react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { PlusCircleIcon, Save, X } from "lucide-react";
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+  } from "@/components/ui/table";
+
+export function CourtCard() {
+  return (
+    <Card className="w-full border-2">
+      <CardHeader>
+        <CardTitle>แนบคำสั่งสาร</CardTitle>
+        {/* <CardDescription>Deploy your new project in one-click.</CardDescription> */}
+      </CardHeader>
+      <CardContent>
+        <form>
+          <div className="flex flex-col w-full items-start justify-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Button className="w-fit" variant="secondary">
+                    <PlusCircleIcon size={32}/><span>เพิ่ม</span>
+              </Button>
+              {/* <Label htmlFor="name">Name</Label>
+              <Input id="name" placeholder="Name of your project" /> */}
+            </div>
+            <Table>
+              {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
+              <TableHeader>
+                <TableRow className="hover:bg-background">
+                  <TableHead className="w-[20px]">#</TableHead>
+                  <TableHead className="w-[100px]">ลำดับ</TableHead>
+                  <TableHead className="w-[200px]">หมายเลขคดีแดง</TableHead>
+                  <TableHead className="w-[200px]">หมายเลขคดีดำ</TableHead>
+                  <TableHead className="w-[200px]">ลงวันที่</TableHead>
+                  <TableHead className="w-[200px]">ประเภท</TableHead>
+                  <TableHead className="w-[200px]">มาตรา</TableHead>
+                  <TableHead>อัพโหลดคำสั่งสาร</TableHead>
+                </TableRow>
+              </TableHeader>
+              {/* <TableBody>
+                {invoices.map((invoice: any, idx: number) => (
+                  <TableRow key={invoice.invoice}>
+                    <TableCell className="font-medium">
+                      <div className="flex justify-between w-full">
+                        {invoices[idx].submit === 0 && <DeleteDialog />}
+                        {invoices[idx].submit != 0 && <div className="flex-1"></div>}
+                        <DocumentSheet />
+                      </div>
+                    </TableCell>
+                    <TableCell>{invoice.topic}</TableCell>
+                    <TableCell>{invoice.date}</TableCell>
+                    <TableCell>{invoice.notice}</TableCell>
+                    <TableCell>{invoice.type}</TableCell>
+                    <TableCell className="text-center text-background flex flex-col cursor-pointer">
+                      <div className={`py-2
+                          rounded-md ${invoice.submit === 0? "bg-gray-500": "bg-blue-600"}`}>
+                          <div>
+                              {invoice.submit === 0? "บันทึกฉบับร่าง": "ส่งให้ ISP ดำเนินการ"}
+                          </div>
+                      </div>
+                      </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody> */}
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <div className="flex flex-col w-full">
+                        <Label className="justify-center">No data to display</Label>
+                        <div className="flex w-full justify-end gap-x-1">
+                            <Button className="text-[10px] px-1 h-fit" variant={'default'}>
+                                <Save /><span>
+                                บันทึก</span>
+                            </Button>
+                            <Button className="text-[10px] px-1 h-fit" variant={'destructive'}>
+                                <X /><span>
+                                ยกเลิก</span>
+                            </Button>
+                        </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
+        </form>
+      </CardContent>
+      {/* <CardFooter className="flex justify-between">
+        <Button variant="outline">Cancel</Button>
+        <Button>Deploy</Button>
+      </CardFooter> */}
+    </Card>
+  )
+}
