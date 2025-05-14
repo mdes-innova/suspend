@@ -35,3 +35,16 @@ export async function getAccessFromRefresh(refresh: string) {
     throw new Error("Invalid refresh token");
   }
 }
+
+export async function fetchWithAccess({
+  url, access, refresh, req, res, login, method
+}: {
+    url: string, access: string, refresh: string,
+    req: NextRequest, res: {
+      success: NextResponse,
+      fail: NextResponse
+    }, login: string, method: string
+  }
+) {
+  
+}

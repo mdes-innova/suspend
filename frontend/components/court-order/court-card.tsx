@@ -53,30 +53,31 @@ export function CourtCard() {
 
   const handleButtonClick = (e: any) => {
     e.preventDefault();
-    fileInputRef.current?.click();
+    // console.log("XXXXXXXXXXXX");
+    // fileInputRef.current?.click();
+    handleFileChange("");
   };
 
   const handleFileChange = async (e: any) => {
-    const file = e.target.files[0];
-      if (!file) return;
+    // const file = e.target.files[0];
+    //   if (!file) return;
 
-      if (file.type !== "application/pdf") {
-          alert("Please select a PDF file.");
-          return;
-      }
+    //   if (file.type !== "application/pdf") {
+    //       alert("Please select a PDF file.");
+    //       return;
+    //   }
 
       const formData = new FormData();
-      formData.append("file", file);
+      // formData.append("file", file);
       formData.append("pathname", pathname);
+      formData.append("title", "Title 1");
+      formData.append("category", "category 1");
 
       setUploading(true);
 
       try {
-          const response = await fetch("https://your-backend-url.com/api/upload/", {
+          const response = await fetch("api/upload/pdf/", {
               method: "POST",
-              headers: {
-                  Authorization: `Bearer YOUR_ACCESS_TOKEN_HERE`,
-              },
               body: formData,
               credentials: 'include',
           });
