@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
         nextResponse.cookies.set('access', access, {
             httpOnly: true,       // 🛡️ Prevent JS access
             secure: process.env.NODE_ENV === 'production',  // 🛡️ HTTPS only in prod
-            sameSite: 'Lax',   // 🛡️ Mitigate CSRF
+            sameSite: 'lax',   // 🛡️ Mitigate CSRF
             path: '/',            // available throughout the app
             maxAge: 60 * 5, // 5 minutes
         });

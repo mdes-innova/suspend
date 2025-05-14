@@ -18,17 +18,6 @@ import { BookCard } from "./court-order/book-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import * as React from "react"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
- 
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-
 import { ResetPassword } from "./reset-password";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -37,35 +26,8 @@ import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card } from "./ui/card";
 import { CourtCard } from "./court-order/court-card";
+import DatePicker from "./date-picker";
 
-function DatePicker() {
-  const [date, setDate] = React.useState<Date>()
- 
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  )
-}
 
 const FormSchema = z.object({
   // username: z.string().min(2, {

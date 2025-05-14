@@ -7,7 +7,7 @@ export async function POST() {
   response.cookies.set('access', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
+    sameSite: 'lax',
     path: '/',
     maxAge: 0,
   });
@@ -15,7 +15,7 @@ export async function POST() {
   response.cookies.set('refresh', '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
+    sameSite: 'lax',
     path: '/',
     maxAge: 0,
   });

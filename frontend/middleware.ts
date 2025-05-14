@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
       response.cookies.set('access', data.access, {
         httpOnly: true,
         secure: false,
-        sameSite: 'Lax',
+        sameSite: 'lax',
         path: '/',
         maxAge: 60 * 5,
       });

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set('access', access, {
         httpOnly: true,       // 🛡️ Prevent JS access
         secure: process.env.NODE_ENV === 'production',  // 🛡️ HTTPS only in prod
-        sameSite: 'Lax',   // 🛡️ Mitigate CSRF
+        sameSite: 'lax',   // 🛡️ Mitigate CSRF
         path: '/',            // available throughout the app
         maxAge: 60 * 5, // 5 minutes
     });
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         path: '/',
         maxAge: 60 * 60 * 24 * 7, // 7 days
-        sameSite: 'Lax',
+        sameSite: 'lax',
     });
 
     return response;

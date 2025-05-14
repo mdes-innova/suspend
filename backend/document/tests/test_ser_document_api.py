@@ -120,6 +120,7 @@ class PrivateSerializerTest(TestCase):
             ]
         } for i in range(3)]
         res_data = []
+        print(DOCUMENT_URL)
         for payload in payloads:
             res_create = self.__client.post(
                     DOCUMENT_URL, payload, format='json'
@@ -594,6 +595,7 @@ class ImageUploadTest(TestCase):
         """Test uploading an file to a document."""
         url = reverse('document:document-file-upload',
                       args=[self.__document.pk])
+        print(url)
         with NamedTemporaryFile(suffix='.pdf') as temp:
             temp.write(b'Test file content')
             temp.seek(0)

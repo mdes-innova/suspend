@@ -16,10 +16,13 @@ import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select';
+
 import { PlusCircleIcon, Save, X } from "lucide-react";
 import {
     Table,
@@ -31,8 +34,68 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table";
+import { useRef, useState } from 'react';
+import { usePathname } from "next/navigation";
+import DatePicker from "../date-picker";
 
 export function CourtCard() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pathname = usePathname();
+  const data = [{
+    no: 0,
+    nor: 0,
+    nob: 0,
+    date: DatePicker,
+
+  }];
+  const [uploading, setUploading] = useState(false);
+  const [showInput, setShowInput] = useState(false);
+
+  const handleButtonClick = (e: any) => {
+    e.preventDefault();
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: any) => {
+    const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.type !== "application/pdf") {
+          alert("Please select a PDF file.");
+          return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("pathname", pathname);
+
+      setUploading(true);
+
+      try {
+          const response = await fetch("https://your-backend-url.com/api/upload/", {
+              method: "POST",
+              headers: {
+                  Authorization: `Bearer YOUR_ACCESS_TOKEN_HERE`,
+              },
+              body: formData,
+              credentials: 'include',
+          });
+
+          if (!response.ok) throw new Error("Upload failed");
+
+          const data = await response.json();
+          console.log("Uploaded:", data);
+          alert("File uploaded successfully!");
+          setShowInput(true);
+      } catch (error) {
+          console.error(error);
+          alert("Upload failed");
+      } finally {
+          setUploading(false);
+          e.target.value = "";
+      }
+  };
+
   return (
     <Card className="w-full border-2">
       <CardHeader>
@@ -40,76 +103,112 @@ export function CourtCard() {
         {/* <CardDescription>Deploy your new project in one-click.</CardDescription> */}
       </CardHeader>
       <CardContent>
-        <form>
-          <div className="flex flex-col w-full items-start justify-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Button className="w-fit" variant="secondary">
-                    <PlusCircleIcon size={32}/><span>เพิ่ม</span>
-              </Button>
-              {/* <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Name of your project" /> */}
-            </div>
-            <Table>
-              {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
-              <TableHeader>
-                <TableRow className="hover:bg-background">
-                  <TableHead className="w-[20px]">#</TableHead>
-                  <TableHead className="w-[100px]">ลำดับ</TableHead>
-                  <TableHead className="w-[200px]">หมายเลขคดีแดง</TableHead>
-                  <TableHead className="w-[200px]">หมายเลขคดีดำ</TableHead>
-                  <TableHead className="w-[200px]">ลงวันที่</TableHead>
-                  <TableHead className="w-[200px]">ประเภท</TableHead>
-                  <TableHead className="w-[200px]">มาตรา</TableHead>
-                  <TableHead>อัพโหลดคำสั่งสาร</TableHead>
-                </TableRow>
-              </TableHeader>
-              {/* <TableBody>
-                {invoices.map((invoice: any, idx: number) => (
-                  <TableRow key={invoice.invoice}>
-                    <TableCell className="font-medium">
-                      <div className="flex justify-between w-full">
-                        {invoices[idx].submit === 0 && <DeleteDialog />}
-                        {invoices[idx].submit != 0 && <div className="flex-1"></div>}
-                        <DocumentSheet />
-                      </div>
-                    </TableCell>
-                    <TableCell>{invoice.topic}</TableCell>
-                    <TableCell>{invoice.date}</TableCell>
-                    <TableCell>{invoice.notice}</TableCell>
-                    <TableCell>{invoice.type}</TableCell>
-                    <TableCell className="text-center text-background flex flex-col cursor-pointer">
-                      <div className={`py-2
-                          rounded-md ${invoice.submit === 0? "bg-gray-500": "bg-blue-600"}`}>
-                          <div>
-                              {invoice.submit === 0? "บันทึกฉบับร่าง": "ส่งให้ ISP ดำเนินการ"}
-                          </div>
-                      </div>
-                      </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody> */}
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <div className="flex flex-col w-full">
-                        <Label className="justify-center">No data to display</Label>
-                        <div className="flex w-full justify-end gap-x-1">
-                            <Button className="text-[10px] px-1 h-fit" variant={'default'}>
-                                <Save /><span>
-                                บันทึก</span>
-                            </Button>
-                            <Button className="text-[10px] px-1 h-fit" variant={'destructive'}>
-                                <X /><span>
-                                ยกเลิก</span>
-                            </Button>
-                        </div>
-                    </div>
+        <div className="flex flex-col w-full items-start justify-center gap-4">
+          <div className="flex flex-col space-y-1.5">
+            <Button className="w-fit" variant="secondary"
+              onClick={handleButtonClick}>
+                {uploading && "กำลังอัพโหลด..."}
+                {!uploading && <><PlusCircleIcon size={32}/><span>เพิ่ม</span></>}
+            </Button>
+            {/* <Label htmlFor="name">Name</Label>
+            <Input id="name" placeholder="Name of your project" /> */}
+          </div>
+          <Table>
+            {/* <TableCaption>A list of your recent data.</TableCaption> */}
+            <TableHeader>
+              <TableRow className="hover:bg-background">
+                <TableHead className="w-[20px]">#</TableHead>
+                <TableHead className="w-[60px]">ลำดับ</TableHead>
+                <TableHead className="w-[200px]">หมายเลขคดีแดง</TableHead>
+                <TableHead className="w-[200px]">หมายเลขคดีดำ</TableHead>
+                <TableHead className="w-[200px]">ลงวันที่</TableHead>
+                <TableHead className="w-[200px]">ประเภท</TableHead>
+                <TableHead className="w-[200px]">มาตรา</TableHead>
+                <TableHead>อัพโหลดคำสั่งสาร</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="display-none">
+              {data.map((d: any, idx: number) => (
+                <TableRow key={`table-row-${d.no}`}>
+                  <TableCell></TableCell>
+                  <TableCell><Input type='text' /></TableCell>
+                  <TableCell><Input type='text' /></TableCell>
+                  <TableCell><Input type='text' /></TableCell>
+                  <TableCell><d.date /></TableCell>
+                  <TableCell>
+                    <Select
+                      name="court-order-type"
+                      required
+                    >
+                      <SelectTrigger className="w-[180px]" >
+                        <SelectValue placeholder="Select a type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectGroup>
+                          <SelectLabel>ISP</SelectLabel>
+                          <SelectItem value="apple">Apple</SelectItem>
+                          <SelectItem value="banana">Banana</SelectItem>
+                          <SelectItem value="blueberry">Blueberry</SelectItem>
+                          <SelectItem value="grapes">Grapes</SelectItem>
+                          <SelectItem value="pineapple">Pineapple</SelectItem>
+                          </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      name="court-order-group"
+                      required
+                    >
+                      <SelectTrigger className="w-[180px]" >
+                        <SelectValue placeholder="Select a group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectGroup>
+                          <SelectLabel>ISP</SelectLabel>
+                          <SelectItem value="apple">Apple</SelectItem>
+                          <SelectItem value="banana">Banana</SelectItem>
+                          <SelectItem value="blueberry">Blueberry</SelectItem>
+                          <SelectItem value="grapes">Grapes</SelectItem>
+                          <SelectItem value="pineapple">Pineapple</SelectItem>
+                          </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      ref={fileInputRef}
+                      id="pdf-upload"
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleFileChange}
+                      className={showInput ? "" : "hidden"}
+                    />
                   </TableCell>
                 </TableRow>
-              </TableFooter>
-            </Table>
-          </div>
-        </form>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={8}>
+                  <div className="flex flex-col w-full">
+                      <Label className="justify-center">No data to display</Label>
+                      <div className="flex w-full justify-end gap-x-1">
+                          <Button className="text-[10px] px-1 h-fit" variant={'default'}>
+                              <Save /><span>
+                              บันทึก</span>
+                          </Button>
+                          <Button className="text-[10px] px-1 h-fit" variant={'destructive'}>
+                              <X /><span>
+                              ยกเลิก</span>
+                          </Button>
+                      </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
       </CardContent>
       {/* <CardFooter className="flex justify-between">
         <Button variant="outline">Cancel</Button>
