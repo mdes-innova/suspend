@@ -21,6 +21,9 @@ import { useState } from 'react'
 export function DropdownMenuUser({user}: {user: any}) {
   const router = useRouter();
   const [open, setOpen] = useState(false)
+
+  if (!user) return null;
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>

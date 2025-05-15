@@ -2,6 +2,21 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { NextRequest, NextResponse } from "next/server";
 
+type ReturnRes = {
+  fail: NextResponse,
+  success: NextResponse
+}
+type Params = {
+  url: string,
+  access: string | undefined,
+  refresh: string | undefined,
+  req: NextRequest,
+  returnRes: ReturnRes,
+  method: string,
+  file?: null | File,
+  params: object
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -14,7 +29,10 @@ export async function getAccessFromRefresh(refresh: string) {
               {
                   refresh
               }
-          )
+          ),
+          headers: {
+            'Content-Type': 'application/json'
+          },
       },
     );
     if (!refreshRes.ok)
@@ -36,15 +54,91 @@ export async function getAccessFromRefresh(refresh: string) {
   }
 }
 
-export async function fetchWithAccess({
-  url, access, refresh, req, res, login, method
-}: {
-    url: string, access: string, refresh: string,
-    req: NextRequest, res: {
-      success: NextResponse,
-      fail: NextResponse
-    }, login: string, method: string
+export async function fetchWithAccess(params: Params) {
+  try {
+    let { access } = params;
+    let backendData: null | object | FormData = null;
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${params.access}`)
+    if (params?.file) {
+      backendData = new FormData();
+      (backendData as FormData).append("file", params.file);
+    } else {
+      backendData = params.params;
+      headers.append("Content-Type", "application/json");
+    }
+    if (access && params.refresh) {
+      let res = await fetch(
+          params.url,
+          {
+            method: params.method,
+            body: params.file
+            ? backendData as FormData 
+            : JSON.stringify(backendData),
+            headers
+          });
+
+      if (!res.ok) {
+          if (res.status === 401) {
+              access = await getAccessFromRefresh(params.refresh);
+              res = await fetch(
+                params.url,
+                {
+                  method: params.method,
+                  body: params.file
+                  ? backendData as FormData 
+                  : JSON.stringify(backendData),
+                  headers 
+              });
+
+              if (!res.ok) {
+                  if (res.status === 401)
+                      return NextResponse.json({ error: "Unauthorized." },
+                    { status: 401 });
+                  else
+                    return params.returnRes.fail; 
+              } else {
+                  const resJson = await res.json();
+                  return NextResponse.json({ data: resJson },
+                    { status: params.returnRes.success.status });
+              }
+          } else
+              return params.returnRes.fail; 
+      } else {
+          const resJson = await res.json();
+          return NextResponse.json({ data: resJson },
+            { status: params.returnRes.success.status });
+
+      }
+
+  } else if (!access && params.refresh) {
+      access = await getAccessFromRefresh(params.refresh);
+      let res = await fetch(
+        params.url,
+        {
+          method: params.method,
+          body: params.file
+          ? backendData as FormData 
+          : JSON.stringify(backendData),
+          headers 
+      });
+
+      if (!res.ok) {
+          if (res.status === 401)
+              return NextResponse.json({ error: "Unauthorized." },
+            { status: 401 });
+          else
+            return params.returnRes.fail;
+      } else {
+          const resJson = await res.json();
+          return NextResponse.json({ data: resJson },
+            { status: params.returnRes.success.status });
+      }
+    } else {
+        return NextResponse.json({ error: "Unauthorized." },
+          { status: 401 });
+    }
+  } catch (error) {
+    return NextResponse.json({ error: "Fetch fail." }, { status: 400 });
   }
-) {
-  
 }

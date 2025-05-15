@@ -132,4 +132,10 @@ class DocumentView(viewsets.ModelViewSet):
                 return Response({'detail': "File not available"},
                                 status.HTTP_404_NOT_FOUND)
 
-            return FileResponse(document.file.open('rb'), as_attachment=True)
+            filename = document.file.name.split('/')[-1]
+            return FileResponse(
+                document.file.open('rb'),
+                as_attachment=True,
+                filename=filename,
+                content_type='application/pdf'
+            )

@@ -39,36 +39,83 @@ import { usePathname } from "next/navigation";
 import DatePicker from "../date-picker";
 
 export function CourtCard() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pathname = usePathname();
-  const data = [{
-    no: 0,
-    nor: 0,
-    nob: 0,
-    date: DatePicker,
+  const inputRefs = useRef<Array<Array<React.RefObject<HTMLInputElement | null>>>>([
+    [useRef(null), useRef(null), useRef(null), useRef(null)]
+  ]);
 
-  }];
+  const [numItems, setNumItems] = useState(1);
+  const [uploadedFiles, setUploadedFiles] = useState<(string | null)[]>([null]);
+  const [downloadFiles, setDownloadFiles] = useState<(number | null)[]>([null]);
+  const pathname = usePathname();
   const [uploading, setUploading] = useState(false);
   const [showInput, setShowInput] = useState(false);
 
   const handleButtonClick = (e: any) => {
     e.preventDefault();
-    // console.log("XXXXXXXXXXXX");
-    // fileInputRef.current?.click();
-    handleFileChange("");
+    const newRow = [
+        React.createRef<HTMLInputElement>(),
+        React.createRef<HTMLInputElement>(),
+        React.createRef<HTMLInputElement>(),
+        React.createRef<HTMLInputElement>()
+    ];
+    inputRefs.current.push(newRow);
+    uploadedFiles.push(null);
+    downloadFiles.push(null);
+    setNumItems(prev => prev + 1);
   };
 
-  const handleFileChange = async (e: any) => {
-    // const file = e.target.files[0];
-    //   if (!file) return;
+  const clearItems = (e: any) => {
+    e.preventDefault();
+    inputRefs.current = [
+      [React.createRef(), React.createRef(), React.createRef(), React.createRef()]
+    ];
+    setUploadedFiles([null]);
+    setDownloadFiles([null]);
+    setNumItems(1);
+  }
 
-    //   if (file.type !== "application/pdf") {
-    //       alert("Please select a PDF file.");
-    //       return;
-    //   }
+  const handleDownload = async (idx: number) => {
+    try {
+      const fileName = uploadedFiles[idx];
+      const response = await fetch(
+        'api/download/pdf/',
+        {
+          method: "POST",
+          credentials: 'include',
+          body: JSON.stringify({
+            docId: downloadFiles[idx],
+            documentName: fileName,
+            pathname
+          })
+        }
+      );
+      if (!response.ok) throw new Error("Download failed");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${fileName}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to download document.");
+    }
+  }
+
+  const handleFileChange = async (e: any, idx: number) => {
+    const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.type !== "application/pdf") {
+          alert("Please select a PDF file.");
+          return;
+      }
 
       const formData = new FormData();
-      // formData.append("file", file);
+      formData.append("file", file);
       formData.append("pathname", pathname);
       formData.append("title", "Title 1");
       formData.append("category", "category 1");
@@ -86,14 +133,26 @@ export function CourtCard() {
 
           const data = await response.json();
           console.log("Uploaded:", data);
+          setDownloadFiles(prev => {
+            const updated = [...prev];
+            updated[idx] = data.data.id;
+            return updated;
+          });
           alert("File uploaded successfully!");
           setShowInput(true);
       } catch (error) {
           console.error(error);
           alert("Upload failed");
       } finally {
-          setUploading(false);
-          e.target.value = "";
+        const fileNames = (e.target.value as string).split('\\');
+        const fileName = fileNames[fileNames.length - 1];
+        setUploading(false);
+        setUploadedFiles(prev => {
+          const updated = [...prev];
+          updated[idx] = fileName;
+          return updated;
+        });
+        e.target.value = "";
       }
   };
 
@@ -108,8 +167,7 @@ export function CourtCard() {
           <div className="flex flex-col space-y-1.5">
             <Button className="w-fit" variant="secondary"
               onClick={handleButtonClick}>
-                {uploading && "กำลังอัพโหลด..."}
-                {!uploading && <><PlusCircleIcon size={32}/><span>เพิ่ม</span></>}
+                <PlusCircleIcon size={32}/><span>เพิ่ม</span>
             </Button>
             {/* <Label htmlFor="name">Name</Label>
             <Input id="name" placeholder="Name of your project" /> */}
@@ -125,17 +183,17 @@ export function CourtCard() {
                 <TableHead className="w-[200px]">ลงวันที่</TableHead>
                 <TableHead className="w-[200px]">ประเภท</TableHead>
                 <TableHead className="w-[200px]">มาตรา</TableHead>
-                <TableHead>อัพโหลดคำสั่งสาร</TableHead>
+                <TableHead className="w-[300px]">อัพโหลดคำสั่งสาร</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="display-none">
-              {data.map((d: any, idx: number) => (
-                <TableRow key={`table-row-${d.no}`}>
+              {Array.from({length: numItems}).map((d: any, idx: number) => (
+                <TableRow key={`table-row-${idx}`}>
                   <TableCell></TableCell>
-                  <TableCell><Input type='text' /></TableCell>
-                  <TableCell><Input type='text' /></TableCell>
-                  <TableCell><Input type='text' /></TableCell>
-                  <TableCell><d.date /></TableCell>
+                  <TableCell><Input type='text' ref={inputRefs.current[idx][0]}/></TableCell>
+                  <TableCell><Input type='text' ref={inputRefs.current[idx][1]}/></TableCell>
+                  <TableCell><Input type='text' ref={inputRefs.current[idx][2]}/></TableCell>
+                  <TableCell><DatePicker /></TableCell>
                   <TableCell>
                     <Select
                       name="court-order-type"
@@ -176,15 +234,37 @@ export function CourtCard() {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
-                    <Input
-                      ref={fileInputRef}
-                      id="pdf-upload"
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleFileChange}
-                      className={showInput ? "" : "hidden"}
-                    />
+                  <TableCell className="max-w-[100px]">
+                    {
+                      uploadedFiles[idx]?
+                          <div className="underline text-primary cursor-pointer"
+                            onClick={ async (e: any) => {
+                              e.preventDefault();
+                              await handleDownload(idx);
+                            }}
+                          >
+                            {uploadedFiles[idx]}
+                          </div>:
+                        <div>
+                          <Button
+                            type="button"
+                            variant={'link'}
+                            onClick={() => inputRefs.current[idx][3].current?.click()}
+                          >
+                            อัพโหลดไฟล์
+                          </Button>
+                          <Input
+                            ref={inputRefs.current[idx][3]}
+                            id="pdf-upload"
+                            type="file"
+                            accept="application/pdf"
+                            onChange={ async (e: any) => {
+                              await handleFileChange(e, idx)
+                            }}
+                            className="hidden"
+                          />
+                        </div>
+                    }
                   </TableCell>
                 </TableRow>
               ))}
@@ -199,7 +279,7 @@ export function CourtCard() {
                               <Save /><span>
                               บันทึก</span>
                           </Button>
-                          <Button className="text-[10px] px-1 h-fit" variant={'destructive'}>
+                          <Button className="text-[10px] px-1 h-fit" variant={'destructive'} onClick={clearItems}>
                               <X /><span>
                               ยกเลิก</span>
                           </Button>
