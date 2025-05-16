@@ -41,14 +41,6 @@ class Document(models.Model):
             null=True
         )
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                Lower('title'), 'created_at',
-                name='by_title_created_at_ci'
-            )
-        ]
-
     def __str__(self):
         return "{}(title={}, created_at={})".format(
             self.__class__.__name__, self.title, self.created_at

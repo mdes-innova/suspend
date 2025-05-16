@@ -1,11 +1,10 @@
 """Test for Document serializer API."""
 import os
+import time
 from tempfile import NamedTemporaryFile
-from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
 from django.core.files import File
 from datetime import datetime
-from PIL import Image
 from urllib.parse import quote
 
 from django.test import TestCase
@@ -107,7 +106,33 @@ class PrivateSerializerTest(TestCase):
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
-###############################################################
+
+    def test_create_document_compare_time_success(self):
+        """Test to create a document to compare modified_at and created_at."""
+        payload = {'title': 'Title x'}
+        res = self.__client.post(DOCUMENT_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        created_at = datetime.fromisoformat(res.data['created_at'])
+        modified_at = datetime.fromisoformat(res.data['modified_at'])
+
+        self.assertEqual(created_at.replace(microsecond=0),
+                         modified_at.replace(microsecond=0)) 
+
+        time.sleep(2)
+        update_payload = {'title': 'Title y'}
+        document_detail_url = reverse('document:document-detail',
+                                      kwargs={'pk': res.data['id']})
+
+        res = self.__client.patch(document_detail_url, update_payload,
+                                  format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['title'], 'Title y')
+
+        # Reload the object from DB
+        updated_doc = Document.objects.get(pk=res.data['id'])
+        self.assertNotEqual(updated_doc.created_at, updated_doc.modified_at)
+
     def test_create_document_with_tags_success(self):
         """Test to create documents with tags."""
         payloads = [{
@@ -247,7 +272,8 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res_docs.data), 2)
         self.assertEqual({'Title 1', 'Title 2'},
-                         set([res_docs.data[0]['title'], res_docs.data[1]['title']]))
+                         set([res_docs.data[0]['title'],
+                              res_docs.data[1]['title']]))
 
         url = reverse('tag:tag-documents-by-name', kwargs={'name': 'Tag 2'})
         res_docs = self.__client.get(url)

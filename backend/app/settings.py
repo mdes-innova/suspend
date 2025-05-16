@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'tag',
     'category',
     'link',
+    'group',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

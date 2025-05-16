@@ -1,0 +1,208 @@
+"""Testcase module for group serializer."""
+
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+
+from core.models import Group, KindType
+from ..serializer import GroupSerializer
+
+
+GROUP_URL = reverse('group:group-list')
+
+
+def get_group_detail_url(pk):
+    return reverse('group:group-detail', args=[pk])
+
+
+class PublicTest(TestCase):
+    """Test for public access."""
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        user_payload = {
+            'username': 'user',
+            'password': 'user_password_123'
+        }
+        cls.__client = APIClient()
+        cls.__user = get_user_model().objects.create_user(**user_payload)
+
+    def test_create_group_fail(self):
+        """Test to create group in public fail."""
+        payload = {
+            'name': 'group1',
+        }
+        res = self.__client.post(GROUP_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_groups_fail(self):
+        """Test to get groups in public fail."""
+        payloads = [
+                Group(name="name 1", user=self.__user),
+                Group(name="name 2", user=self.__user),
+            ]
+        Group.objects.bulk_create(payloads)
+        res = self.__client.get(GROUP_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateTest(TestCase):
+    """Test for private access."""
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        user_payload = {
+            'username': 'user',
+            'password': 'user_password_123'
+        }
+        cls.__client = APIClient()
+        cls.__user = get_user_model().objects.create_user(**user_payload)
+        cls.__client.force_authenticate(cls.__user)
+
+    def test_create_group_success(self):
+        """Test to create group in private success."""
+        payload = {
+            'name': 'group1'
+        }
+        res = self.__client.post(GROUP_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+    def test_get_groups_success(self):
+        """Test to get groups in private success."""
+        payloads = [
+                Group(name="name 1", user=self.__user),
+                Group(name="name 2", user=self.__user),
+            ]
+        Group.objects.bulk_create(payloads)
+        res = self.__client.get(GROUP_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res_data = sorted(res.data, key=lambda x: x['name'])
+        groups = Group.objects.order_by('name')
+        serializers = GroupSerializer(groups, many=True)
+
+        self.assertEqual(res_data, serializers.data)
+
+    def test_get_groups_post_success(self):
+        """Test to get groups in private success."""
+        payloads = [
+            {
+                'name': 'group1',
+            },
+            {
+                'name': 'group2',
+                'kind': 'nokind'
+            }
+        ]
+
+        for payload in payloads:
+            self.__client.post(GROUP_URL, payload, format='json')
+        res = self.__client.get(GROUP_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res_data = sorted(res.data, key=lambda x: x['name'])
+        groups = Group.objects.order_by('name')
+        serializers = GroupSerializer(groups, many=True)
+
+        self.assertEqual(res_data, serializers.data)
+        self.assertEqual([r['kind'] for r in res_data],
+                         ['pinned'] + [KindType.Playlist]*2)
+
+    def test_get_auto_create_group(self):
+        """Test to get auto-create group after user creation."""
+        payload = {
+            'username': 'user1',
+            'password': 'user1_password_123'
+        }
+        user = get_user_model().objects.create_user(**payload)
+        group = Group.objects.get(user=user)
+
+        self.assertEqual([
+            group.name, group.kind, group.user
+        ], [
+            'default', 'pinned', user
+        ])
+
+    def test_create_group_with_documents_success(self):
+        """Test to create assign document to group success."""
+        doc_payloads = [
+            {
+                'title': 'Title x'
+            },
+            {
+                'title': 'Title y'
+            },
+        ]
+        doc_ids = []
+        for doc_payload in doc_payloads:
+            res = self.__client.post(reverse('document:document-list'),
+                                     doc_payload,
+                                     format='json')
+            doc_ids.append(res.data['id'])
+        group_payload = {
+            'name': 'group1',
+            'document_ids': doc_ids
+        }
+        res = self.__client.post(GROUP_URL, group_payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(set([r['title'] for r in res.data['documents']]),
+                         set([r['title'] for r in doc_payloads]))
+
+    def test_assign_documents_to_group_success(self):
+        """Test to assign document to group success."""
+        doc_payloads = [
+            {
+                'title': 'Title x'
+            },
+            {
+                'title': 'Title y'
+            },
+        ]
+        doc_ids = []
+        for doc_payload in doc_payloads:
+            res = self.__client.post(reverse('document:document-list'),
+                                     doc_payload,
+                                     format='json')
+            doc_ids.append(res.data['id'])
+        group_payload = {
+            'name': 'group1',
+        }
+        res = self.__client.post(GROUP_URL, group_payload, format='json')
+
+        url = reverse('group:group-detail', args=[res.data['id']])
+        res = self.__client.patch(url, {'document_ids': doc_ids},
+                                  format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set([r['title'] for r in res.data['documents']]),
+                         set([r['title'] for r in doc_payloads]))
+    
+    def test_assign_duplicated_documents_to_group_success(self):
+        """Test to assign duplicated documents to group success."""
+        doc_payloads = [
+            {
+                'title': 'Title x'
+            },
+            {
+                'title': 'Title y'
+            },
+        ]
+        doc_ids = []
+        for doc_payload in doc_payloads:
+            res = self.__client.post(reverse('document:document-list'),
+                                     doc_payload,
+                                     format='json')
+            doc_ids.append(res.data['id'])
+        group_payload = {
+            'name': 'group1',
+        }
+        res = self.__client.post(GROUP_URL, group_payload, format='json')
+
+        url = reverse('group:group-detail', args=[res.data['id']])
+        res = self.__client.patch(url, {'document_ids': doc_ids*2},
+                                  format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data['documents']), 2)
+        self.assertEqual(set([r['title'] for r in res.data['documents']]),
+                         set([r['title'] for r in doc_payloads]))
