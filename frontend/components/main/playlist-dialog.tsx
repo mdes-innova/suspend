@@ -47,10 +47,9 @@ function MyScrollArea() {
   )
 }
 
-export default function PlaylistDialog({ children }: { children: any }) {
+export default function PlaylistDialog() {
     const dispatch = useAppDispatch();
     const uiOpen = useAppSelector(state => state.playlistDialogUi.modalOpen);
-
     return (
         <Dialog open={uiOpen} 
             onOpenChange={(open) => {

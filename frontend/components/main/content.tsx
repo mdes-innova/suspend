@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting } 
   from "../store/features/content-list-ui-slice";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import AcionDropdown from "./action-dropdown";
+import ActionDropdown from "./action-dropdown";
 import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 
@@ -150,7 +150,7 @@ export const columns: ColumnDef<Document>[] = [
           })}
           </div>
       );
-    }
+    },
   },
   {
     accessorKey: "title",
@@ -165,7 +165,7 @@ export const columns: ColumnDef<Document>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("title")}</div>,
+    cell: ({ row }) => <div className="lowercase ml-4">{row.getValue("title")}</div>,
   },
     {
     accessorKey: "category",
@@ -180,7 +180,9 @@ export const columns: ColumnDef<Document>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       return (
-        <AcionDropdown />
+        <ActionDropdown>
+          <MoreHorizontal />
+        </ActionDropdown>
       )
     },
   },
@@ -239,8 +241,16 @@ export default function DataTable({ data }: { data: Document[] }) {
           }
           className="max-w-sm"
         />
-        <div className="ml-auto">
-          <Button variant="secondary" className="text-xs mr-2">Actions</Button>
+        <div className="ml-auto flex items-center gap-x-2">
+          {Object.keys(rowSelection || {}).length > 0 ? (
+            <ActionDropdown>
+              {/* <Button variant="outline"> */}
+                <SlidersVertical />
+              {/* </Button> */}
+            </ActionDropdown>
+          ) : (
+            <></>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">

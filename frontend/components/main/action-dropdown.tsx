@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks";
 import { openModal } from "../store/features/playlist-diaolog-ui-slice";
 
-export default function AcionDropdown() {
+export default function ActionDropdown({ children }: { children: any}) {
     const dispatch = useAppDispatch();
     const [open, setOpen] = useState(false);
 
@@ -27,7 +27,8 @@ export default function AcionDropdown() {
         }}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal />
+                    {children}
+                {/* <MoreHorizontal /> */}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
