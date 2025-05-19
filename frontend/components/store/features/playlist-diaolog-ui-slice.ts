@@ -19,15 +19,13 @@ const playlistDialogUiSlice = createSlice({
     openModal(state: UIState) {
       state.modalOpen = true;
     },
-    closeModal(state: UIState, action: PayloadAction<string | undefined>) {
+    closeModal(state: UIState, action: PayloadAction<string[] | undefined>) {
       state.modalOpen = false;
       if (action.payload) {
         toast("Event has been created", {
-          description: "Sunday, December 03, 2023 at 9:00 AM",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
+          description: action.payload.length? "Sunday, December 03, 2023 at 9:00 AM":
+            action.payload.length < 3? action.payload[0] + " " + action.payload[0]:
+            action.payload[0],
         })
       }
     },

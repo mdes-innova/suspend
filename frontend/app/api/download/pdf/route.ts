@@ -1,4 +1,4 @@
-import { getAccessFromRefresh } from "@/lib/utils";
+import { getAccessFromRefreshApi } from "@/lib/utils";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
             if (!res.ok) {
                 if (res.status === 401) {
-                    access = await getAccessFromRefresh(refresh);
+                    access = await getAccessFromRefreshApi(refresh);
                     res = await fetch(
                         url,
                         {
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
                 });
             }
         } else if (!access && refresh) {
-            access = await getAccessFromRefresh(refresh);
+            access = await getAccessFromRefreshApi(refresh);
             let res = await fetch(
                 url,
                 {

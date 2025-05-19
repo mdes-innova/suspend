@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,21 +12,19 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting } 
+  from "../store/features/content-list-ui-slice";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -36,56 +34,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import AcionDropdown from "./action-dropdown";
 import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 
-export function Sonner() {
-  return (
-    <Button
-      variant="outline"
-      onClick={() =>
-        toast("Event has been created", {
-          description: "Sunday, December 03, 2023 at 9:00 AM",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
-        })
-      }
-    >
-      Show Toast
-    </Button>
-  )
+import {
+  type Updater,
+} from '@tanstack/react-table';
+
+
+function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
+  return typeof updater === 'function';
 }
 
-function PinIcon({docId, docName}: {docId: number, docName: string}) {
+function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
+  return isUpdaterFunction(updater) ? updater(previous) : updater;
+}
+
+function PinIcon({docId}: {docId: number}) {
     const [pinned, setPinned] = React.useState(false);
-
-    useEffectExceptOnMount(() => {
-    toast("Document pinned", {
-        description: `${docName} document is ${pinned ? "pinned" : "unpinned"}.`,
-        action: {
-        label: "Undo",
-        onClick: () => setPinned((prv) => !prv),
-        },
-    });
-    }, [pinned]);
-
   return (
     <div className="max-w-8 "
         onClick={(e: any) => {
             e.preventDefault();
-            setPinned(prv => !prv);
+            const newPinned = !pinned;
+            toast("Document pinned", {
+              position: "bottom-left",
+              description: `$document is ${newPinned? "pinned" : "unpinned"}.`,
+            });
+            setPinned(newPinned);
         }}>
         <svg
         width="24"
@@ -112,53 +89,19 @@ function PinIcon({docId, docName}: {docId: number, docName: string}) {
   );
 }
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    pinned: true,
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    pinned: false,
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    pinned: true,
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    pinned: false,
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    pinned: true,
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-]
-
-export type Payment = {
-  id: string
-  pinned: boolean,
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+type Category = {
+  name: string
 }
 
-export const columns: ColumnDef<Payment>[] = [
+type Document = {
+  id: number, 
+  pinned: boolean,
+  category?: Category, 
+  title: string,
+  modifiedAt: Date
+}
+
+export const columns: ColumnDef<Document>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -181,56 +124,61 @@ export const columns: ColumnDef<Payment>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    accessorKey: "pinned",
-    header: "Pinned",
-    cell: ({ row }) => (
-        <PinIcon docId={row.getValue("id")} docName={row.getValue("status")} />
-    ),
-  },
+  // {
+  //   accessorKey: "pinned",
+  //   header: "Pinned",
+  //   cell: ({ row }) => {
+  //     const { id } = row.original;
+  //     return <PinIcon docId={id} />;
+  //   }
+  // },
     {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
+    accessorKey: "modifiedAt",
+    header: "Date",
+    cell: ({ row }) => {
+      const value = row.getValue("modifiedAt");
+      const date = new Date(value as string);
+
+      return (
+        <div className="capitalize">
+          {date.toLocaleString("en-US", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+          </div>
+      );
+    }
   },
   {
-    accessorKey: "email",
+    accessorKey: "title",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Title
           <ArrowUpDown />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="lowercase">{row.getValue("title")}</div>,
   },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
-    },
+    {
+    accessorKey: "category",
+    header: () => <div className="text-right">Category</div>,
+    cell: ({ row }) => (
+      <div className="capitalize text-right">{row.getValue("category")? 
+        (row.getValue("category") as Category).name: "-"}</div>
+    ),
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original
-
       return (
         <AcionDropdown />
       )
@@ -238,76 +186,93 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ]
 
-export default function DataTable() {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+export default function DataTable({ data }: { data: Document[] }) {
+
+  const dispatch = useAppDispatch();
+  const sorting = useAppSelector((state) => state.contentListUi.sorting);
+  const columnFilters = useAppSelector((state) => state.contentListUi.columnFilters);
+  const columnVisibility = useAppSelector((state) => state.contentListUi.columnVisibility);
+  const rowSelection = useAppSelector((state) => state.contentListUi.rowSelection);
+  // const [sorting, setSorting] = React.useState<SortingState>([])
+  // const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+  //   []
+  // )
+  // const [columnVisibility, setColumnVisibility] =
+  //   React.useState<VisibilityState>({})
+  // const [rowSelection, setRowSelection] = React.useState({})
+  // const [pagination, setPagination] = React.useState({
+  //   pageIndex: 0,
+  //   pageSize: 10, // 👈 max rows per page
+  // });
 
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: (updater) =>
+      dispatch(setSorting(resolveUpdater(updater, sorting))),
+    onColumnFiltersChange: (updater) =>
+      dispatch(setColumnFilters(resolveUpdater(updater, columnFilters))),
+    onColumnVisibilityChange: (updater) =>
+      dispatch(setColumnVisibility(resolveUpdater(updater, columnVisibility))),
+    onRowSelectionChange: (updater) =>
+      dispatch(setRowSelection(resolveUpdater(updater, rowSelection))),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
     },
-  })
+  });
 
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("title")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="ml-auto">
+          <Button variant="secondary" className="text-xs mr-2">Actions</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Columns <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map((headerGroup, idx: number) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (

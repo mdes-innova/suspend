@@ -1,4 +1,4 @@
-import { fetchWithAccess } from "@/lib/utils";
+import { fetchWithAccessApi } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const access = req.cookies.get('access')?.value;
     const refresh = req.cookies.get('refresh')?.value;
 
-    return await fetchWithAccess(
+    return await fetchWithAccessApi(
         {
             url: `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/`,
             access,
@@ -22,5 +22,4 @@ export async function POST(req: NextRequest) {
             }
         }
     );
-   
 }

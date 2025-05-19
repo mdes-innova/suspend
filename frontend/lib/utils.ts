@@ -1,6 +1,18 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { NextRequest, NextResponse } from "next/server";
+import { NextApiResponse } from "next";
+
+export class AuthError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode = 500) {
+    super(message);
+    this.name = this.constructor.name;
+    this.statusCode = statusCode;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
 
 type ReturnRes = {
   fail: NextResponse,
@@ -10,7 +22,7 @@ type Params = {
   url: string,
   access: string | undefined,
   refresh: string | undefined,
-  req: NextRequest,
+  req?: NextRequest,
   returnRes: ReturnRes,
   method: string,
   file?: null | File,
@@ -21,7 +33,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export async function getAccessFromRefresh(refresh: string) {
+export async function getAccessFromRefreshApi(refresh: string) {
   try {
     const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
           method: 'POST',
@@ -54,7 +66,7 @@ export async function getAccessFromRefresh(refresh: string) {
   }
 }
 
-export async function fetchWithAccess(params: Params) {
+export async function fetchWithAccessApi(params: Params) {
   try {
     let { access } = params;
     let backendData: null | object | FormData = null;
@@ -80,7 +92,7 @@ export async function fetchWithAccess(params: Params) {
 
       if (!res.ok) {
           if (res.status === 401) {
-              access = await getAccessFromRefresh(params.refresh);
+              access = await getAccessFromRefreshApi(params.refresh);
               res = await fetch(
                 params.url,
                 {
@@ -112,7 +124,7 @@ export async function fetchWithAccess(params: Params) {
       }
 
   } else if (!access && params.refresh) {
-      access = await getAccessFromRefresh(params.refresh);
+      access = await getAccessFromRefreshApi(params.refresh);
       let res = await fetch(
         params.url,
         {
@@ -140,5 +152,44 @@ export async function fetchWithAccess(params: Params) {
     }
   } catch (error) {
     return NextResponse.json({ error: "Fetch fail." }, { status: 400 });
+  }
+}
+
+export async function fetchWithAccessApp({ access, refresh, url }: {
+  access?: string,
+  refresh?: string,
+  url: string,
+}) {
+  try {
+    // throw new AuthError("Invalid refresh token");
+    const headers = new Headers();
+    if (access) headers.append("Authorization", `Bearer ${access}`);
+
+    const res = await fetch(url, { headers });
+
+    if (!res.ok && res.status === 401 && refresh) {
+      const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+
+      if (!refreshRes.ok) throw new Error("Invalid refresh token");
+
+      const { access: newAccess } = await refreshRes.json();
+      headers.set("Authorization", `Bearer ${newAccess}`);
+
+      const retryRes = await fetch(url, { headers });
+      if (!retryRes.ok) throw new Error("Retry fetch failed");
+
+      return retryRes.json();
+    }
+
+    return res.json();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      throw new Error("Authentication error.");
+    }
+    return null;
   }
 }

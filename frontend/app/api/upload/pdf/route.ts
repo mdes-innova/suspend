@@ -1,4 +1,4 @@
-import { fetchWithAccess, getAccessFromRefresh } from "@/lib/utils";
+import { fetchWithAccessApi, getAccessFromRefreshApi } from "@/lib/utils";
 import axios from "axios";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         if (docRes.ok) {
             const docJson = await docRes.json();
             docId = docJson.data.id as number;
-            const uploadRes = await fetchWithAccess(
+            const uploadRes = await fetchWithAccessApi(
                 {
                     url: getUploadUrl(docId),
                     access,

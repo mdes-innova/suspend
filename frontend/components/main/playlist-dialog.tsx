@@ -26,12 +26,17 @@ const tags = Array.from({ length: 50 }).map(
 )
  
 function MyScrollArea() {
+  const dispatch = useAppDispatch();
   return (
     <ScrollArea className="h-48 w-full rounded-md ">
       <div className="p-4">
         {tags.map((tag) => (
           <>
-            <div key={tag} className="text-sm cursor-pointer">
+            <div key={tag} className="text-sm cursor-pointer" 
+            onClick={(e: any) => {
+              e.preventDefault();
+              dispatch(closeModal([tag]));
+            }}>
               {tag}
             </div>
             <Separator className="my-2" />
@@ -55,25 +60,8 @@ export default function PlaylistDialog({ children }: { children: any }) {
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                 <DialogTitle>Select a playlist</DialogTitle>
-                {/* <DialogDescription>
-                    Make changes to your profile here. Click save when you're done.
-                </DialogDescription> */}
                 </DialogHeader>
                 <MyScrollArea />
-                {/* <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                    Name
-                    </Label>
-                    <Input id="name" value="Pedro Duarte" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="username" className="text-right">
-                    Username
-                    </Label>
-                    <Input id="username" value="@peduarte" className="col-span-3" />
-                </div>
-                </div> */}
                 <DialogFooter>
                     <NewPlaylistSheet>
                         <Button type="submit"><Plus size={10} />Create new</Button>
