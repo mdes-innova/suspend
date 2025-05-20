@@ -172,6 +172,7 @@ class PrivateTest(TestCase):
         res = self.__client.post(GROUP_URL, group_payload, format='json')
 
         url = reverse('group:group-detail', args=[res.data['id']])
+        print(url)
         res = self.__client.patch(url, {'document_ids': doc_ids},
                                   format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)

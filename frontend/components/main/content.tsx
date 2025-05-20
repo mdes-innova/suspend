@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import ActionDropdown from "./action-dropdown";
 import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
 
 import {
   type Updater,
@@ -179,8 +180,9 @@ export const columns: ColumnDef<Document>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
+      const { id } = row.original;
       return (
-        <ActionDropdown>
+        <ActionDropdown docId={ id }>
           <MoreHorizontal />
         </ActionDropdown>
       )
@@ -206,7 +208,6 @@ export default function DataTable({ data }: { data: Document[] }) {
   //   pageIndex: 0,
   //   pageSize: 10, // 👈 max rows per page
   // });
-
   const table = useReactTable({
     data,
     columns,
@@ -230,6 +231,14 @@ export default function DataTable({ data }: { data: Document[] }) {
     },
   });
 
+  React.useEffect(() => {
+    if (table)
+    {
+      const selectedIds = table.getSelectedRowModel().rows.map(row => row.original.id);
+      dispatch(setDocIds(selectedIds));
+    }
+  }, [rowSelection]);
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -244,9 +253,7 @@ export default function DataTable({ data }: { data: Document[] }) {
         <div className="ml-auto flex items-center gap-x-2">
           {Object.keys(rowSelection || {}).length > 0 ? (
             <ActionDropdown>
-              {/* <Button variant="outline"> */}
                 <SlidersVertical />
-              {/* </Button> */}
             </ActionDropdown>
           ) : (
             <></>

@@ -9,3 +9,8 @@ class GroupView(viewsets.ModelViewSet):
     """Group view."""
     queryset = Group.objects.all().order_by('id')
     serializer_class = GroupSerializer
+
+    def get_queryset(self):
+        """Get group object data."""
+        data = self.queryset.filter(user=self.request.user).order_by('-id')
+        return data

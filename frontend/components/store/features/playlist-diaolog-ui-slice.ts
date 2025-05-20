@@ -1,36 +1,86 @@
 import { toast } from "sonner";
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export enum PLAYLISTUI  {
+  list,
+  new,
+};
+
+type Payload = {
+  ui: PLAYLISTUI,
+  info?: string[],
+  err?: boolean
+}
+
 interface UIState {
-  modalOpen: boolean;
+  listOpen: boolean;
+  newOpen: boolean;
+  docIds: null | number[]
 }
 
 const initialState: UIState = {
-  modalOpen: false,
+  listOpen: false,
+  newOpen: false,
+  docIds: null
 };
 
 const playlistDialogUiSlice = createSlice({
   name: 'playlist-dialog-ui',
   initialState,
   reducers: {
-    toggleModal(state: UIState) {
-      state.modalOpen = !state.modalOpen;
+    setDocIds(state: UIState, action: PayloadAction<number[] | null>) {
+      state.docIds = action.payload? action.payload: null;
     },
-    openModal(state: UIState) {
-      state.modalOpen = true;
+    toggleModal(state: UIState, action: PayloadAction<Payload>) {
+      if (action.payload.ui === PLAYLISTUI.list) state.listOpen = !state.listOpen;
+      else if (action.payload.ui === PLAYLISTUI.new) state.newOpen = !state.newOpen;
     },
-    closeModal(state: UIState, action: PayloadAction<string[] | undefined>) {
-      state.modalOpen = false;
-      if (action.payload) {
-        toast("Event has been created", {
-          description: action.payload.length? "Sunday, December 03, 2023 at 9:00 AM":
-            action.payload.length < 3? action.payload[0] + " " + action.payload[0]:
-            action.payload[0],
-        })
+    openModal(state: UIState, action: PayloadAction<Payload>) {
+      if (action.payload.ui === PLAYLISTUI.list) state.listOpen = true;
+      else if (action.payload.ui === PLAYLISTUI.new) state.newOpen = true;
+    },
+    closeModal(state: UIState, action: PayloadAction<Payload>) {
+      if (action.payload.ui === PLAYLISTUI.list) state.listOpen = false;
+      else if (action.payload.ui === PLAYLISTUI.new) state.newOpen = false;
+
+      if (action.payload.ui === PLAYLISTUI.new) {
+        if (Object.keys(action.payload).includes("err") && action.payload.info?.length) {
+          toast("Error detected", {
+            description: `Error: ${action.payload.info[0]}`});
+        } else {
+          if (action.payload.info?.length) {
+            if (action.payload.info.length == 1) 
+              toast(action.payload.info[0], {
+                description: 'Playlist has been created.'});
+            else
+              toast(action.payload.info[0], {
+                description: action.payload.info.slice(1).map(e => e + " added.")
+                  .slice(0, 3).join('\n')
+              });
+          }
+        }
+      } else {
+        if (Object.keys(action.payload).includes("err") && action.payload.info?.length) {
+          toast("Error detected", {
+            description: `Error: ${action.payload.info[0]}`});
+        } else {
+          if (action.payload.info?.length) {
+            if (action.payload.info.length == 1) 
+              toast(action.payload.info[0], {
+                description: 'Playlist has been created.'});
+            else
+                Array.from({length: action.payload.info.length - 1}).forEach((_, idx: number) => {
+                  if (action.payload.info)
+                    toast(action.payload.info[0], {
+                      description: action.payload.info[idx + 1] + " added."
+                    });
+                });
+          }
+        }
       }
     },
   },
 });
 
-export const { toggleModal, openModal, closeModal } = playlistDialogUiSlice.actions;
+export const { toggleModal, openModal, closeModal, setDocIds } = playlistDialogUiSlice.actions;
 export default playlistDialogUiSlice.reducer;

@@ -4,6 +4,8 @@ import DataTable from '@/components/main/content';
 import { cookies } from "next/headers";
 import { fetchWithAccessApp } from '@/lib/utils';
 import { redirect } from "next/navigation";
+import PlaylistDialog from '@/components/main/playlist-dialog';
+import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
 
 async function getData() {
   const cookieStore = await cookies();
@@ -34,6 +36,8 @@ export default function Home() {
   return (
       <Suspense fallback={<ContentLoading />}>
         <Content />
+        <NewPlaylistSheet />
+        <PlaylistDialog />
       </Suspense>
   );
 }

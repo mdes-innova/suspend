@@ -15,9 +15,9 @@ import PlaylistDialog from "./playlist-dialog";
 import { useAppSelector } from "../store/hooks";
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks";
-import { openModal } from "../store/features/playlist-diaolog-ui-slice";
+import { openModal, PLAYLISTUI, setDocIds} from "../store/features/playlist-diaolog-ui-slice";
 
-export default function ActionDropdown({ children }: { children: any}) {
+export default function ActionDropdown({ children, docId }: { children: any, docId?: number}) {
     const dispatch = useAppDispatch();
     const [open, setOpen] = useState(false);
 
@@ -28,7 +28,6 @@ export default function ActionDropdown({ children }: { children: any}) {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
                     {children}
-                {/* <MoreHorizontal /> */}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -40,7 +39,9 @@ export default function ActionDropdown({ children }: { children: any}) {
                     <DropdownMenuItem onClick={(e: any) => {
                         e.preventDefault();
                         setOpen(false);
-                        dispatch(openModal());
+                        if (docId)
+                            dispatch(setDocIds([docId]));
+                        dispatch(openModal({ ui: PLAYLISTUI.list }));
                     }}>
                         <Plus className="h-4 w-4" />
                         <span>Add to Playlist</span>

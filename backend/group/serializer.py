@@ -21,6 +21,16 @@ class GroupSerializer(serializers.ModelSerializer):
                   'created_at', 'modified_at']
         read_only_fields = ['kind', 'documents', 'created_at', 'modified_at']
 
+    def validate(self, data):
+        user = data.get('user') or self.context['request'].user
+        name = data.get('name')
+
+        if Group.objects.filter(user=user, name=name).exists():
+            raise serializers.ValidationError(
+                {'detail': 'You already have a group with this name.'}
+            )
+        return data
+
     def create(self, validated_data):
         user = self.context['request'].user
         documents = validated_data.pop('document_ids', [])
@@ -31,6 +41,7 @@ class GroupSerializer(serializers.ModelSerializer):
         return group
 
     def update(self, instance, validated_data):
+        print("XXXXXXXXXXXX")
         documents = validated_data.pop('document_ids', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

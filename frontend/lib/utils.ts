@@ -14,23 +14,36 @@ export class AuthError extends Error {
   }
 }
 
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 type ReturnRes = {
   fail: NextResponse,
   success: NextResponse
-}
+};
+
 type Params = {
   url: string,
-  access: string | undefined,
-  refresh: string | undefined,
+  access?: string,
+  refresh?: string,
   req?: NextRequest,
   returnRes: ReturnRes,
   method: string,
-  file?: null | File,
-  params: object
+  file?: File | null,
+  params?: object
+};
+
+async function handleSuccess(res: Response, returnRes: ReturnRes) {
+  const data = await res.json();
+  return NextResponse.json({ data }, { status: returnRes.success.status });
 }
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+function handleFailure(res: Response, returnRes: ReturnRes) {
+  if (res.status === 401) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  return returnRes.fail;
 }
 
 export async function getAccessFromRefreshApi(refresh: string) {
@@ -68,90 +81,72 @@ export async function getAccessFromRefreshApi(refresh: string) {
 
 export async function fetchWithAccessApi(params: Params) {
   try {
-    let { access } = params;
-    let backendData: null | object | FormData = null;
+    let { access, refresh, url, method, file, params: bodyParams, returnRes } = params;
+
     const headers = new Headers();
-    headers.append("Authorization", `Bearer ${params.access}`)
-    if (params?.file) {
-      backendData = new FormData();
-      (backendData as FormData).append("file", params.file);
-    } else {
-      backendData = params.params;
-      headers.append("Content-Type", "application/json");
+    let body: FormData | string | undefined;
+
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      body = formData;
+    } else if (bodyParams) {
+      headers.set("Content-Type", "application/json");
+      body = JSON.stringify(bodyParams);
     }
-    if (access && params.refresh) {
-      let res = await fetch(
-          params.url,
-          {
-            method: params.method,
-            body: params.file
-            ? backendData as FormData 
-            : JSON.stringify(backendData),
-            headers
-          });
 
-      if (!res.ok) {
-          if (res.status === 401) {
-              access = await getAccessFromRefreshApi(params.refresh);
-              res = await fetch(
-                params.url,
-                {
-                  method: params.method,
-                  body: params.file
-                  ? backendData as FormData 
-                  : JSON.stringify(backendData),
-                  headers 
-              });
-
-              if (!res.ok) {
-                  if (res.status === 401)
-                      return NextResponse.json({ error: "Unauthorized." },
-                    { status: 401 });
-                  else
-                    return params.returnRes.fail; 
-              } else {
-                  const resJson = await res.json();
-                  return NextResponse.json({ data: resJson },
-                    { status: params.returnRes.success.status });
-              }
-          } else
-              return params.returnRes.fail; 
-      } else {
-          const resJson = await res.json();
-          return NextResponse.json({ data: resJson },
-            { status: params.returnRes.success.status });
-
-      }
-
-  } else if (!access && params.refresh) {
-      access = await getAccessFromRefreshApi(params.refresh);
-      let res = await fetch(
-        params.url,
-        {
-          method: params.method,
-          body: params.file
-          ? backendData as FormData 
-          : JSON.stringify(backendData),
-          headers 
+    // Utility to send fetch with current headers and body
+    const sendRequest = async (): Promise<Response> => {
+      return fetch(url, {
+        method,
+        headers,
+        body,
       });
+    };
+
+    // Try with current access token
+    if (access && refresh) {
+      headers.set("Authorization", `Bearer ${access}`);
+      let res = await sendRequest();
+
+      // Try to refresh if unauthorized
+      if (res.status === 401) {
+        access = await getAccessFromRefreshApi(refresh);
+        headers.set("Authorization", `Bearer ${access}`);
+        res = await sendRequest();
+
+        if (!res.ok) {
+          return handleFailure(res, returnRes);
+        }
+        return await handleSuccess(res, returnRes);
+      }
+
+      // Non-401 failure
+      if (!res.ok) {
+        return handleFailure(res, returnRes);
+      }
+
+      return await handleSuccess(res, returnRes);
+    }
+
+    // No access token — try refresh only
+    if (!access && refresh) {
+      access = await getAccessFromRefreshApi(refresh);
+      headers.set("Authorization", `Bearer ${access}`);
+      const res = await sendRequest();
 
       if (!res.ok) {
-          if (res.status === 401)
-              return NextResponse.json({ error: "Unauthorized." },
-            { status: 401 });
-          else
-            return params.returnRes.fail;
-      } else {
-          const resJson = await res.json();
-          return NextResponse.json({ data: resJson },
-            { status: params.returnRes.success.status });
+        return handleFailure(res, returnRes);
       }
-    } else {
-        return NextResponse.json({ error: "Unauthorized." },
-          { status: 401 });
+
+      return await handleSuccess(res, returnRes);
     }
+
+    // No valid access or refresh
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+
   } catch (error) {
-    return NextResponse.json({ error: "Fetch fail." }, { status: 400 });
+    return NextResponse.json({ error: "Fetch failed." }, { status: 400 });
   }
 }
 
