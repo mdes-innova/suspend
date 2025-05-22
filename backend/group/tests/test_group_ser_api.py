@@ -172,38 +172,88 @@ class PrivateTest(TestCase):
         res = self.__client.post(GROUP_URL, group_payload, format='json')
 
         url = reverse('group:group-detail', args=[res.data['id']])
-        print(url)
         res = self.__client.patch(url, {'document_ids': doc_ids},
                                   format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(set([r['title'] for r in res.data['documents']]),
                          set([r['title'] for r in doc_payloads]))
-    
-    def test_assign_duplicated_documents_to_group_success(self):
-        """Test to assign duplicated documents to group success."""
-        doc_payloads = [
-            {
-                'title': 'Title x'
-            },
-            {
-                'title': 'Title y'
-            },
-        ]
-        doc_ids = []
-        for doc_payload in doc_payloads:
-            res = self.__client.post(reverse('document:document-list'),
-                                     doc_payload,
-                                     format='json')
-            doc_ids.append(res.data['id'])
-        group_payload = {
-            'name': 'group1',
-        }
-        res = self.__client.post(GROUP_URL, group_payload, format='json')
 
-        url = reverse('group:group-detail', args=[res.data['id']])
-        res = self.__client.patch(url, {'document_ids': doc_ids*2},
-                                  format='json')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data['documents']), 2)
-        self.assertEqual(set([r['title'] for r in res.data['documents']]),
-                         set([r['title'] for r in doc_payloads]))
+    def test_assing_the_same_doc_different_users_success(self):
+        """Test to assign the same document to different users with the
+        same name of group
+        """
+        user_1 = get_user_model().objects.create_user(
+            username='user_1',
+            password='password_1'
+        )
+        user_2 = get_user_model().objects.create_user(
+            username='user_2',
+            password='password_2'
+        )
+        client_1 = APIClient()
+        client_2 = APIClient()
+        client_1.force_authenticate(user_1)
+        client_2.force_authenticate(user_2)
+
+        res_doc = self.__client.post(reverse('document:document-list'),
+                                     {'title': 'Title 1'},
+                                     format='json')
+
+        res_user1_group = client_1.post(reverse('group:group-list'),
+                                        {'name': 'group1'},
+                                        format='json')
+        res_user2_group = client_2.post(reverse('group:group-list'),
+                                        {'name': 'group1'},
+                                        format='json')
+
+        url1 = reverse('group:group-detail', args=[res_user1_group.data['id']])
+        url2 = reverse('group:group-detail', args=[res_user2_group.data['id']])
+
+        res_update1 = client_1.patch(url1,
+                                     {'document_ids': res_doc.data['id']})
+        res_update2 = client_2.patch(url2,
+                                     {'document_ids': res_doc.data['id']})
+
+        self.assertEqual(res_update1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_update1.data['documents'][0]['title'], 'Title 1')
+        self.assertEqual(res_update2.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_update2.data['documents'][0]['title'], 'Title 1')
+
+    def test_assing_the_same_doc_the_same_user_fail(self):
+        """Test to assign the same document to the same with the
+        different groups fail.
+        """
+        user_1 = get_user_model().objects.create_user(
+            username='user_1',
+            password='password_1'
+        )
+        client_1 = APIClient()
+        client_1.force_authenticate(user_1)
+
+        res_doc = self.__client.post(reverse('document:document-list'),
+                                     {'title': 'Title 1'},
+                                     format='json')
+
+        res_user_group1 = client_1.post(reverse('group:group-list'),
+                                        {'name': 'group1'},
+                                        format='json')
+
+        res_user_group2 = client_1.post(reverse('group:group-list'),
+                                        {'name': 'group2'},
+                                        format='json')
+
+        url1 = reverse('group:group-detail', args=[res_user_group1.data['id']])
+        url2 = reverse('group:group-detail', args=[res_user_group2.data['id']])
+
+        res_update1 = client_1.patch(url1,
+                                     {'document_ids': res_doc.data['id']})
+        self.assertEqual(res_update1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_update1.data['documents'][0]['title'], 'Title 1')
+
+        res_update2 = client_1.patch(url2,
+                                     {'document_ids': res_doc.data['id']})
+
+        self.assertEqual(res_update2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            str(res_update2.data['detail'][0]),
+            "Some documents are already in other groups for this user.")

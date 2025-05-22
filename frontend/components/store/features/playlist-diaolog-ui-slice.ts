@@ -15,13 +15,15 @@ type Payload = {
 interface UIState {
   listOpen: boolean;
   newOpen: boolean;
+  dataChanged: boolean;
   docIds: null | number[]
 }
 
 const initialState: UIState = {
   listOpen: false,
   newOpen: false,
-  docIds: null
+  docIds: null,
+  dataChanged: false
 };
 
 const playlistDialogUiSlice = createSlice({
@@ -58,6 +60,7 @@ const playlistDialogUiSlice = createSlice({
                   .slice(0, 3).join('\n')
               });
           }
+          state.dataChanged = true;
         }
       } else {
         if (Object.keys(action.payload).includes("err") && action.payload.info?.length) {
@@ -75,6 +78,7 @@ const playlistDialogUiSlice = createSlice({
                       description: action.payload.info[idx + 1] + " added."
                     });
                 });
+            state.dataChanged = true;
           }
         }
       }

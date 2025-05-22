@@ -4,6 +4,25 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 
+class GroupDocument(models.Model):
+    group = models.ForeignKey('Group', on_delete=models.CASCADE)
+    document = models.ForeignKey('Document', on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'document'],
+                name='unique_document_per_user'
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.user:
+            self.user = self.group.user
+        super().save(*args, **kwargs)
+
+
 class KindType(models.TextChoices):
     Pinned = "Pinned", "pinned"
     Playlist = "Playlist", "playlist"
@@ -12,8 +31,7 @@ class KindType(models.TextChoices):
 
 
 class Group(models.Model):
-    """Group model for group app."""
-    name = models.CharField(max_length=200, blank=False, null=False)
+    name = models.CharField(max_length=200)
     kind = models.CharField(
         max_length=20,
         choices=KindType.choices,
@@ -22,10 +40,11 @@ class Group(models.Model):
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
-        null=False
+        related_name='group_documents'
     )
     documents = models.ManyToManyField(
         'Document',
+        through='GroupDocument',
         related_name='groups'
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,9 +55,3 @@ class Group(models.Model):
             models.UniqueConstraint(fields=['user', 'name'],
                                     name='unique_group_per_user')
         ]
-
-    def __str__(self):
-        return f"Group(name={self.name}, kind={self.kind})"
-
-    def get_absolute_url(self):
-        return reverse('group:group-detail', kwargs={"pk": self.pk})

@@ -5,4 +5,4 @@ from .tag import Tag
 from .category import Category
 from .link import Link
 from .isp import ISP
-from .group import Group, KindType
+from .group import Group, KindType, GroupDocument

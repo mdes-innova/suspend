@@ -99,7 +99,8 @@ type Document = {
   pinned: boolean,
   category?: Category, 
   title: string,
-  modifiedAt: Date
+  modifiedAt: Date,
+  selected: boolean
 }
 
 export const columns: ColumnDef<Document>[] = [
@@ -115,13 +116,25 @@ export const columns: ColumnDef<Document>[] = [
         aria-label="Select all"
       />
     ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
+    cell: ({ row }) => {
+      const { selected } = row.original;
+      if  (selected)
+        return (
+          <Checkbox
+            checked={true}
+            aria-label="Select row"
+            disabled
+          />
+        );
+      else
+        return (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        );
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -197,6 +210,32 @@ export default function DataTable({ data }: { data: Document[] }) {
   const columnFilters = useAppSelector((state) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state) => state.contentListUi.columnVisibility);
   const rowSelection = useAppSelector((state) => state.contentListUi.rowSelection);
+  const [tableData, setTableData] = React.useState<Document[]>(data);
+  const playlistUi = useAppSelector(state=>state.playlistDialogUi.listOpen);
+  const playlistNewUi = useAppSelector(state=>state.playlistDialogUi.newOpen);
+  const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged);
+
+  React.useEffect(()=>{
+    const getData = async() => {
+      try {
+        const res = await fetch('api/doc/',
+          {
+            credentials: 'include'
+          }
+        );
+        if(!res.ok) setTableData([])
+        else {
+          const jsonData = await res.json();
+          setTableData(jsonData.data);
+        }
+      } catch (error) {
+        setTableData([]);
+      }
+    };
+
+    if (!playlistNewUi && !playlistUi && dataChaged) getData();
+  }, [playlistUi, playlistNewUi]);
+
   // const [sorting, setSorting] = React.useState<SortingState>([])
   // const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
   //   []
@@ -209,7 +248,7 @@ export default function DataTable({ data }: { data: Document[] }) {
   //   pageSize: 10, // 👈 max rows per page
   // });
   const table = useReactTable({
-    data,
+    data: tableData,
     columns,
     onSortingChange: (updater) =>
       dispatch(setSorting(resolveUpdater(updater, sorting))),
@@ -308,10 +347,13 @@ export default function DataTable({ data }: { data: Document[] }) {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row) => {
+                const { selected } = row.original;
+                return (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={`${selected? "bg-muted": ""}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -322,7 +364,8 @@ export default function DataTable({ data }: { data: Document[] }) {
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
+              );
+            })
             ) : (
               <TableRow>
                 <TableCell

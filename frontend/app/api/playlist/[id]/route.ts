@@ -10,8 +10,6 @@ export async function PATCH(
     let access = req.cookies.get('access')?.value;
     const refresh = req.cookies.get('refresh')?.value;
 
-    console.log(data)
-
     return await fetchWithAccessApi(
         {
             url: `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/${id}/`,

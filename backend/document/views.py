@@ -1,4 +1,4 @@
-from core.models import Document
+from core.models import Document, GroupDocument
 from .serializer import (
     DocumentDetailSerializer,
     DocumentSerializer,
@@ -27,6 +27,27 @@ class DocumentView(viewsets.ModelViewSet):
         elif self.action == 'file_upload':
             return FileSerializer
         return DocumentDetailSerializer
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+
+        selected_qs = self.queryset.filter(groups__user=user).distinct()
+        unselected_qs = self.queryset.exclude(groups__user=user).distinct()
+
+        # Serialize and add `selected` flag
+        selected_data = DocumentSerializer(selected_qs, many=True).data
+        for item in selected_data:
+            item['selected'] = True
+
+        unselected_data = DocumentSerializer(unselected_qs, many=True).data
+        for item in unselected_data:
+            item['selected'] = False
+
+        # Combine and sort by ID
+        combined = selected_data + unselected_data
+        combined_sorted = sorted(combined, key=lambda x: x['id'])
+
+        return Response(combined_sorted)
 
     @action(detail=True, methods=['get'])
     def tags(self, request, pk=None):
