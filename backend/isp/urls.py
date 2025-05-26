@@ -5,7 +5,7 @@ from .views import ISPView
 
 
 routers = DefaultRouter()
-routers.register('categories', ISPView)
+routers.register('isps', ISPView)
 
 app_name = 'isp'
 urlpatterns = [

@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const ip = forwardedFor?.split(',')[0]?.trim() || 'unknown';
+
+  console.log('Client IP:', ip);
   const { pathname } = request.nextUrl;
   const refresh = request.cookies.get('refresh')?.value;
   const isLoginPage = pathname === '/login';

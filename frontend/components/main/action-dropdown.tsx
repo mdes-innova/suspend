@@ -8,6 +8,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -46,6 +50,17 @@ export default function ActionDropdown({ children, docId }: { children: any, doc
                         <Plus className="h-4 w-4" />
                         <span>Add to Playlist</span>
                     </DropdownMenuItem>
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="text-lg">Downloads</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                        <DropdownMenuItem>pdf</DropdownMenuItem>
+                        <DropdownMenuItem>urls (.xlsx)</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>All</DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuItem>Report issue</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

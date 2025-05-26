@@ -3,8 +3,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from core.models import ISP
-from isp.serializer import ISPSerializer
+from core.models import ISP, ISPActivity
+from isp.serializer import ISPSerializer, ISPActivitySerializer
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -80,3 +80,32 @@ class PrivateISPSerialzierTest(TestCase):
         res = self.__client.post(ISP_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(res.data[0].code, 'invalid')
+
+    def test_unauth_user_visit_success(self):
+        """Test to store unauthenticated user login."""
+        url = reverse('isp:isp-activity-by-activity',
+                      kwargs={'activity': 'login'})
+        client = APIClient()
+        res = client.post(url, {
+            'ip_address': '127.0.0.1',
+            'path': 'login'
+        })
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, ISPActivitySerializer(
+                ISPActivity.objects.get(pk=res.data['id'])
+            ).data)
+
+    def test_auth_user_visit_success(self):
+        """Test to store authenticated user login."""
+        url = reverse('isp:isp-activity-by-activity',
+                      kwargs={'activity': 'visit'})
+        res = self.__client.post(url, {
+            'ip_address': '127.0.0.1',
+            'path': 'login'
+        })
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, ISPActivitySerializer(
+                ISPActivity.objects.get(pk=res.data['id'])
+            ).data)

@@ -67,6 +67,7 @@ class GroupSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         user = self.context['request'].user
         documents = validated_data.pop('document_ids', None)
+        append = self.context['request'].data.get('append', False)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -74,8 +75,22 @@ class GroupSerializer(serializers.ModelSerializer):
 
         if documents is not None:
             # Clear and re-add only allowed documents
-            GroupDocument.objects.filter(group=instance).delete()
-            for doc in documents:
-                GroupDocument.objects.create(group=instance, document=doc,
-                                             user=user)
+            if append:
+                had_doc_ids = list(
+                    GroupDocument.objects
+                    .filter(group=instance)
+                    .values_list('document_id', flat=True)
+                )
+                doc_ids = [getattr(doc, 'id') for doc in documents]
+                new_doc_ids = set(doc_ids).difference(had_doc_ids)
+                for doc_id in new_doc_ids:
+                    GroupDocument.objects.create(group=instance,
+                                                 document=Document.objects
+                                                 .get(id=doc_id),
+                                                 user=user)
+            else:
+                GroupDocument.objects.filter(group=instance).delete()
+                for doc in documents:
+                    GroupDocument.objects.create(group=instance, document=doc,
+                                                 user=user)
         return instance

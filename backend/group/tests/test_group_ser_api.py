@@ -257,3 +257,58 @@ class PrivateTest(TestCase):
         self.assertEqual(
             str(res_update2.data['detail'][0]),
             "Some documents are already in other groups for this user.")
+
+    def test_append_documents_success(self):
+        """Test to append documents to a group successful.
+        """
+        doc_payloads1 = [
+            {
+                'title': 'Title 1'
+            },
+            {
+                'title': 'Title 2'
+            }
+        ]
+        doc_payloads2 = [
+            {
+                'title': 'Title 3'
+            },
+        ]
+        doc_ids = []
+        update_doc_ids = []
+        for doc in doc_payloads1:
+            res_doc = self.__client.post(reverse('document:document-list'),
+                                         doc, format='json')
+            doc_ids.append(res_doc.data['id'])
+        for doc in doc_payloads2:
+            res_doc = self.__client.post(reverse('document:document-list'),
+                                         doc, format='json')
+            update_doc_ids.append(res_doc.data['id'])
+
+        res_group = self.__client.post(GROUP_URL, {
+            'name': 'group1'
+        }, format='json')
+
+        url = reverse('group:group-detail', args=[res_group.data['id']])
+
+        res_update1 = self.__client.patch(url,
+                                          {'document_ids': doc_ids})
+
+        self.assertEqual(res_update1.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            set([doc['id'] for doc in res_update1.data['documents']]),
+            set(doc_ids))
+
+        res_update2 = self.__client.patch(url,
+                                          {
+                                              'document_ids': update_doc_ids,
+                                              'append': True,
+                                              }, format='json')
+        self.assertEqual(res_update2.status_code, status.HTTP_200_OK)
+
+        res_get = self.__client.get(reverse('group:group-detail',
+                                            args=[res_group.data['id']]))
+        self.assertEqual(res_get.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            set([doc['id'] for doc in res_get.data['documents']]),
+            set(doc_ids + update_doc_ids))

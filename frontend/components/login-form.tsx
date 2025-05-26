@@ -21,11 +21,12 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog';
 import { ResetPassword } from "./reset-password";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useSearchParams } from "next/navigation";
 
 const FormSchema = z.object({
   // username: z.string().min(2, {
@@ -37,8 +38,12 @@ const FormSchema = z.object({
 
 export default function LoginForm() {
 
+  const params = useSearchParams();
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+  }, []);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -72,7 +77,7 @@ export default function LoginForm() {
           withCredentials: true
         }
       );
-        router.push('/');
+        router.push(params.get('pathname')?? '/');
         router.refresh();
     } catch (error) {
       // setLoginLoading(false);

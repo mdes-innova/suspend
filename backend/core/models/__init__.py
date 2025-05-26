@@ -4,5 +4,5 @@ from .document import Document
 from .tag import Tag
 from .category import Category
 from .link import Link
-from .isp import ISP
+from .isp import ISP, ISPActivity
 from .group import Group, KindType, GroupDocument
