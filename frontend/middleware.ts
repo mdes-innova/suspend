@@ -1,14 +1,37 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { headers } from 'next/headers';
 
 export async function middleware(request: NextRequest) {
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const ip = forwardedFor?.split(',')[0]?.trim() || 'unknown';
 
-  console.log('Client IP:', ip);
+  const url = request.nextUrl.clone();
   const { pathname } = request.nextUrl;
+  const access = request.cookies.get('access')?.value;
   const refresh = request.cookies.get('refresh')?.value;
   const isLoginPage = pathname === '/login';
+  const fullPath =  process.env.NEXT_PUBLIC_FRONTEND + url.pathname + url.search;
+
+  const headersList = await headers();
+  const forwardedFor = headersList.get('x-forwarded-for') || '';
+  const ip = forwardedFor.split(',')[0];
+
+  try {
+    const _ = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/visit/activity/`,
+      {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          ipAddress: ip,
+          path: fullPath
+        })
+      }
+    );
+  } catch (error) {
+    
+  }
 
   // Allow public paths (you can customize this list)
   const publicPaths = ['/login'];
@@ -22,7 +45,6 @@ export async function middleware(request: NextRequest) {
   }
 
   
-  const access = request.cookies.get('access')?.value;
   if (!access && refresh) {
     const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
       method: 'POST',

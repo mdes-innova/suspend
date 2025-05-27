@@ -100,6 +100,7 @@ class PrivateISPSerialzierTest(TestCase):
         """Test to store authenticated user login."""
         url = reverse('isp:isp-activity-by-activity',
                       kwargs={'activity': 'visit'})
+        print(url)
         res = self.__client.post(url, {
             'ip_address': '127.0.0.1',
             'path': 'login'

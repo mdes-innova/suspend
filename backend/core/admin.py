@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .models import User, Document, Category, Tag
+from .models import User, Document, Category, Tag, ISP, ISPActivity
 
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
@@ -25,3 +25,5 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Document)
 admin.site.register(Category)
 admin.site.register(Tag)
+admin.site.register(ISP)
+admin.site.register(ISPActivity)

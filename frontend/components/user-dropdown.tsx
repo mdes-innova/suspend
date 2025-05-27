@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { usePathname } from "next/navigation";
 
 import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
@@ -21,6 +22,7 @@ import { useState } from 'react'
 export function DropdownMenuUser({user}: {user: any}) {
   const router = useRouter();
   const [open, setOpen] = useState(false)
+  const pathname = usePathname();
 
   if (!user) return null;
 
@@ -56,7 +58,12 @@ export function DropdownMenuUser({user}: {user: any}) {
           try {
             const res = await fetch('/api/auth/logout', {
               method: 'POST',
-              credentials: 'include', // ⬅️ Important to send cookies
+              credentials: 'include',
+              body: JSON.stringify(
+                {
+                  path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
+                }
+              )
             });
 
             if (res.ok) {

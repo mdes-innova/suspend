@@ -198,7 +198,8 @@ class AdminUserTest(TestCase):
         get_user_model().objects.create_user(**payload)
         res = self.client.post(TOKEN_URL, {
             'username': payload['username'],
-            'password': payload['password']
+            'password': payload['password'],
+            'ip_address': '::1'
         })
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -219,7 +220,8 @@ class AdminUserTest(TestCase):
         get_user_model().objects.create_user(**payload)
         res = self.client.post(TOKEN_URL, {
             'username': payload['username'],
-            'password': payload['password']
+            'password': payload['password'],
+            'ip_address': '::1'
         })
         fake_res = self.client.post(TOKEN_URL, {
             'username': fake_payload['username'],
@@ -235,12 +237,13 @@ class AdminUserTest(TestCase):
         """Test to get refresh token success."""
         payload = {
             'username': 'Testname',
-            'password': 'test_password'
+            'password': 'test_password',
         }
         get_user_model().objects.create_user(**payload)
         res = self.client.post(TOKEN_URL, {
             'username': payload['username'],
-            'password': payload['password']
+            'password': payload['password'],
+            'ip_address': '::1'
         })
         refresh = res.data['refresh']
         new_res = self.client.post(REFRESH_TOKEN_URL, {
@@ -337,6 +340,12 @@ class PrivateUserApiTest(TestCase):
             'password': 'tokenpass123',
             'isp': None
         }
+        payload_with_ip = {
+            'username': 'Tokenname',
+            'password': 'tokenpass123',
+            'ip_address': '::1',
+            'isp': None
+        }
         payload_check = {
             'username': 'Tokenname',
             'password': 'tokenpass123',
@@ -346,7 +355,7 @@ class PrivateUserApiTest(TestCase):
         }
         user = get_user_model().objects.create_user(**payload)
         url = reverse('user:user-detail', args=[user.pk])
-        response = self.__client_for_token.post(TOKEN_URL, payload,
+        response = self.__client_for_token.post(TOKEN_URL, payload_with_ip,
                                                 format='json')
         access_token = response.data['access']
         self.__client_for_token.credentials(

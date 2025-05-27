@@ -150,17 +150,24 @@ export async function fetchWithAccessApi(params: Params) {
   }
 }
 
-export async function fetchWithAccessApp({ access, refresh, url }: {
+export async function fetchWithAccessApp({ access, refresh, url, method, params: bodyParams }: {
   access?: string,
   refresh?: string,
   url: string,
+  method: string,
+  params?: object
 }) {
   try {
     // throw new AuthError("Invalid refresh token");
     const headers = new Headers();
+    let body: string | undefined;
     if (access) headers.append("Authorization", `Bearer ${access}`);
+    if (bodyParams) {
+      body = JSON.stringify(bodyParams);
+      headers.set("Content-Type", "application/json");
+    }
 
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, { headers, body, method });
 
     if (!res.ok && res.status === 401 && refresh) {
       const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
@@ -174,7 +181,7 @@ export async function fetchWithAccessApp({ access, refresh, url }: {
       const { access: newAccess } = await refreshRes.json();
       headers.set("Authorization", `Bearer ${newAccess}`);
 
-      const retryRes = await fetch(url, { headers });
+      const retryRes = await fetch(url, { headers, method, body });
       if (!retryRes.ok) throw new Error("Retry fetch failed");
 
       return retryRes.json();

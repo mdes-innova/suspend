@@ -27,6 +27,8 @@ import axios from "axios";
 import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
+
 
 const FormSchema = z.object({
   // username: z.string().min(2, {
@@ -39,6 +41,7 @@ const FormSchema = z.object({
 export default function LoginForm() {
 
   const params = useSearchParams();
+  const pathname = usePathname();
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
 
@@ -69,14 +72,17 @@ export default function LoginForm() {
     //   username: formData.get('username'),
     //   password: formData.get('password'),
     // };
-
+    const extendedValues = {
+      ...values,
+      path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
+    };
     try {
-      // setLoginLoading(true);
-      const _ = await axios.post('api/auth/login/', values,
+      const _ = await axios.post('api/auth/login/', extendedValues,
         {
           withCredentials: true
         }
       );
+
         router.push(params.get('pathname')?? '/');
         router.refresh();
     } catch (error) {

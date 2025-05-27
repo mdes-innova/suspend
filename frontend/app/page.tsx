@@ -15,7 +15,7 @@ async function getData() {
 
   try {
     const data = await fetchWithAccessApp({
-      access, refresh, url
+      access, refresh, url, method: 'GET'
     });
     return data;
   } catch (error) {

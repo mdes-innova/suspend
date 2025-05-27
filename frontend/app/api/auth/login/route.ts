@@ -1,11 +1,17 @@
 import axios from 'axios';
 import { NextRequest, NextResponse } from "next/server";
+import { headers } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   try {
     const params = await req.json();
+    const headersList = await headers();
+    const forwardedFor = headersList.get('x-forwarded-for') || '';
+    const ip = forwardedFor.split(',')[0];
+    params['ipAddress'] = ip;
     const resData = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/`, params);
     const { access, refresh } = resData.data;
+
 
     const response = NextResponse.json({ data: { username: params['username'] }});
 

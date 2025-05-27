@@ -66,5 +66,5 @@ class ISPView(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'activity_by_activity':
-            return [AllowAny()]  # Allow unauthenticated users for this action
+            return [AllowAny()]
         return super().get_permissions()
