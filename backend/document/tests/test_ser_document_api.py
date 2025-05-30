@@ -11,7 +11,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from core.models import Document, Category
+from core.models import Document, Category, DocumentFile
 from document.serializer import DocumentSerializer, DocumentDetailSerializer
 from tag.serializer import TagSerializer, Tag
 from link.serializer import Link, LinkSerializer
@@ -574,7 +574,7 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class ImageUploadTest(TestCase):
+class FileDownloadUploadTest(TestCase):
     """Testcase for image uploading."""
     @classmethod
     def setUpClass(cls):
@@ -616,6 +616,7 @@ class ImageUploadTest(TestCase):
     def tearDown(self):
         """Clear testcase after finished."""
         super().tearDown()
+        DocumentFile.objects.all().delete()
 
     def test_upload_file_success(self):
         """Test uploading an file to a document."""
