@@ -90,14 +90,10 @@ function PinIcon({docId}: {docId: number}) {
   );
 }
 
-type Category = {
-  name: string
-}
-
 type Document = {
   id: number, 
   pinned: boolean,
-  category?: Category, 
+  download?: string, 
   title: string,
   modifiedAt: Date,
   selected: boolean
@@ -182,11 +178,10 @@ export const columns: ColumnDef<Document>[] = [
     cell: ({ row }) => <div className="lowercase ml-4">{row.getValue("title")}</div>,
   },
     {
-    accessorKey: "category",
-    header: () => <div className="text-right">Category</div>,
+    accessorKey: "download",
+    header: () => <div className="text-right">Downloads</div>,
     cell: ({ row }) => (
-      <div className="capitalize text-right">{row.getValue("category")? 
-        (row.getValue("category") as Category).name: "-"}</div>
+      <div className="capitalize text-right">{row.getValue("download")}</div>
     ),
   },
   {

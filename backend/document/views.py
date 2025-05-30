@@ -139,10 +139,12 @@ class DocumentView(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['get'],
-        name='document-file-download'
+        methods=['post'],
+        name='document-file-download',
+        url_path='pdf-download'
     )
     def file_download(self, request, pk):
+        file_ext = getattr(request, 'ext', None)
         try:
             document = Document.objects.get(pk=pk)
         except Document.DoesNotExist:
@@ -158,5 +160,5 @@ class DocumentView(viewsets.ModelViewSet):
                 document.file.open('rb'),
                 as_attachment=True,
                 filename=filename,
-                content_type='application/pdf'
+                content_type='application/pdf' if file_ext == 'xlsx' else 'pdf'
             )
