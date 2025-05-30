@@ -10,10 +10,75 @@ export async function POST(req: NextRequest) {
     const ip = forwardedFor.split(',')[0];
     params['ipAddress'] = ip;
     const resData = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/`, params);
-    const { access, refresh } = resData.data;
+    let { access } = resData.data;
+    let { refresh } = resData.data;
 
 
     const response = NextResponse.json({ data: { username: params['username'] }});
+
+    try {
+    if (access) {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/login/activity/`,
+        {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access}`
+          },
+          body: JSON.stringify({
+            ipAddress: ip,
+            path: params.path
+          })
+        }
+      );
+
+      if (!res.ok)
+        return NextResponse.json({ message: 'Cannot log before logging in.' }, {
+          status: 404})
+    } else if (!access && refresh) {
+        const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${access}`
+          },
+          body: JSON.stringify({ refresh }),
+        });
+
+        if (!refreshRes.ok)
+          return NextResponse.json({ message: 'Cannot log before logging in.' }, {
+            status: 404})
+
+        access = (await refreshRes.json()).access;
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/login/activity/`,
+          {
+            method: 'POST',
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${access}`
+            },
+            body: JSON.stringify({
+              ipAddress: ip,
+              path: params.path
+            })
+          }
+        );
+
+        if (!res.ok)
+        return NextResponse.json({ message: 'Cannot log before logging in.' }, {
+            status: 404})
+    } else {
+      return NextResponse.json({ message: 'Cannot log before logging in.' }, {
+        status: 404})
+    }
+    
+  } catch (error) {
+    return NextResponse.json({ message: 'Cannot log before logging in.' }, {
+      status: 404})
+  }
 
     response.cookies.set('access', access, {
         httpOnly: true,       // 🛡️ Prevent JS access

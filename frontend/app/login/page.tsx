@@ -11,13 +11,21 @@ export default function LoginPage() {
         w-full max-md:flex max-md:flex-col max-md:gap-y-6">
         <div className="flex-1 flex flex-col justify-center items-center h-full">
           <div className="w-[540px] h-[540px] relative max-lg:w-[360px] max-lg:h-[360px]">
-            <Image 
+            {/* <Image 
               src="/images/logo.png"
               alt="Login logo"
               fill
               className="object-cover"
               priority
-            />
+            /> */}
+            <Image 
+              src="/images/logo.png"
+              alt="Home logo"
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+          />
           </div>
           <div className="text-3xl max-lg:text-xl">กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม</div>
           <div className="text-3xl max-lg:text-xl">Ministry of Digital Economy and Society</div>

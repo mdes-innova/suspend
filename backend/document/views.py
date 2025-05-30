@@ -126,39 +126,42 @@ class DocumentView(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=['post'],
-        name='document-file-upload'
+        name='document-file-upload',
+        url_path='file-upload'
     )
     def file_upload(self, request, pk=None):
         document = self.get_object()
-        serializer = self.get_serializer(document, data=request.data)
+        serializer = FileSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status.HTTP_200_OK)
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+            serializer.save(document=document)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=True,
         methods=['post'],
         name='document-file-download',
-        url_path='pdf-download'
+        url_path='file-download'
     )
     def file_download(self, request, pk):
-        file_ext = getattr(request, 'ext', None)
+        file_ext = request.data.get('ext')
+        if not file_ext:
+            file_ext = 'pdf'
         try:
             document = Document.objects.get(pk=pk)
         except Document.DoesNotExist:
             return Response({'detail': "Document not available"},
                             status.HTTP_404_NOT_FOUND)
         else:
-            if not document.file:
+            if document.files.count() == 0:
                 return Response({'detail': "File not available"},
                                 status.HTTP_404_NOT_FOUND)
-
-            filename = document.file.name.split('/')[-1]
+            f = document.files.filter(file__iendswith='.' + file_ext).order_by('-id').first()
+            filename = f.file.name.split('/')[-1]
             return FileResponse(
-                document.file.open('rb'),
+                f.file.open('rb'),
                 as_attachment=True,
                 filename=filename,
-                content_type='application/pdf' if file_ext == 'xlsx' else 'pdf'
+                content_type=f'application/{file_ext}'
             )

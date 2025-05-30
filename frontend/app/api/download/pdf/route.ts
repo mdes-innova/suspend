@@ -3,7 +3,7 @@ import { getAccessFromRefreshApi } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 const getDownloadUrl = (docId: number) => `${process.env.NEXT_PUBLIC_BACKEND}` + 
-    `/api/document/documents/${docId}/file_download/`;
+    `/api/document/documents/${docId}/file-download/`;
 
 export async function POST(req: NextRequest) {
     const params = await req.json();

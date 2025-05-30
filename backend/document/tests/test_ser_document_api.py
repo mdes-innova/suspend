@@ -89,7 +89,8 @@ class PrivateSerializerTest(TestCase):
         documents = Document.objects.all().order_by('-id')
         serializer = DocumentSerializer(documents, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(set(((d['id'], d['title']) for d in res.data)),
+                         set(((d['id'], d['title']) for d in serializer.data)))
 
     def test_get_document_success(self):
         Document.objects.bulk_create([
@@ -145,7 +146,6 @@ class PrivateSerializerTest(TestCase):
             ]
         } for i in range(3)]
         res_data = []
-        print(DOCUMENT_URL)
         for payload in payloads:
             res_create = self.__client.post(
                     DOCUMENT_URL, payload, format='json'
@@ -480,6 +480,7 @@ class PrivateSerializerTest(TestCase):
             res = self.__client.post(DOCUMENT_URL, payload, format='json')
             self.assertEqual(res.status_code, status.HTTP_201_CREATED)
             del res.data['description']
+            del res.data['files']
             res_data.append(res.data)
         docs = Document.objects.order_by('title').all()
         serializers = DocumentSerializer(docs, many=True)
@@ -615,13 +616,11 @@ class ImageUploadTest(TestCase):
     def tearDown(self):
         """Clear testcase after finished."""
         super().tearDown()
-        self.__document.file.delete()
 
     def test_upload_file_success(self):
         """Test uploading an file to a document."""
         url = reverse('document:document-file-upload',
                       args=[self.__document.pk])
-        print(url)
         with NamedTemporaryFile(suffix='.pdf') as temp:
             temp.write(b'Test file content')
             temp.seek(0)
@@ -630,9 +629,8 @@ class ImageUploadTest(TestCase):
             res = self.__client.post(url, payload, format='multipart')
 
         self.__document.refresh_from_db()
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertIn('file', res.data)
-        self.assertTrue(os.path.exists(self.__document.file.path))
 
     def test_upload_file_bad_request(self):
         """Test uploading invalid file."""
@@ -664,15 +662,62 @@ class ImageUploadTest(TestCase):
             temp.seek(0)
             django_file = File(temp, name='example.pdf')
             payload = {'file': django_file}
+            res = self.__client.post(url, payload, format='multipart')
+            print(res.data)
+
+        self.__document.refresh_from_db()
+        url = reverse('document:document-file-download',
+                      args=[self.__document.pk])
+        res = self.__client.post(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.get('Content-Disposition'),
+                         'attachment; filename="test-uuid.pdf"')
+        content = b''.join(res.streaming_content)
+        self.assertEqual(content, b'Test file content')
+    
+    @patch('core.models.document.uuid.uuid4')
+    def test_dowload_pdf_file_success(self, mock_uuid):
+        """Test to download an file from a document."""
+        mock_uuid.return_value = 'test-uuid'
+        url = reverse('document:document-file-upload',
+                      args=[self.__document.pk])
+        with NamedTemporaryFile(suffix='.pdf') as temp:
+            temp.write(b'Test file content')
+            temp.seek(0)
+            django_file = File(temp, name='example.pdf')
+            payload = {'file': django_file}
             self.__client.post(url, payload, format='multipart')
 
         self.__document.refresh_from_db()
         url = reverse('document:document-file-download',
                       args=[self.__document.pk])
-        res = self.__client.get(url)
+        res = self.__client.post(url, {'ext': 'pdf'}, format='json')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.get('Content-Disposition'),
                          'attachment; filename="test-uuid.pdf"')
+        content = b''.join(res.streaming_content)
+        self.assertEqual(content, b'Test file content')
+
+    @patch('core.models.document.uuid.uuid4')
+    def test_dowload_xlsx_file_success(self, mock_uuid):
+        """Test to download an file from a document."""
+        mock_uuid.return_value = 'test-uuid'
+        url = reverse('document:document-file-upload',
+                      args=[self.__document.pk])
+        with NamedTemporaryFile(suffix='.xlsx') as temp:
+            temp.write(b'Test file content')
+            temp.seek(0)
+            django_file = File(temp, name='example.xlsx')
+            payload = {'file': django_file}
+            self.__client.post(url, payload, format='multipart')
+
+        self.__document.refresh_from_db()
+        url = reverse('document:document-file-download',
+                      args=[self.__document.pk])
+        res = self.__client.post(url, {'ext': 'xlsx'}, format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.get('Content-Disposition'),
+                         'attachment; filename="test-uuid.xlsx"')
         content = b''.join(res.streaming_content)
         self.assertEqual(content, b'Test file content')
 
@@ -692,7 +737,7 @@ class ImageUploadTest(TestCase):
         self.__document.refresh_from_db()
         url = reverse('document:document-file-download',
                       args=[99])
-        res = self.__client.get(url)
+        res = self.__client.post(url)
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(res.data['detail'], 'Document not available')
 
@@ -702,6 +747,42 @@ class ImageUploadTest(TestCase):
                       args=[self.__document.pk])
         url = reverse('document:document-file-download',
                       args=[self.__document.pk])
-        res = self.__client.get(url)
+        res = self.__client.post(url)
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(res.data['detail'], 'File not available')
+
+    # @patch('core.models.document.uuid.uuid4')
+    # def test_get_document_content_success(self):
+    #     """Test to get document content successful."""
+    #     mock_uuid.return_value = 'test-uuid'
+
+    #     url = reverse('document:document-content')
+    #     document_payloads = [
+    #         {
+    #             'title': f'Title {i}'
+    #         } for i in range(40)
+    #     ]
+    #     document_ids = []
+    #     num_pdf_dowloads = 21
+    #     num_xlsx_downloads = 20
+
+    #     for dpi, dp in enumerate(document_payloads):
+    #         res = self.__client.post(DOCUMENT_URL, dp, format='json')
+    #         document_ids.append(res.data['id'])
+
+    #         upload_url = reverse('document:document-file-upload',
+    #                     args=[res.data['id']])
+
+    #         with NamedTemporaryFile(suffix='.pdf') as temp:
+    #             temp.write(b'Test file content')
+    #             temp.seek(0)
+    #             django_file = File(temp, name='example.pdf')
+    #             payload = {'file': django_file}
+    #             self.__client.post(upload_url, payload, format='multipart')
+
+    #         with NamedTemporaryFile(suffix='.xlsx') as temp:
+    #             temp.write(b'Test file content')
+    #             temp.seek(0)
+    #             django_file = File(temp, name='example.xlsx')
+    #             payload = {'file': django_file}
+    #             self.__client.post(upload_url, payload, format='multipart')

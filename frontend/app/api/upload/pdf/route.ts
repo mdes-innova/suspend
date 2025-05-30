@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const getUploadUrl = (docId: number) => `${process.env.NEXT_PUBLIC_BACKEND}` + 
-    `/api/document/documents/${docId}/file_upload/`;
+    `/api/document/documents/${docId}/file-upload/`;
 
 export async function POST(req: NextRequest) {
     const formData = await req.formData();

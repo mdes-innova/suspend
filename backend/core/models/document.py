@@ -30,18 +30,24 @@ class Document(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    file = models.FileField(
-            upload_to=document_file_path,
-            validators=[
-                    FileExtensionValidator(
-                            allowed_extensions=['pdf', 'docx', 'txt']
-                        )
-                ],
-            blank=True,
-            null=True
-        )
 
     def __str__(self):
         return "{}(title={}, created_at={})".format(
             self.__class__.__name__, self.title, self.created_at
         )
+
+class DocumentFile(models.Model):
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name='files'
+    )
+    file = models.FileField(
+        upload_to=document_file_path,
+        validators=[
+            FileExtensionValidator(allowed_extensions=['pdf', 'docx', 'txt', 'xlsx', 'xls'])
+        ],
+        blank=True,
+        null=True
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)

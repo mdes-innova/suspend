@@ -1,6 +1,6 @@
 """Document serializer module."""
 from rest_framework import serializers
-from core.models import Document, Tag, Category, Link
+from core.models import Document, Tag, Category, Link, DocumentFile
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
 from link.serializer import LinkSerializer
@@ -21,11 +21,20 @@ class DocumentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'modified_at']
 
 
+class FileSerializer(serializers.ModelSerializer):
+    """Image serializer class."""
+    class Meta:
+        """Meta class for FileSerializer."""
+        model = DocumentFile
+        fields = ['id', 'file', 'uploaded_at']        
+
 class DocumentDetailSerializer(DocumentSerializer):
     """Document detail serializer with a description field."""
+    files = FileSerializer(many=True, read_only=True)
+
     class Meta(DocumentSerializer.Meta):
         """Meta class for Document detail serializer."""
-        fields = DocumentSerializer.Meta.fields + ['description']
+        fields = DocumentSerializer.Meta.fields + ['description', 'files']
 
     def create(self, validated_data):
         tags_data = self.initial_data.get('tags', [])
@@ -91,13 +100,6 @@ class DocumentDetailSerializer(DocumentSerializer):
         doc.links.set(link_objects)
 
         return doc
-
-
-class FileSerializer(serializers.ModelSerializer):
-    """Image serializer class."""
-    class Meta:
-        """Meta class for FileSerializer."""
-        model = Document
-        fields = ['id', 'file']
-        read_only_fields = ['id']
-        extra_kwargs = {'file': {'required': 'True'}}
+    
+    def get_files(self, obj):
+        return [{'id': f.id, 'file': f.file.url} for f in obj.files.all()]
