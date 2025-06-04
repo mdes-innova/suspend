@@ -96,8 +96,20 @@ type Document = {
   download?: string, 
   title: string,
   modifiedAt: Date,
-  selected: boolean
+  selected: boolean,
+  downloads: number
 }
+
+    // id: 161,
+    // title: 'Title 0',
+    // category: null,
+    // links: [],
+    // tags: [],
+    // createdAt: '2025-06-04T05:08:08.147680Z',
+    // modifiedAt: '2025-06-04T05:08:08.147697Z',
+    // pdf: true,
+    // xlsx: true,
+    // downloads: 0
 
 export const columns: ColumnDef<Document>[] = [
   {
@@ -143,10 +155,11 @@ export const columns: ColumnDef<Document>[] = [
   //   }
   // },
     {
+      id: 'Date',
     accessorKey: "modifiedAt",
     header: "Date",
     cell: ({ row }) => {
-      const value = row.getValue("modifiedAt");
+      const value = row.getValue("Date");
       const date = new Date(value as string);
 
       return (
@@ -178,10 +191,10 @@ export const columns: ColumnDef<Document>[] = [
     cell: ({ row }) => <div className="lowercase ml-4">{row.getValue("title")}</div>,
   },
     {
-    accessorKey: "download",
+    accessorKey: "downloads",
     header: () => <div className="text-right">Downloads</div>,
     cell: ({ row }) => (
-      <div className="capitalize text-right">{row.getValue("download")}</div>
+      <div className="capitalize text-right">{row.getValue("downloads")}</div>
     ),
   },
   {
@@ -213,7 +226,7 @@ export default function DataTable({ data }: { data: Document[] }) {
   React.useEffect(()=>{
     const getData = async() => {
       try {
-        const res = await fetch('api/doc/',
+        const res = await fetch('api/content/',
           {
             credentials: 'include'
           }

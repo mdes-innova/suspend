@@ -21,8 +21,13 @@ import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks";
 import { openModal, PLAYLISTUI, setDocIds} from "../store/features/playlist-diaolog-ui-slice";
 
+type User = {
+    isp: boolean
+}
+
 export default function ActionDropdown({ children, docId }: { children: any, docId?: number}) {
     const dispatch = useAppDispatch();
+    const user = useAppSelector(state => state.userAuth.user);
     const [open, setOpen] = useState(false);
 
     return (
@@ -40,6 +45,8 @@ export default function ActionDropdown({ children, docId }: { children: any, doc
                     View
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {
+                    !((user as User | null)?.isp) &&
                     <DropdownMenuItem onClick={(e: any) => {
                         e.preventDefault();
                         setOpen(false);
@@ -50,6 +57,7 @@ export default function ActionDropdown({ children, docId }: { children: any, doc
                         <Plus className="h-4 w-4" />
                         <span>Add to Playlist</span>
                     </DropdownMenuItem>
+                }
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="text-lg">Downloads</DropdownMenuSubTrigger>
                     <DropdownMenuPortal>

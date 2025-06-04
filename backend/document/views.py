@@ -1,4 +1,5 @@
-from core.models import Document, GroupDocument
+import os
+from core.models import Document, ISPActivity
 from .serializer import (
     DocumentDetailSerializer,
     DocumentSerializer,
@@ -165,3 +166,37 @@ class DocumentView(viewsets.ModelViewSet):
                 filename=filename,
                 content_type=f'application/{file_ext}'
             )
+
+    @action(
+        detail=False,
+        methods=['get'],
+    )
+    def content(self, request):
+        data = DocumentSerializer(self.queryset, many=True).data
+        for d in data:
+            doc = self.queryset.get(pk=d['id'])
+            files = (DocumentDetailSerializer(doc).data)['files']
+            files = sorted(files, key=lambda x: x['id'], reverse=True)
+            # pdf_file = None
+            # xlsx_file = None
+            # for f in files:
+            #     _, fname = f['original_name']
+            #     if not pdf_file and 'pdf' in fname:
+            #         pdf_file = fname
+            #     if not xlsx_file and ('xlsx' in fname or 'xls' in fname):
+            #         xlsx_file = fname
+            # d['pdf'] = pdf_file
+            # d['xlsx'] = xlsx_file
+            downloads = ISPActivity.objects.filter(document=doc, activity='download')
+            d['downloads'] = len(downloads)
+            d['selected'] = False
+
+        return Response(data)
+    
+    # @action(
+    #     detail=True,
+    #     methods=['get'],
+    # )
+    # def content_view(self, request, pk=None):
+    #     doc = self.queryset.get(pk=pk)
+    #     data = DocumentDetailSerializer(doc).data

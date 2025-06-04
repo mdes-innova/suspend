@@ -63,6 +63,42 @@ class ISPView(viewsets.ModelViewSet):
         )
 
         return Response(ISPActivitySerializer(isp_activity).data)
+    
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-activity/(?P<activity>[^/]+)/activity',
+    )
+    def by_activity_dynamic(self, request, activity=None):
+        return self.handle_activity_get(request, activity)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-activity/activity',
+    )
+    def by_activity_static(self, request, activity=None):
+        return self.handle_activity_get(request, None)
+    
+    def handle_activity_get(self, request, activity=None):
+        user = getattr(request, 'user', None)
+        document_id = getattr(request, 'did', None)
+        document = None if not document_id else Document.objects.get(pk=document_id)
+        queries = {}
+        if activity:
+            queries['activity'] = activity
+        if user:
+            queries['user'] = user
+        if document:
+            queries['document'] = document
+
+        try:
+            activities = ISPActivity.objects.filter(**queries)
+            return Response(ISPActivitySerializer(activities, many=True).data)
+        except ISPActivity.DoesNotExist:
+            return Response({'detail': 'Activity not found.'},
+                            status.HTTP_404_NOT_FOUND)
+        
 
     def get_permissions(self):
         if self.action == 'activity_by_activity':

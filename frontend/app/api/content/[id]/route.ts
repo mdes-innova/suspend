@@ -1,20 +1,21 @@
 import { fetchWithAccessApi } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     const access = req.cookies.get('access')?.value;
     const refresh = req.cookies.get('refresh')?.value;
+    const { id } = await params;
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/content/`,
+            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/${id}/`,
             access,
             refresh,
             method: 'GET',
             req,
             returnRes: {
-                fail: NextResponse.json({ error: "Fail to get documents." }, { status: 400 }),
-                success: NextResponse.json({}, { status: 200 })
+                fail: NextResponse.json({ error: "Fail to create a document." }, { status: 400 }),
+                success: NextResponse.json({}, { status: 201 })
             }
         }
     );

@@ -110,3 +110,23 @@ class PrivateISPSerialzierTest(TestCase):
         self.assertEqual(res.data, ISPActivitySerializer(
                 ISPActivity.objects.get(pk=res.data['id'])
             ).data)
+
+    def test_get_activity_static_success(self):
+        """Test to get activity static."""
+        url = reverse('isp:isp-activity-by-activity',
+                      kwargs={'activity': 'visit'})
+        res = self.__client.post(url, {
+            'ip_address': '127.0.0.1',
+            'path': 'login'
+        })
+        url = reverse('isp:isp-by-activity-static')
+        res = self.__client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(set((
+            res.data[0]['ip_address'],
+            res.data[0]['path'])), set((
+                '127.0.0.1',
+                'login'
+            )))

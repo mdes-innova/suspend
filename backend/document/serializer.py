@@ -26,7 +26,7 @@ class FileSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class for FileSerializer."""
         model = DocumentFile
-        fields = ['id', 'file', 'uploaded_at']        
+        fields = ['id', 'original_name', 'file', 'uploaded_at']        
 
 class DocumentDetailSerializer(DocumentSerializer):
     """Document detail serializer with a description field."""

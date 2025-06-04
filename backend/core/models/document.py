@@ -37,6 +37,7 @@ class Document(models.Model):
         )
 
 class DocumentFile(models.Model):
+    original_name = models.CharField(max_length=2000, blank=True, null=True)
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
