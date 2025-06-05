@@ -1,17 +1,11 @@
 'use client';
 
-import useSWR from 'swr';
-import { useParams } from 'next/navigation';
+export default function DocumentView(
+  { logData, docData }: { logData: any[], docData: object}) {
 
-const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then((res) => res.json());
+  return (
+    <div className="h-full w-full flex flex-col justify-start items-center">
 
-export default function DocumentView() {
-  const { id } = useParams<{ id: string }>();
-  const { data } = useSWR(id ? `/api/content/${id}` : null, fetcher,
-    { suspense: true ,
-        fallbackData: { data: [] }
-    });
-
-  return <div>Data: {JSON.stringify(data?.data)}</div>;
+    </div>
+  );
 }

@@ -36,11 +36,10 @@ class ISPView(viewsets.ModelViewSet):
         user = getattr(request, 'user', None)
         path = request.data.get('path')
         ip_address = request.data.get('ip_address')
-        document_id = request.data.get('did')  # if using "did" in payload
+        document_id = request.data.get('did')
         document = None
         isp = None
 
-        # Sanitize unauthenticated users
         if user and not user.is_authenticated:
             user = None
 
@@ -62,7 +61,9 @@ class ISPView(viewsets.ModelViewSet):
             isp=isp
         )
 
-        return Response(ISPActivitySerializer(isp_activity).data)
+        res_data = ISPActivitySerializer(isp_activity).data
+
+        return Response(res_data)
     
     @action(
         detail=False,
@@ -93,7 +94,24 @@ class ISPView(viewsets.ModelViewSet):
             queries['document'] = document
 
         try:
-            activities = ISPActivity.objects.filter(**queries)
+            activities = ISPActivity.objects.filter(**queries).order_by('-created_at')
+            return Response(ISPActivitySerializer(activities, many=True).data)
+        except ISPActivity.DoesNotExist:
+            return Response({'detail': 'Activity not found.'},
+                            status.HTTP_404_NOT_FOUND)
+    
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-document/(?P<did>[^/]+)/activity',
+    )
+    def by_document(self, request, did=None):
+        user = request.user
+        document = None if not did else Document.objects.get(pk=did)
+        queries = {'user': user, 'document': document}
+
+        try:
+            activities = ISPActivity.objects.filter(user=user, document=document)
             return Response(ISPActivitySerializer(activities, many=True).data)
         except ISPActivity.DoesNotExist:
             return Response({'detail': 'Activity not found.'},

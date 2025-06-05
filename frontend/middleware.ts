@@ -14,18 +14,25 @@ export async function middleware(request: NextRequest) {
   const headersList = await headers();
   const forwardedFor = headersList.get('x-forwarded-for') || '';
   const ip = forwardedFor.split(',')[0];
+  const headerss = new Headers();
+  headerss.set("Content-Type", "application/json");
+  if (access) {
+    headerss.set("Authorization", `Bearer ${access}`);
+  }
 
   try {
+    const fullPathList = fullPath.split('/');
+    const docviewIdx = fullPathList.findIndex(e => e === 'document-view');
+
     const _ = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/visit/activity/`,
       {
         method: 'POST',
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: headerss,
         body: JSON.stringify({
           ipAddress: ip,
-          path: fullPath
+          path: fullPath,
+          did: parseInt(fullPathList[docviewIdx + 1])
         })
       }
     );
