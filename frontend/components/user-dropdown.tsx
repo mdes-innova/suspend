@@ -35,7 +35,11 @@ export function DropdownMenuUser({user}: {user: any}) {
         <DropdownMenuLabel>บัญชีของฉัน</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={(e: any) => {
+            e.preventDefault();
+              setOpen(false);
+              router.push('/profile-view');
+          }}>
             โปรไฟล์ 
           </DropdownMenuItem>
           {
@@ -56,7 +60,7 @@ export function DropdownMenuUser({user}: {user: any}) {
         <DropdownMenuItem onClick={async (e: any)=>{
           e.preventDefault();
           try {
-            const res = await fetch('/api/auth/logout', {
+            const _ = await fetch('/api/auth/logout', {
               method: 'POST',
               credentials: 'include',
               body: JSON.stringify(
@@ -66,11 +70,11 @@ export function DropdownMenuUser({user}: {user: any}) {
               )
             });
 
-            if (res.ok) {
+            // if (res.ok) {
               window.location.href = '/login';
-            } else {
-              console.error('Logout failed:', await res.json());
-            }
+            // } else {
+              // console.error('Logout failed:', await res.json());
+            // }
           } catch (err) {
             console.error('Logout error:', err);
           }

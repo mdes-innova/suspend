@@ -14,6 +14,17 @@ export class AuthError extends Error {
   }
 }
 
+export class LogError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode = 601) {
+    super(message);
+    this.name = this.constructor.name;
+    this.statusCode = statusCode;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -82,6 +93,8 @@ export async function getAccessFromRefreshApi(refresh: string) {
 export async function fetchWithAccessApi(params: Params) {
   try {
     let { access, refresh, url, method, file, params: bodyParams, returnRes } = params;
+
+    console.log(bodyParams)
 
     const headers = new Headers();
     let body: FormData | string | undefined;
@@ -157,8 +170,6 @@ export async function fetchWithAccessApp({ access, refresh, url, method, params:
   method: string,
   params?: object
 }) {
-  try {
-    // throw new AuthError("Invalid refresh token");
     const headers = new Headers();
     let body: string | undefined;
     if (access) headers.append("Authorization", `Bearer ${access}`);
@@ -176,22 +187,18 @@ export async function fetchWithAccessApp({ access, refresh, url, method, params:
         body: JSON.stringify({ refresh }),
       });
 
-      if (!refreshRes.ok) throw new Error("Invalid refresh token");
+      if (!refreshRes.ok) throw new AuthError("Invalid refresh token");
 
       const { access: newAccess } = await refreshRes.json();
       headers.set("Authorization", `Bearer ${newAccess}`);
 
       const retryRes = await fetch(url, { headers, method, body });
-      if (!retryRes.ok) throw new Error("Retry fetch failed");
-
+      if (!retryRes.ok) {
+        if (res.status === 401) throw new AuthError("Authentication fail.");
+        else throw new Error("Retry fetch failed");
+      }
       return retryRes.json();
     }
 
     return res.json();
-  } catch (error) {
-    if (error instanceof AuthError) {
-      throw new Error("Authentication error.");
-    }
-    return null;
-  }
 }

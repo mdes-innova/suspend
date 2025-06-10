@@ -3,7 +3,7 @@ import { getAccessFromRefreshApi } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 const getDownloadUrl = (docId: number) => `${process.env.NEXT_PUBLIC_BACKEND}` + 
-    `/api/document/documents/${docId}/file-download/`;
+    `/api/document/documents/${docId}/file_download/`;
 
 export async function POST(req: NextRequest) {
     const params = await req.json();
@@ -13,8 +13,6 @@ export async function POST(req: NextRequest) {
     let access = req.cookies.get('access')?.value;
     const refresh = req.cookies.get('refresh')?.value;
     const url = getDownloadUrl(params.docId);
-
-    console.log(params);
 
     try {
         if (access && refresh) {

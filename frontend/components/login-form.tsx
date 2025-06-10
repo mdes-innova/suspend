@@ -77,14 +77,23 @@ export default function LoginForm() {
       path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
     };
     try {
-      const _ = await axios.post('api/auth/login/', extendedValues,
+      const res = await fetch('api/auth/login/', 
         {
-          withCredentials: true
+          method: 'POST',
+          body: JSON.stringify(
+            {
+              ...extendedValues
+            }
+          ),
+          credentials: 'include'
         }
       );
 
+      if (!res.ok) setErrorMessage('ไม่สามารถเข้าสู่ระบบได้');
+      else {
         router.push(params.get('pathname')?? '/');
         router.refresh();
+      }
     } catch (error) {
       // setLoginLoading(false);
       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');

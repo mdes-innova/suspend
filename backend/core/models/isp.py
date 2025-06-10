@@ -32,6 +32,8 @@ class ISPActivity(models.Model):
     ip_address = models.CharField(max_length=16)
     user = models.ForeignKey('User', on_delete=models.CASCADE, null=True)
     isp = models.ForeignKey('ISP', on_delete=models.CASCADE, null=True)
+    file = models.ForeignKey('DocumentFile', on_delete=models.CASCADE,
+                             null=True)
     document = models.ForeignKey('Document', on_delete=models.CASCADE,
                                  null=True)
     path = models.URLField(max_length=2000)

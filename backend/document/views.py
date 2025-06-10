@@ -187,8 +187,17 @@ class DocumentView(viewsets.ModelViewSet):
             #         xlsx_file = fname
             # d['pdf'] = pdf_file
             # d['xlsx'] = xlsx_file
-            downloads = ISPActivity.objects.filter(document=doc, activity='download')
-            d['downloads'] = len(downloads)
+            pdf_downloads = ISPActivity.objects.filter(
+                document=doc,
+                activity='download',
+                file__file__endswith='.pdf'
+                )
+            xlsx_downloads = ISPActivity.objects.filter(
+                document=doc,
+                activity='download',
+                file__file__endswith='.xlsx'
+                )
+            d['downloads'] = f'{len(pdf_downloads)}/{len(xlsx_downloads)}'
             d['selected'] = False
 
         return Response(data)

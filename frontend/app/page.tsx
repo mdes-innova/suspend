@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
 import DataTable from '@/components/main/content';
 import { cookies } from "next/headers";
-import { fetchWithAccessApp } from '@/lib/utils';
+import { AuthError, fetchWithAccessApp } from '@/lib/utils';
 import { redirect } from "next/navigation";
 import PlaylistDialog from '@/components/main/playlist-dialog';
 import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
@@ -19,7 +19,8 @@ async function getData() {
     });
     return data;
   } catch (error) {
-    redirect('/login') ;
+    if (error instanceof AuthError) redirect('/login') ;
+    else return [];
   }
 }
 

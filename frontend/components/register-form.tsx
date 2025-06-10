@@ -46,8 +46,9 @@ export default function LoginForm() {
 
   const [errorMessage, setErrorMessage] = useState('');
   const [userType, setUserType]= useState('user');
+  const [success, setSuccess] = useState(false);
+  const [isp, setIsp] = useState('')
   const router = useRouter();
-    const [isp, setIsp] = useState('')
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -70,22 +71,37 @@ export default function LoginForm() {
   // }
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    // const rawFormData = {
-    //   username: formData.get('username'),
-    //   password: formData.get('password'),
-    // };
+    const extendedValues = {
+      username: values.username,
+      password: values.password,
+      isp,
+      userType,
+      path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
+    };
 
     try {
-      // setLoginLoading(true);
-      const _ = await axios.post('api/auth/login/', values,
+      const res = await fetch('api/register/', 
         {
-          withCredentials: true
+          body: JSON.stringify({
+            ...extendedValues
+          }),
+          method: 'POST',
+          credentials: 'include'
         }
       );
-        router.push('/');
+      if (!res.ok) {
+        setSuccess(false);
+        setErrorMessage('ไม่สามารถเข้าสู่ระบบได้');
+      }
+      else {
         router.refresh();
+        setErrorMessage('');
+        setSuccess(true);
+      }
+
     } catch (error) {
       // setLoginLoading(false);
+      setSuccess(false);
       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
     }
   }
@@ -196,7 +212,8 @@ export default function LoginForm() {
         </form>
       </Form>
       <div className="h-2 block mt-1">
-        {errorMessage != '' && <div className="text-destructive">{errorMessage}</div>}
+        {errorMessage != '' && !success && <div className="text-destructive">{errorMessage}</div>}
+        {errorMessage == '' && success && <div className="text-green-600">ลงทะเบียนสำเร็จ</div>}
       </div>
     </div>
   )

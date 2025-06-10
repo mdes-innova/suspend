@@ -5,13 +5,14 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-async function Components({ params }: { params: any }) {
+async function Components({ params, searchParams }: { params: any, searchParams: any }) {
   const { id } = (await params);
+  const { ap } = (await searchParams);
   const cookieStore = await cookies();
   const refresh = cookieStore?.get("refresh")?.value;
   let access = cookieStore?.get("access")?.value;
   const docUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/${id}/`;
-  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-document/${id}/activity/`;
+  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-document/${id}/activity/?ap=${ap?? 0}`;
 
   try {
     const docData = await fetchWithAccessApp({
@@ -20,9 +21,8 @@ async function Components({ params }: { params: any }) {
     const logData = await fetchWithAccessApp({
       access, refresh, url: logUrl, method: 'GET'
     });
-    console.log(logData);
     return (
-      <DocumentView logData={logData} docData={docData} />
+      <DocumentView logData={logData} docData={docData} ap={parseInt(ap)?? 0}/>
     );
   } catch (error) {
     let access = cookieStore?.get("access")?.value;
@@ -43,10 +43,11 @@ async function Components({ params }: { params: any }) {
   }
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page({ params, searchParams }:
+  { params: { id: string }, searchParams: { [key: string]: string }}) {
   return (
     <Suspense>
-      <Components params={params}/>
+      <Components params={params} searchParams={searchParams} />
     </Suspense>
   );
 }

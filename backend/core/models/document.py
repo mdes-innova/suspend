@@ -17,6 +17,10 @@ def document_file_path(instance, filename):
 class Document(models.Model):
     """Document model class."""
     title = models.CharField(max_length=512)
+    date = models.DateField(null=True)
+    section = models.BigIntegerField(null=True)
+    red_number = models.CharField(max_length=32, null=True)
+    black_number = models.CharField(max_length=32, null=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -35,6 +39,7 @@ class Document(models.Model):
         return "{}(title={}, created_at={})".format(
             self.__class__.__name__, self.title, self.created_at
         )
+
 
 class DocumentFile(models.Model):
     original_name = models.CharField(max_length=2000, blank=True, null=True)

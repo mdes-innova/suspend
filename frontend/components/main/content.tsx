@@ -93,11 +93,13 @@ function PinIcon({docId}: {docId: number}) {
 type Document = {
   id: number, 
   pinned: boolean,
-  download?: string, 
+  download?: string,
+  redNumber?: string,
+  blackNumber?: string,
   title: string,
-  modifiedAt: Date,
+  date: string,
   selected: boolean,
-  downloads: number
+  downloads: string
 }
 
     // id: 161,
@@ -106,7 +108,7 @@ type Document = {
     // links: [],
     // tags: [],
     // createdAt: '2025-06-04T05:08:08.147680Z',
-    // modifiedAt: '2025-06-04T05:08:08.147697Z',
+    // date: '2025-06-04T05:08:08.147697Z',
     // pdf: true,
     // xlsx: true,
     // downloads: 0
@@ -154,28 +156,8 @@ export const columns: ColumnDef<Document>[] = [
   //     return <PinIcon docId={id} />;
   //   }
   // },
-    {
-      id: 'Date',
-    accessorKey: "modifiedAt",
-    header: "Date",
-    cell: ({ row }) => {
-      const value = row.getValue("Date");
-      const date = new Date(value as string);
-
-      return (
-        <div className="capitalize">
-          {date.toLocaleString("en-US", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-          </div>
-      );
-    },
-  },
   {
+    id: 'ชื่อเรื่อง',
     accessorKey: "title",
     header: ({ column }) => {
       return (
@@ -183,19 +165,73 @@ export const columns: ColumnDef<Document>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Title
+          ชื่อเรื่อง
           <ArrowUpDown />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase ml-4">{row.getValue("title")}</div>,
+    cell: ({ row }) => 
+    {
+      const { title } = row.original;
+      return (<div className="lowercase ml-4">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>);
+    }
   },
     {
+      id: 'วันที่',
+    accessorKey: "date",
+    header: "วันที่",
+    cell: ({ row }) => {
+      // const value = row.getValue("Date");
+      // const date = new Date(value as string);
+      const { date } = row.original;
+
+      return (
+        <div>
+          {(new Date(date)).toLocaleString("en-GB", {
+            year: "numeric",
+            day: "2-digit",
+            month: "2-digit"
+          })}
+          </div>
+      );
+    },
+  },
+  {
+    id: 'คดีหมายเลขดำ',
+    accessorKey: "blackNumber",
+    header: "คดีหมายเลขดำ",
+    cell: ({ row }) => {
+      const { blackNumber } = row.original;
+      return (
+        <div>
+          {blackNumber?? '-'}
+          </div>
+      );
+    },
+  },
+  {
+    id: 'คดีหมายเลขแดง',
+    accessorKey: "redNumber",
+    header: "คดีหมายเลขแดง",
+    cell: ({ row }) => {
+      const { redNumber } = row.original;
+
+      return (
+        <div>
+          {redNumber?? '-'}
+          </div>
+      );
+    },
+  },
+    {
+      id: 'ดาวน์โหลด',
     accessorKey: "downloads",
-    header: () => <div className="text-right">Downloads</div>,
-    cell: ({ row }) => (
-      <div className="capitalize text-right">{row.getValue("downloads")}</div>
-    ),
+    header: () => <div className="text-right">ดาวน์โหลด</div>,
+    cell: ({ row }) => {
+      const { downloads } = row.original;
+      return (<div className="text-right">{downloads}</div>);
+
+    }
   },
   {
     id: "actions",
@@ -291,9 +327,9 @@ export default function DataTable({ data }: { data: Document[] }) {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter title..."
-          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("ชื่อเรื่อง")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("title")?.setFilterValue(event.target.value)
+            table.getColumn("ชื่อเรื่อง")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

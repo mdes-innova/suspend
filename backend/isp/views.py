@@ -1,4 +1,5 @@
 """View module for ISP app."""
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets
 from .serializer import ISPSerializer, ISPActivitySerializer
 from document.serializer import DocumentSerializer
@@ -64,7 +65,7 @@ class ISPView(viewsets.ModelViewSet):
         res_data = ISPActivitySerializer(isp_activity).data
 
         return Response(res_data)
-    
+
     @action(
         detail=False,
         methods=['get'],
@@ -80,26 +81,52 @@ class ISPView(viewsets.ModelViewSet):
     )
     def by_activity_static(self, request, activity=None):
         return self.handle_activity_get(request, None)
-    
+
     def handle_activity_get(self, request, activity=None):
         user = getattr(request, 'user', None)
-        document_id = getattr(request, 'did', None)
-        document = None if not document_id else Document.objects.get(pk=document_id)
+        ap = request.query_params.get('ap')
         queries = {}
         if activity:
             queries['activity'] = activity
         if user:
             queries['user'] = user
-        if document:
-            queries['document'] = document
 
         try:
-            activities = ISPActivity.objects.filter(**queries).order_by('-created_at')
-            return Response(ISPActivitySerializer(activities, many=True).data)
+            count = ISPActivity.objects.filter(
+                **queries).count()
+            activities = ISPActivity.objects.filter(
+                **queries).order_by('-created_at')
+            pdf_downloads = len(activities.filter(
+                activity='download',
+                file__file__endswith='.pdf'
+            ))
+            xlsx_downloads = len(activities.filter(
+                activity='download',
+                file__file__endswith='.xlsx'
+            ))
+            paginator = Paginator(activities, 20)
+            return Response({
+                'data': ISPActivitySerializer(
+                    paginator.page(int(ap) + 1),
+                    many=True).data,
+                'count': count,
+                'downloads': {
+                    'pdf': pdf_downloads,
+                    'xlsx': xlsx_downloads
+                }
+                })
         except ISPActivity.DoesNotExist:
             return Response({'detail': 'Activity not found.'},
                             status.HTTP_404_NOT_FOUND)
-    
+
+        # try:
+        #     activities = ISPActivity.objects.filter(**queries)\
+        #         .order_by('-created_at')
+        #     return Response(ISPActivitySerializer(activities, many=True).data)
+        # except ISPActivity.DoesNotExist:
+        #     return Response({'detail': 'Activity not found.'},
+        #                     status.HTTP_404_NOT_FOUND)
+
     @action(
         detail=False,
         methods=['get'],
@@ -108,15 +135,36 @@ class ISPView(viewsets.ModelViewSet):
     def by_document(self, request, did=None):
         user = request.user
         document = None if not did else Document.objects.get(pk=did)
+        ap = request.query_params.get('ap')
         queries = {'user': user, 'document': document}
 
         try:
-            activities = ISPActivity.objects.filter(user=user, document=document)
-            return Response(ISPActivitySerializer(activities, many=True).data)
+            count = ISPActivity.objects.filter(
+                **queries).count()
+            activities = ISPActivity.objects.filter(
+                **queries).order_by('-created_at')
+            pdf_downloads = len(activities.filter(
+                activity='download',
+                file__file__endswith='.pdf'
+            ))
+            xlsx_downloads = len(activities.filter(
+                activity='download',
+                file__file__endswith='.xlsx'
+            ))
+            paginator = Paginator(activities, 20)
+            return Response({
+                'data': ISPActivitySerializer(
+                    paginator.page(int(ap) + 1),
+                    many=True).data,
+                'count': count,
+                'downloads': {
+                    'pdf': pdf_downloads,
+                    'xlsx': xlsx_downloads
+                }
+                })
         except ISPActivity.DoesNotExist:
             return Response({'detail': 'Activity not found.'},
                             status.HTTP_404_NOT_FOUND)
-        
 
     def get_permissions(self):
         if self.action == 'activity_by_activity':

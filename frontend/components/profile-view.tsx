@@ -38,16 +38,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Fragment, memo } from "react";
 import { number } from "zod";
-import { MyPaginator, type Paginor } from "./my-pagination";
+import { MyPagination, type Paginor } from "./my-pagination";
 
-type Doctype = {
-  title: string
-  date: string
+type UserType = {
+  username: string,
+  createdAt: string,
+  isp: string
+}
+
+type DocumentType = {
+    title: string
 }
 
 type Logtype = {
-  id: number
-  activity: string
+  id: number,
+  document?: DocumentType,
+  activity: string,
   createdAt: string
 }
 
@@ -61,15 +67,15 @@ type LogactivityType = {
   data: Logtype[]
 }
 
-export default function DocumentView(
-  { logData, docData, ap }: { logData: LogactivityType, docData: Doctype, ap: number}) {
+export default function ProfileView(
+  { logData, userData, ap }: { logData: LogactivityType, userData: UserType, ap: number}) {
   return (
     <div className="h-full w-full flex flex-col justify-start items-center p-4">
       <div className="flex w-full justify-between h-[500px]">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
-            <div className="w-full text-start text-2xl font-bold">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>
-            <div className="w-full text-start text-md">{new Date(docData.date).toLocaleString("en-GB", {
+            <div className="w-full text-start text-2xl font-bold">{userData.username}</div>
+            <div className="w-full text-start text-md">{new Date(userData.createdAt).toLocaleString("en-GB", {
                 year: "numeric",
                 month: "2-digit",
                 day: "2-digit",
@@ -89,21 +95,6 @@ export default function DocumentView(
           </div>
         </div>
         <Card className="w-full max-w-sm h-fit">
-          <CardHeader>
-            <CardTitle>ไฟล์</CardTitle>
-            <CardDescription>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-decimal list-outside pl-6 underline cursor-pointer">
-              <li onClick={(e) => {
-                e.preventDefault();
-              }}>PDF</li>
-              <li onClick={(e) => {
-                e.preventDefault();
-              }}>XLSX</li>
-            </ul>
-          </CardContent>
           <CardHeader>
             <CardTitle>ดาวน์โหลด</CardTitle>
             <CardDescription>
@@ -142,6 +133,7 @@ function DocumentLogs({ data, pagination }: { data: Logtype[], pagination: Pagin
           {/* <TableHead className="w-[100px]">Invoice</TableHead> */}
           <TableHead>วันที่ เวลา</TableHead>
           <TableHead>กิจกรรม</TableHead>
+          <TableHead>เอกสาร</TableHead>
           <TableHead className="text-right">ไฟล์</TableHead>
         </TableRow>
       </TableHeader>
@@ -157,14 +149,15 @@ function DocumentLogs({ data, pagination }: { data: Logtype[], pagination: Pagin
               minute: "2-digit",
             })}</TableCell>
             <TableCell>{log.activity}</TableCell>
+            <TableCell>{log.document? log.document.title: '-'}</TableCell>
             <TableCell className="text-right">-</TableCell>
           </TableRow>
         ))}
       </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={3}>
-              <MyPaginator pagination={pagination} />
+            <TableCell colSpan={4}>
+              <MyPagination pagination={pagination} />
             </TableCell>
           </TableRow>
       </TableFooter>

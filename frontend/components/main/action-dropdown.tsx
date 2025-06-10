@@ -20,6 +20,7 @@ import { useAppSelector } from "../store/hooks";
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch } from "../store/hooks";
 import { openModal, PLAYLISTUI, setDocIds} from "../store/features/playlist-diaolog-ui-slice";
+import { useRouter } from "next/navigation";
 
 type User = {
     isp: boolean
@@ -27,6 +28,7 @@ type User = {
 
 export default function ActionDropdown({ children, docId }: { children: any, docId?: number}) {
     const dispatch = useAppDispatch();
+    const router = useRouter();
     const user = useAppSelector(state => state.userAuth.user);
     const [open, setOpen] = useState(false);
 
@@ -41,7 +43,10 @@ export default function ActionDropdown({ children, docId }: { children: any, doc
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                    e.preventDefault();
+                    router.push(`/document-view/${docId}/`);
+                }}>
                     View
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

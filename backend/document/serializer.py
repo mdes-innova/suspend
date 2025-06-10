@@ -16,7 +16,8 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class for Document serializer."""
         model = Document
-        fields = ['id', 'title', 'category', 'links', 'tags', 'created_at',
+        fields = ['id', 'title', 'date', 'category', 'links', 'tags',
+                  'red_number', 'black_number', 'section', 'created_at',
                   'modified_at']
         read_only_fields = ['id', 'created_at', 'modified_at']
 
