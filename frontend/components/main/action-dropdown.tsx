@@ -26,7 +26,8 @@ type User = {
     isp: boolean
 }
 
-export default function ActionDropdown({ children, docId }: { children: any, docId?: number}) {
+export default function ActionDropdown({ children, docId, active }:
+    { children: any, docId?: number, active?: boolean}) {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const user = useAppSelector(state => state.userAuth.user);
@@ -43,7 +44,8 @@ export default function ActionDropdown({ children, docId }: { children: any, doc
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={(e) => {
+                <DropdownMenuItem
+                 onClick={(e) => {
                     e.preventDefault();
                     router.push(`/document-view/${docId}/`);
                 }}>
@@ -52,8 +54,14 @@ export default function ActionDropdown({ children, docId }: { children: any, doc
                 <DropdownMenuSeparator />
                 {
                     !((user as User | null)?.isp) &&
-                    <DropdownMenuItem onClick={(e: any) => {
+                    <DropdownMenuItem 
+                        // className="hover:bg-red-500 focus:bg-red-500"
+                        className={`${active === false? 
+                            "text-gray-400 bg-inherit hover:bg-inherit focus:bg-inherit" +
+                                " hover:cursor-not-allowed hover:text-gray-400 focus:text-gray-400" : ''}`}
+                        onClick={(e: any) => {
                         e.preventDefault();
+                        if (active == false) return;
                         setOpen(false);
                         if (docId)
                             dispatch(setDocIds([docId]));

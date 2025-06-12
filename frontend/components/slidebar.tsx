@@ -62,8 +62,8 @@ function SlideBar() {
             {projects.map((project: any, idx: number) => (
                 <div
                     key={`sidebar-div-${idx}`}
-                    className={`px-2 py-1 cursor-pointer ${pathname === project.pathname? "bg-gray-300": "hover:bg-gray-200"}`}>
-                    <Link href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
+                    className={`px-2 py-1 border-b cursor-pointer ${pathname === project.pathname? "bg-gray-300": "hover:bg-gray-200"}`}>
+                    <Link  href={`${process.env.NEXT_PUBLIC_FRONTEND}${project.pathname}`}>
                     <span>{project.name}</span>
                     </Link>
                 </div>

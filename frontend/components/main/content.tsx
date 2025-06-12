@@ -99,7 +99,8 @@ type Document = {
   title: string,
   date: string,
   selected: boolean,
-  downloads: string
+  downloads: string,
+  active: boolean
 }
 
     // id: 161,
@@ -127,23 +128,16 @@ export const columns: ColumnDef<Document>[] = [
       />
     ),
     cell: ({ row }) => {
-      const { selected } = row.original;
-      if  (selected)
-        return (
-          <Checkbox
-            checked={true}
-            aria-label="Select row"
-            disabled
-          />
-        );
-      else
-        return (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        );
+      const { selected, active } = row.original;
+        if (active)
+          return (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+              disabled={!active}
+            />
+          );
     },
     enableSorting: false,
     enableHiding: false,
@@ -237,9 +231,9 @@ export const columns: ColumnDef<Document>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const { id } = row.original;
+      const { id, active } = row.original;
       return (
-        <ActionDropdown docId={ id }>
+        <ActionDropdown docId={ id } active={active}>
           <MoreHorizontal />
         </ActionDropdown>
       )
@@ -319,6 +313,7 @@ export default function DataTable({ data }: { data: Document[] }) {
     {
       const selectedIds = table.getSelectedRowModel().rows.map(row => row.original.id);
       dispatch(setDocIds(selectedIds));
+      // table.toggleAllPageRowsSelected(false);
     }
   }, [rowSelection]);
 
@@ -392,12 +387,12 @@ export default function DataTable({ data }: { data: Document[] }) {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
-                const { selected } = row.original;
+                const { selected, active } = row.original;
                 return (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={`${selected? "bg-muted": ""}`}
+                  data-state={active? row.getIsSelected() && "selected": ""}
+                  className={`${active? selected? "bg-muted": "": "bg-gray-100 text-gray-400"}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

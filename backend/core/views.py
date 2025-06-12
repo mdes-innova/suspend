@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny
-from .models import ISPActivity
+from .models import Activity
 from decouple import config
 
 
@@ -25,7 +25,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         ip_address = request.data.get('ip_address')
 
         try:
-            ISPActivity.objects.create(
+            Activity.objects.create(
                 user=user,
                 activity='login',
                 ip_address=ip_address,

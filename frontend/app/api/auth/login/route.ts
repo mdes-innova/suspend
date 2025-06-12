@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     try {
     if (access) {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/login/activity/`,
+        `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/login/`,
         {
           method: 'POST',
           headers: {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         access = (await refreshRes.json()).access;
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/login/activity/`,
+          `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/login/`,
           {
             method: 'POST',
             headers: {

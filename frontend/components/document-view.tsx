@@ -38,7 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Fragment, memo } from "react";
 import { number } from "zod";
-import { MyPaginator, type Paginor } from "./my-pagination";
+import { MyPagination, type Paginor } from "./my-pagination";
 
 type Doctype = {
   title: string
@@ -164,7 +164,7 @@ function DocumentLogs({ data, pagination }: { data: Logtype[], pagination: Pagin
         <TableFooter>
           <TableRow>
             <TableCell colSpan={3}>
-              <MyPaginator pagination={pagination} />
+              <MyPagination pagination={pagination} />
             </TableCell>
           </TableRow>
       </TableFooter>

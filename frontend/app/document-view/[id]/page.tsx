@@ -12,7 +12,7 @@ async function Components({ params, searchParams }: { params: any, searchParams:
   const refresh = cookieStore?.get("refresh")?.value;
   let access = cookieStore?.get("access")?.value;
   const docUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/${id}/`;
-  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-document/${id}/activity/?ap=${ap?? 0}`;
+  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-document/${id}/?ap=${ap?? 0}`;
 
   try {
     const docData = await fetchWithAccessApp({

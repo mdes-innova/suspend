@@ -11,7 +11,7 @@ async function Components({ searchParams }: { searchParams: any }) {
   const refresh = cookieStore?.get("refresh")?.value;
   let access = cookieStore?.get("access")?.value;
   const userUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/me/`;
-  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/activity/?ap=${ap?? 0}`;
+  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/?ap=${ap?? 0}`;
 
   try {
     const userData = await fetchWithAccessApp({

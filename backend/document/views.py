@@ -1,5 +1,5 @@
 import os
-from core.models import Document, ISPActivity
+from core.models import Document, Activity, GroupDocument
 from .serializer import (
     DocumentDetailSerializer,
     DocumentSerializer,
@@ -172,6 +172,7 @@ class DocumentView(viewsets.ModelViewSet):
         methods=['get'],
     )
     def content(self, request):
+        user = request.user
         data = DocumentSerializer(self.queryset, many=True).data
         for d in data:
             doc = self.queryset.get(pk=d['id'])
@@ -187,17 +188,22 @@ class DocumentView(viewsets.ModelViewSet):
             #         xlsx_file = fname
             # d['pdf'] = pdf_file
             # d['xlsx'] = xlsx_file
-            pdf_downloads = ISPActivity.objects.filter(
+            pdf_downloads = Activity.objects.filter(
                 document=doc,
                 activity='download',
                 file__file__endswith='.pdf'
                 )
-            xlsx_downloads = ISPActivity.objects.filter(
+            xlsx_downloads = Activity.objects.filter(
                 document=doc,
                 activity='download',
                 file__file__endswith='.xlsx'
                 )
             d['downloads'] = f'{len(pdf_downloads)}/{len(xlsx_downloads)}'
+            try:
+                GroupDocument.objects.get(document=doc, user=user)
+                d['active'] = False
+            except GroupDocument.DoesNotExist:
+                d['active'] = True
             d['selected'] = False
 
         return Response(data)

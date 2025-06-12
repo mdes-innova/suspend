@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
     const docviewIdx = fullPathList.findIndex(e => e === 'document-view');
 
     const _ = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/by-activity/visit/activity/`,
+      `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/visit/`,
       {
         method: 'POST',
         headers: headerss,

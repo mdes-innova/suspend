@@ -42,3 +42,28 @@ export async function POST(req: NextRequest) {
         }
     );
 }
+
+export async function PATCH(req: NextRequest) {
+    const params = await req.json();
+    let access = req.cookies.get('access')?.value;
+    const refresh = req.cookies.get('refresh')?.value;
+    console.log(params)
+
+    return await fetchWithAccessApi(
+        {
+            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/`,
+            access,
+            refresh,
+            method: 'PATCH',
+            req,
+            params: {
+                documentIds: params.documentIds,
+                append: params.append?? false
+            },
+            returnRes: {
+                fail: NextResponse.json({ error: "Fail to create playlist." }, { status: 400 }),
+                success: NextResponse.json({}, { status: 200 })
+            }
+        }
+    );
+}

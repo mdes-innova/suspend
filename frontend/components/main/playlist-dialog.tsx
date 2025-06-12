@@ -50,7 +50,8 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
                       method: 'PATCH',
                       credentials: 'include',
                       body: JSON.stringify({
-                        documentIds: docIds
+                        documentIds: docIds,
+                        append: true
                       })
                     }
                   );
@@ -58,8 +59,8 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
                   if (!addRes.ok) dispatch(closeModal({ui: PLAYLISTUI.list, info: [addResJson.error], err: true }));
                   else {
                     const newPlaylist = addResJson.data.name;
-                    const docs = addResJson.data.documents.map((doc: any) => doc.title).slice(0, 3);
-                    console.log(docs)
+                    const docs = addResJson.data.documents.filter((x: any) =>
+                      docIds.includes(x.id)).map((doc: any) => doc.title).slice(0, 3);
                     dispatch(closeModal({ui: PLAYLISTUI.list, info: [newPlaylist, ...docs] }));
                   }
                 } catch (error1) {

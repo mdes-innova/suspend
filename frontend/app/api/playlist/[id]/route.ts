@@ -18,7 +18,8 @@ export async function PATCH(
             method: 'PATCH',
             req,
             params: {
-                documentIds: data.documentIds.map((e :string) => parseInt(e))
+                documentIds: data.documentIds.map((e :string) => parseInt(e)),
+                append: data.append?? false
             },
             returnRes: {
                 fail: NextResponse.json({ error: "Fail to create playlist." }, { status: 400 }),

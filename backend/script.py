@@ -8,7 +8,7 @@ from datetime import date
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 django.setup()
 
-from core.models import Document, DocumentFile, ISPActivity
+from core.models import Document, DocumentFile, Activity
 
 Document.objects.all().delete()
 
@@ -63,7 +63,7 @@ for pdf_download_id in pdf_download_rnds:
                                  document=doc)
     isp_payload['file'] = f
     isp_payload['document'] = doc
-    ISPActivity.objects.create(**isp_payload)
+    Activity.objects.create(**isp_payload)
 
 for xlsx_download_id in xlsx_download_rnds:
     doc = Document.objects.get(pk=xlsx_download_id)
@@ -71,7 +71,7 @@ for xlsx_download_id in xlsx_download_rnds:
                                  document=doc)
     isp_payload['file'] = f
     isp_payload['document'] = doc
-    ISPActivity.objects.create(**isp_payload)
+    Activity.objects.create(**isp_payload)
 
 docs = Document.objects.all()
 print(docs)

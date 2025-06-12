@@ -61,7 +61,7 @@ export function NewPlaylistSheet() {
                         if (!res.ok) dispatch(closeModal({ui: PLAYLISTUI.new, info: [resJson.error], err: true }));
                         else {
                           try {
-                            const addRes = await fetch('api/playlist',
+                            const addRes = await fetch('api/playlist/',
                               {
                                 method: 'PATCH',
                                 credentials: 'include',
