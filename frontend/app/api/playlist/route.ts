@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
             method: 'POST',
             req,
             params: {
-                name: params.name
+                name: params.name,
+                kind: params.kind
             },
             returnRes: {
                 fail: NextResponse.json({ error: "Fail to create playlist." }, { status: 400 }),
@@ -47,7 +48,6 @@ export async function PATCH(req: NextRequest) {
     const params = await req.json();
     let access = req.cookies.get('access')?.value;
     const refresh = req.cookies.get('refresh')?.value;
-    console.log(params)
 
     return await fetchWithAccessApi(
         {

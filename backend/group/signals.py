@@ -8,4 +8,4 @@ from core.models import Group
 @receiver(post_save, sender=get_user_model())
 def create_user_group(sender, instance, created, **kwargs):
     if created:
-        Group.objects.create(name='default', user=instance, kind='pinned')
+        Group.objects.create(name='default', user=instance, kind='nokind')

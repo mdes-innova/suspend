@@ -16,15 +16,30 @@ import {
 } from "@/components/ui/sheet"
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { closeModal, PLAYLISTUI, toggleModal } from '../store/features/playlist-diaolog-ui-slice';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { X } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
+const Kinds = [
+  'ไม่มี', 'ชนิดที่ 1', 'ชนิดที่ 2', 'ชนิดที่ 3', 'ชนิดที่ 4'
+]
 
 export function NewPlaylistSheet() {
     const dispatch = useAppDispatch();
     const uiOpen = useAppSelector(state=>state.playlistDialogUi.newOpen);
     const docIds = useAppSelector(state=>state.playlistDialogUi.docIds);
     const rowsSelect = useAppSelector(state=>state.contentListUi.rowSelection);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputNameRef = useRef<HTMLInputElement>(null);
+
+    const [kind, setKind] = useState<string>(Kinds[0]);
 
   return (
     <div className="grid grid-cols-2 gap-2 flex-1">
@@ -36,12 +51,30 @@ export function NewPlaylistSheet() {
             <SheetHeader>
               <SheetTitle>Create new playlist</SheetTitle>
             </SheetHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 px-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
-                  Name
+                  ชื่อ 
                 </Label>
-                <Input id="name" ref={inputRef} defaultValue="New playlist" className="col-span-3" />
+                <Input id="name" ref={inputNameRef} defaultValue="New playlist" className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">
+                  ชนิด 
+                </Label>
+                <Select onValueChange={(value) => setKind(value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="เลือกชนิด" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {
+                        Kinds.map((kind: string) => <SelectItem key={`select-${kind}`} value={kind}>{kind}</SelectItem>)
+                      }
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {/* <Input id="kind" ref={inputKindRef} defaultValue="New playlist" className="col-span-3" /> */}
               </div>
             </div>
             <SheetFooter>
@@ -54,7 +87,8 @@ export function NewPlaylistSheet() {
                           method: 'POST',
                           credentials: 'include',
                           body: JSON.stringify({
-                            name: inputRef.current?.value
+                            name: inputNameRef.current?.value,
+                            kind
                           })
                         });
                         const resJson = await res.json();

@@ -1,4 +1,5 @@
 """Testcase module for group serializer."""
+from datetime import date
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -12,6 +13,7 @@ from ..serializer import GroupSerializer
 
 
 GROUP_URL = reverse('group:group-list')
+DOCUMENT_URL = reverse('document:document-list')
 
 
 def get_group_detail_url(pk):
@@ -107,7 +109,7 @@ class PrivateTest(TestCase):
 
         self.assertEqual(res_data, serializers.data)
         self.assertEqual([r['kind'] for r in res_data],
-                         ['pinned'] + [KindType.Playlist]*2)
+                         ['nokind']*2)
 
     def test_get_auto_create_group(self):
         """Test to get auto-create group after user creation."""
@@ -121,7 +123,7 @@ class PrivateTest(TestCase):
         self.assertEqual([
             group.name, group.kind, group.user
         ], [
-            'default', 'pinned', user
+            'default', 'nokind', user
         ])
 
     def test_create_group_with_documents_success(self):
@@ -312,3 +314,79 @@ class PrivateTest(TestCase):
         self.assertEqual(
             set([doc['id'] for doc in res_get.data['documents']]),
             set(doc_ids + update_doc_ids))
+
+    def test_add_docs_success(self):
+        """Test to add documents to groups success."""
+        doc1_payloads = [
+            {
+                'title': f'doc{i}',
+                'date': date.today()
+            } for i in range(3)
+        ]
+
+        doc1_ids = []
+        for payload in doc1_payloads:
+            res_doc1 = self.__client.post(DOCUMENT_URL, payload, format='json')
+            doc1_ids.append(res_doc1.data['id'])
+
+        res_group1 = self.__client.post(GROUP_URL, {
+            'name': 'kind1',
+            'kind': 'Kind1'
+        })
+
+        res_group2 = self.__client.post(GROUP_URL, {
+            'name': 'kind2',
+            'kind': 'Kind2'
+        })
+
+        res_1 = self.__client.patch(
+                reverse('group:group-detail', args=[res_group1.data['id']]),
+                {'document_ids': doc1_ids},
+                format='json'
+            )
+        res_2 = self.__client.patch(
+                reverse('group:group-detail', args=[res_group2.data['id']]),
+                {'document_ids': doc1_ids},
+                format='json'
+            )
+
+        self.assertEqual(res_1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_2.status_code, status.HTTP_200_OK)
+
+    def test_add_docs_fail(self):
+        """Test to add documents to groups fail."""
+        doc1_payloads = [
+            {
+                'title': f'doc{i}',
+                'date': date.today()
+            } for i in range(3)
+        ]
+
+        doc1_ids = []
+        for payload in doc1_payloads:
+            res_doc1 = self.__client.post(DOCUMENT_URL, payload, format='json')
+            doc1_ids.append(res_doc1.data['id'])
+
+        res_group1 = self.__client.post(GROUP_URL, {
+            'name': 'kind1',
+            'kind': 'Kind1'
+        })
+
+        res_group2 = self.__client.post(GROUP_URL, {
+            'name': 'kind1_2',
+            'kind': 'Kind1'
+        })
+
+        res_1 = self.__client.patch(
+                reverse('group:group-detail', args=[res_group1.data['id']]),
+                {'document_ids': doc1_ids},
+                format='json'
+            )
+        res_2 = self.__client.patch(
+                reverse('group:group-detail', args=[res_group2.data['id']]),
+                {'document_ids': [doc1_ids[1]]},
+                format='json'
+            )
+
+        self.assertEqual(res_1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_2.status_code, status.HTTP_400_BAD_REQUEST)

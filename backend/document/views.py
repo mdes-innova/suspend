@@ -1,5 +1,5 @@
 import os
-from core.models import Document, Activity, GroupDocument
+from core.models import Document, Activity, GroupDocument, DocumentFile
 from .serializer import (
     DocumentDetailSerializer,
     DocumentSerializer,
@@ -155,17 +155,23 @@ class DocumentView(viewsets.ModelViewSet):
             return Response({'detail': "Document not available"},
                             status.HTTP_404_NOT_FOUND)
         else:
-            if document.files.count() == 0:
+            if len(DocumentFile.objects.filter(document=document)) == 0:
                 return Response({'detail': "File not available"},
                                 status.HTTP_404_NOT_FOUND)
-            f = document.files.filter(file__iendswith='.' + file_ext).order_by('-id').first()
-            filename = f.file.name.split('/')[-1]
-            return FileResponse(
-                f.file.open('rb'),
-                as_attachment=True,
-                filename=filename,
-                content_type=f'application/{file_ext}'
-            )
+            f = DocumentFile.objects.filter(
+                document=document, file__iendswith='.' + file_ext)\
+                .order_by('-id').first()
+            if f:
+                filename = f.file.name.split('/')[-1]
+                return FileResponse(
+                    f.file.open('rb'),
+                    as_attachment=True,
+                    filename=filename,
+                    content_type=f'application/{file_ext}'
+                )
+            else:
+                return Response({'detail': "File not available"},
+                                status.HTTP_404_NOT_FOUND)
 
     @action(
         detail=False,

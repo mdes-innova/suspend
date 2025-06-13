@@ -19,7 +19,7 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = ['id', 'name', 'kind', 'documents', 'document_ids',
                   'created_at', 'modified_at']
-        read_only_fields = ['kind', 'documents', 'created_at', 'modified_at']
+        read_only_fields = ['documents', 'created_at', 'modified_at']
 
     def validate(self, data):
         user = self.context['request'].user
@@ -39,7 +39,8 @@ class GroupSerializer(serializers.ModelSerializer):
         documents = data.get('document_ids', [])
         if documents:
             conflicting_docs = Document.objects.filter(
-                groups__user=user
+                groups__user=user,
+                groups__kind=self.instance.kind if self.instance else None
             ).exclude(groups=self.instance if self.instance else None).filter(
                 pk__in=[doc.pk for doc in documents]
             ).distinct()
@@ -57,8 +58,8 @@ class GroupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         documents = validated_data.pop('document_ids', [])
-        group = Group.objects.create(user=user, kind=KindType.Playlist,
-                                     **validated_data)
+        kind = validated_data.pop('kind', 'nokind')
+        group = Group.objects.create(user=user, kind=kind, **validated_data)
         for doc in documents:
             GroupDocument.objects.create(group=group, document=doc,
                                          user=user)
@@ -91,6 +92,8 @@ class GroupSerializer(serializers.ModelSerializer):
             else:
                 GroupDocument.objects.filter(group=instance).delete()
                 for doc in documents:
-                    GroupDocument.objects.create(group=instance, document=doc,
-                                                 user=user)
+                    GroupDocument.objects.create(group=instance,
+                                                 document=doc,
+                                                 user=user,
+                                                 document_kind=instance.kind)
         return instance

@@ -794,7 +794,7 @@ class FileDownloadUploadTest(TestCase):
         xlsx_download_rnds = random.choices(document_ids,
                                            k=num_xlsx_downloads)
 
-        activity_url = reverse('isp:isp-activity-by-activity',
+        activity_url = reverse('activity:activity-by-activity',
                                kwargs={'activity': 'download'})
         isp_payload = {
             'user': None,
@@ -818,6 +818,5 @@ class FileDownloadUploadTest(TestCase):
             res = self.__client.post(download_url, {'ext': 'xlsx'}, format='json')
 
         self.__document.refresh_from_db()
-        print(url)
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
