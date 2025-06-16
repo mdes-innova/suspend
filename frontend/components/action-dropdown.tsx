@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import PlaylistDialog from "./playlist-dialog";
-import { useAppSelector } from "../store/hooks";
+import PlaylistDialog from "./main/playlist-dialog";
+import { useAppSelector } from "./store/hooks";
 import { useEffect, useRef, useState } from "react";
-import { useAppDispatch } from "../store/hooks";
-import { openModal, PLAYLISTUI, setDocIds} from "../store/features/playlist-diaolog-ui-slice";
+import { useAppDispatch } from "./store/hooks";
+import { openModal, PLAYLISTUI, setDocIds} from "./store/features/playlist-diaolog-ui-slice";
 import { useRouter } from "next/navigation";
 
 type User = {

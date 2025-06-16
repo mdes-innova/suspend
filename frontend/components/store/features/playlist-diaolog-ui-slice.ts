@@ -55,10 +55,12 @@ const playlistDialogUiSlice = createSlice({
               toast(action.payload.info[0], {
                 description: 'Playlist has been created.'});
             else
-              toast(action.payload.info[0], {
-                description: action.payload.info.slice(1).map(e => e + " added.")
-                  .slice(0, 3).join('\n')
-              });
+                Array.from({length: action.payload.info.length - 1}).forEach((_, idx: number) => {
+                  if (action.payload.info)
+                    toast(action.payload.info[0], {
+                      description: action.payload.info[idx + 1] + " added."
+                    });
+                });
           }
           state.dataChanged = true;
         }

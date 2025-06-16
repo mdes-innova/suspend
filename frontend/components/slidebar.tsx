@@ -28,6 +28,10 @@ function SlideBar() {
             name: "เมนูตรวจสอบหลักฐาน"
         },
         {
+            pathname: "/document-groups",
+            name: "สร้างเอกสาร"
+        },
+        {
             pathname: "/#",
             name: "ตั้งค่าระบบ"
         },

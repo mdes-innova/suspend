@@ -6,6 +6,8 @@ import { DropdownMenuUser } from './user-dropdown';
 import SlideBar from './slidebar';
 import { useAppDispatch, useAppSelector  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
+import { Mail } from 'lucide-react';
+import UserMailbox from './user-mailbox';
 
 type DefaultBarProps = {
   user: any;
@@ -54,7 +56,10 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                     <div className="text-2xl font-bold">ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์</div>
                     <div>กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ</div>
                 </div>
-                <DropdownMenuUser user={user} />
+                <div className='flex relative'>
+                    <UserMailbox />
+                    <DropdownMenuUser user={user}/>
+                </div>
             </div>
             <div className="flex justify-start items-start w-full h-full ">
                 <SlideBar />

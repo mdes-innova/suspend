@@ -29,8 +29,19 @@ import {
 } from "@/components/ui/select"
 
 const Kinds = [
-  'ไม่มี', 'ชนิดที่ 1', 'ชนิดที่ 2', 'ชนิดที่ 3', 'ชนิดที่ 4'
+  { value: 'Nokind', text: 'ไม่มี'},
+  { value: 'Kind1', text: 'ชนิดที่ 1'},
+  { value: 'Kind2', text: 'ชนิดที่ 2'},
+  { value: 'Kind3', text: 'ชนิดที่ 3'},
+  { value: 'Kind4', text: 'ชนิดที่ 4'}
 ]
+
+
+type KindOption = {
+ value: string;
+ text: string;
+};
+
 
 export function NewPlaylistSheet() {
     const dispatch = useAppDispatch();
@@ -39,7 +50,7 @@ export function NewPlaylistSheet() {
     const rowsSelect = useAppSelector(state=>state.contentListUi.rowSelection);
     const inputNameRef = useRef<HTMLInputElement>(null);
 
-    const [kind, setKind] = useState<string>(Kinds[0]);
+    const [kind, setKind] = useState<string>(Kinds[0].value);
 
   return (
     <div className="grid grid-cols-2 gap-2 flex-1">
@@ -69,7 +80,7 @@ export function NewPlaylistSheet() {
                   <SelectContent>
                     <SelectGroup>
                       {
-                        Kinds.map((kind: string) => <SelectItem key={`select-${kind}`} value={kind}>{kind}</SelectItem>)
+                        Kinds.map((kind: KindOption) => <SelectItem key={`select-${kind}`} value={kind.value}>{kind.text}</SelectItem>)
                       }
                     </SelectGroup>
                   </SelectContent>
@@ -95,12 +106,13 @@ export function NewPlaylistSheet() {
                         if (!res.ok) dispatch(closeModal({ui: PLAYLISTUI.new, info: [resJson.error], err: true }));
                         else {
                           try {
-                            const addRes = await fetch('api/playlist/',
+                            const addRes = await fetch(`api/playlist/${resJson.data.id}/`,
                               {
                                 method: 'PATCH',
                                 credentials: 'include',
                                 body: JSON.stringify({
-                                  documentIds: docIds
+                                  documentIds: docIds,
+                                  append: true
                                 })
                               }
                             );
@@ -108,7 +120,7 @@ export function NewPlaylistSheet() {
                             if (!addRes.ok) dispatch(closeModal({ui: PLAYLISTUI.new, info: [addResJson.error], err: true }));
                             else {
                               const newPlaylist = addResJson.data.name;
-                              const docs = addResJson.data.documents.map((doc: any) => doc.name).slice(0, 3);
+                              const docs = addResJson.data.documents.map((doc: any) => doc.title).slice(0, 3);
                               dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
                             }
                           } catch (error1) {

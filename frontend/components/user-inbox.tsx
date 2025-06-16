@@ -15,7 +15,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting } 
-  from "../store/features/content-list-ui-slice";
+  from "./store/features/content-list-ui-slice";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -34,11 +34,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import ActionDropdown from "../action-dropdown";
+import ActionDropdown from "./action-dropdown";
 import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
-import { type DocumentType } from "../document-list";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { setDocIds } from "./store/features/playlist-diaolog-ui-slice";
 
 import {
   type Updater,
@@ -91,8 +90,21 @@ function PinIcon({docId}: {docId: number}) {
   );
 }
 
+type Document = {
+  id: number, 
+  pinned: boolean,
+  download?: string,
+  redNumber?: string,
+  blackNumber?: string,
+  title: string,
+  date: string,
+  selected: boolean,
+  downloads: string,
+  active: boolean
+}
 
-export const columns: ColumnDef<DocumentType>[] = [
+
+export const columns: ColumnDef<Document>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -186,19 +198,6 @@ export const columns: ColumnDef<DocumentType>[] = [
           </div>
       );
     },
-  }, {
-    id: 'มาตรา',
-    accessorKey: "section",
-    header: "มาตรา",
-    cell: ({ row }) => {
-      const { section } = row.original;
-
-      return (
-        <div>
-          {section?? '-'}
-          </div>
-      );
-    },
   },
     {
       id: 'ดาวน์โหลด',
@@ -224,7 +223,7 @@ export const columns: ColumnDef<DocumentType>[] = [
   },
 ]
 
-export default function DataTable({ data }: { data: Document[] }) {
+export default function UserInbox({ data }: { data: Document[] }) {
 
   const dispatch = useAppDispatch();
   const [tableData, setTableData] = React.useState<Document[]>(data);
@@ -234,30 +233,7 @@ export default function DataTable({ data }: { data: Document[] }) {
   const rowSelection = useAppSelector((state) => state.contentListUi.rowSelection);
   const playlistUi = useAppSelector(state=>state.playlistDialogUi.listOpen);
   const playlistNewUi = useAppSelector(state=>state.playlistDialogUi.newOpen);
-  const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged); 
-
-  const table = useReactTable({
-    data: tableData,
-    columns,
-    onSortingChange: (updater) =>
-      dispatch(setSorting(resolveUpdater(updater, sorting))),
-    onColumnFiltersChange: (updater) =>
-      dispatch(setColumnFilters(resolveUpdater(updater, columnFilters))),
-    onColumnVisibilityChange: (updater) =>
-      dispatch(setColumnVisibility(resolveUpdater(updater, columnVisibility))),
-    onRowSelectionChange: (updater) =>
-      dispatch(setRowSelection(resolveUpdater(updater, rowSelection))),
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  });
+  const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged);
 
   React.useEffect(()=>{
     const getData = async() => {
@@ -280,12 +256,6 @@ export default function DataTable({ data }: { data: Document[] }) {
     if (!playlistNewUi && !playlistUi && dataChaged) getData();
   }, [playlistUi, playlistNewUi]);
 
-    React.useEffect(()=>{
-     if (table) {
-      table.resetRowSelection(true);
-     }
-    }, [tableData]);
-
   // const [sorting, setSorting] = React.useState<SortingState>([])
   // const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
   //   []
@@ -297,7 +267,28 @@ export default function DataTable({ data }: { data: Document[] }) {
   //   pageIndex: 0,
   //   pageSize: 10, // 👈 max rows per page
   // });
-
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    onSortingChange: (updater) =>
+      dispatch(setSorting(resolveUpdater(updater, sorting))),
+    onColumnFiltersChange: (updater) =>
+      dispatch(setColumnFilters(resolveUpdater(updater, columnFilters))),
+    onColumnVisibilityChange: (updater) =>
+      dispatch(setColumnVisibility(resolveUpdater(updater, columnVisibility))),
+    onRowSelectionChange: (updater) =>
+      dispatch(setRowSelection(resolveUpdater(updater, rowSelection))),
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  });
 
   React.useEffect(() => {
     if (table)

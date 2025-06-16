@@ -22,6 +22,7 @@ class GroupSerializer(serializers.ModelSerializer):
         read_only_fields = ['documents', 'created_at', 'modified_at']
 
     def validate(self, data):
+        print(data)
         user = self.context['request'].user
         name =\
             data.get('name') or self.instance.name if self.instance else None
