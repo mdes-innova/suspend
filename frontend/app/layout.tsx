@@ -74,7 +74,7 @@ export default async function RootLayout({
         forcedTheme="light" // Force the theme to always be light
         disableTransitionOnChange
       >
-          <div className="w-full h-full relative">
+          <div className="w-full min-h-full relative">
               <Providers>
                 <SidebarProvider>
                   <DefaultBar user={user ?? null}>

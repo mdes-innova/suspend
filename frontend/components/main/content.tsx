@@ -38,7 +38,7 @@ import ActionDropdown from "../action-dropdown";
 import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
-import { type DocumentType } from "../document-list";
+import { type DocumentType } from "../document-list/document-list";
 
 import {
   type Updater,
@@ -92,7 +92,7 @@ function PinIcon({docId}: {docId: number}) {
 }
 
 
-export const columns: ColumnDef<DocumentType>[] = [
+export const columns: ColumnDef<DocumentType | any>[] = [
   {
     id: "select",
     header: ({ table }) => (

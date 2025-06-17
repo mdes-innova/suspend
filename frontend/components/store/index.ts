@@ -5,6 +5,7 @@ import userAuthReducer from './features/user-auth-slice';
 import playlistDialogReducer from './features/playlist-diaolog-ui-slice';
 import contentListUiReducer from './features/content-list-ui-slice';
 import mailboxListUiReducer from './features/mailbox-list-ui-slice';
+import documentListUiReducer from './features/document-list-ui-slice';
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
     userAuth: userAuthReducer,
     playlistDialogUi: playlistDialogReducer,
     contentListUi: contentListUiReducer,
-    mailboxListUi: mailboxListUiReducer
+    mailboxListUi: mailboxListUiReducer,
+    documentListUi: documentListUiReducer
   },
 });
 

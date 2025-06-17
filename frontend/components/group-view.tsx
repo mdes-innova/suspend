@@ -36,11 +36,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Fragment, memo } from "react";
+import { Fragment, memo, useEffect } from "react";
 import { number } from "zod";
 import { MyPagination, type Paginor } from "./my-pagination";
 import { type GroupType } from "./group-list";
-import DocumentList from "./document-list";
+import DocumentList from "./document-list/document-list";
+import DragDrop from "./document-list/drag-drop";
 
 type Logtype = {
   id: number
@@ -61,8 +62,8 @@ type LogactivityType = {
 export default function GroupView(
   { logData, groupData, ap }: { logData: LogactivityType, groupData: GroupType, ap: number}) {
   return (
-    <div className="h-full w-full flex flex-col justify-start items-center p-4">
-      <div className="flex w-full justify-between h-[500px]">
+    <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
+      <div className="flex w-full justify-between">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
             <div className="w-full text-start text-2xl font-bold">{groupData.name}</div>
@@ -73,17 +74,18 @@ export default function GroupView(
               })}</div>
           </div>
         <DocumentList data={groupData.documents} />
-          <div className="mt-auto">
+        {/* <DragDrop /> */}
+          {/* <div className="mt-auto">
           <Urls />
-          </div>
+          </div> */}
         </div>
       </div>
-      <DocumentLogs data={logData.data} pagination={
+      {/* <DocumentLogs data={logData.data} pagination={
         {
           active: ap,
           count: logData.count
         }
-      } />
+      } /> */}
     </div>
   );
 }
