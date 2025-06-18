@@ -15,23 +15,9 @@ import { DragEndEvent } from "@dnd-kit/core";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setDragging } from "../store/features/document-list-ui-slice";
 
-export type DocumentType = {
-  id: number, 
-  pinned: boolean,
-  download?: string,
-  redNumber?: string,
-  blackNumber?: string,
-  section?: string,
-  title: string,
-  date: string,
-  selected: boolean,
-  downloads: string,
-  active: boolean
-}
-
 export default function DocumentList({ data }: { data: DocumentType[] }) {
     const [edit, setEdit] = useState(false);
-    const [docData, setDocData] = useState([...data, ...data, ...data]);
+    const [docData, setDocData] = useState(data && data.length? [...data]: []);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const documentListRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -240,36 +226,36 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
                     <DragDrop onDragEnd={handleDragEnd} disabled={edit? false: true}>
                         <div className="flex flex-col px-6 w-full h-fit" ref={documentListRef}>
                             {columns.map((e: any, idx: number) => (
-                                <div>
-                            <DroppableArea key={`drop-${idx}`} id={`drop-${idx}`} >
-                                <div className="w-full h-6"></div>
-                            </DroppableArea>
-                                <DraggableItem key={`drag-${idx}`} id={`drag-${idx}`} 
-                                    className={`${edit? 'cursor-move': ''} 
-                                    ${(draggingId === `drag-${idx}` && isDragging)? 'opacity-70': 'opacity-100'}`}>
-                                    <Card key={`group-${idx}`}
-                                        className="flex flex-row px-4 hover:shadow-md w-full"
-                                        onClick={(evt: any) => {
-                                            evt.preventDefault();
-                                            router.push(`/document-groups/${e.id}/`);
-                                        }}
-                                        >
-                                        <div className="flex-[1]">{idx}</div>
-                                        <div className="flex-[2]">{(new Date(e.createdAt)).toLocaleString("en-GB", {
-                                                year: "numeric",
-                                                day: "2-digit",
-                                                month: "2-digit"
-                                            })}</div>
-                                        <div className="flex-[4]">{e.title}</div>
-                                        <div className="flex-[2] ml-auto text-right">0</div>
-                                    </Card>
-                                </DraggableItem>
-
-                                </div>
-                            ))}
-                            <DroppableArea key={`drop-${columns.length}`} id={`drop-${columns.length}`} >
+                            <div key={`drag-drop-${idx}`}>
+                                <DroppableArea key={`drop-${idx}`} id={`drop-${idx}`} >
                                     <div className="w-full h-6"></div>
-                            </DroppableArea>
+                                </DroppableArea>
+                                    <DraggableItem key={`drag-${idx}`} id={`drag-${idx}`} 
+                                        className={`${edit? 'cursor-move': ''} 
+                                        ${(draggingId === `drag-${idx}` && isDragging)? 'opacity-70': 'opacity-100'}`}>
+                                        <Card key={`group-${idx}`}
+                                            className="flex flex-row px-4 hover:shadow-md w-full"
+                                            onClick={(evt: any) => {
+                                                if (edit) return;
+                                                evt.preventDefault();
+                                                router.push(`/document-view/${e.id}/`);
+                                            }}
+                                            >
+                                            <div className="flex-[1]">{idx}</div>
+                                            <div className="flex-[2]">{(new Date(e.createdAt)).toLocaleString("en-GB", {
+                                                    year: "numeric",
+                                                    day: "2-digit",
+                                                    month: "2-digit"
+                                                })}</div>
+                                            <div className="flex-[4]">{e.title}</div>
+                                            <div className="flex-[2] ml-auto text-right">0</div>
+                                        </Card>
+                                    </DraggableItem>
+                                </div>
+                                ))}
+                                <DroppableArea key={`drop-${columns.length}`} id={`drop-${columns.length}`} >
+                                        <div className="w-full h-6"></div>
+                                </DroppableArea>
                         </div>
                     </DragDrop>
                     {/* { data && data.length &&

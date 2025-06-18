@@ -1,8 +1,10 @@
 from rest_framework import (
     viewsets, status
 )
-from core.models import Group
+from core.models import Group, Document
 from .serializer import GroupSerializer
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 
 class GroupView(viewsets.ModelViewSet):
@@ -14,3 +16,20 @@ class GroupView(viewsets.ModelViewSet):
         """Get group object data."""
         data = self.queryset.filter(user=self.request.user).order_by('-id')
         return data
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-document/(?P<did>[^/]+)',
+    )
+    def by_document(self, request, did=None):
+        try:
+            doc = Document.objects.get(pk=did)
+            group = Group.objects.get(user=request.user, documents=doc)
+            return Response(GroupSerializer(group).data)
+        except Document.DoesNotExist:
+            return Response({'detail': 'Document not found.'},
+                            status.HTTP_404_NOT_FOUND)
+        except Group.DoesNotExist:
+            return Response({'detail': 'Document not found.'},
+                            status.HTTP_404_NOT_FOUND)

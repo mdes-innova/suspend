@@ -304,7 +304,7 @@ class PrivateTest(TestCase):
         res_update2 = self.__client.patch(url,
                                           {
                                               'document_ids': update_doc_ids,
-                                              'append': True,
+                                              'mode': 'append',
                                               }, format='json')
         self.assertEqual(res_update2.status_code, status.HTTP_200_OK)
 
@@ -390,3 +390,69 @@ class PrivateTest(TestCase):
 
         self.assertEqual(res_1.status_code, status.HTTP_200_OK)
         self.assertEqual(res_2.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_group_by_document_success(self):
+        """Test to get a group from a document successful."""
+        res_doc = self.__client.post(DOCUMENT_URL, {
+            'title': 'Doc1'
+        }, format='json')
+
+        res_group = self.__client.post(GROUP_URL, {
+            'name': 'group1'
+        }, format='json')
+
+        url = reverse('group:group-detail', args=[res_group.data['id']])
+
+        self.__client.patch(url, {
+            'document_ids': [res_doc.data['id']]
+        }, format='json')
+
+        url = reverse('group:group-by-document',
+                      kwargs={'did': res_doc.data['id']})
+
+        res = self.__client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        group = Group.objects.get(pk=res_group.data['id'])
+        group_data = GroupSerializer(group).data
+
+        self.assertEqual(group_data, res.data)
+
+    def test_remove_group_from_documents_success(self):
+        """Test to get a group from a document successful."""
+        doc_payloads1 = [
+            {
+                'title': 'Title 1'
+            },
+            {
+                'title': 'Title 2'
+            },
+            {
+                'title': 'Title 3'
+            },
+            {
+                'title': 'Title 4'
+            }
+        ]
+        doc_ids = []
+        for doc in doc_payloads1:
+            res_doc = self.__client.post(reverse('document:document-list'),
+                                         doc, format='json')
+            doc_ids.append(res_doc.data['id'])
+
+        res_group = self.__client.post(GROUP_URL, {
+            'name': 'group1'
+        }, format='json')
+
+        url = reverse('group:group-detail', args=[res_group.data['id']])
+        self.__client.patch(url, {'document_ids': doc_ids})
+        self.__client.patch(url, {'document_ids': doc_ids[-2:],
+                                  'mode': 'remove'})
+        res_get = self.__client.get(reverse('group:group-detail',
+                                            args=[res_group.data['id']]))
+        self.assertEqual(res_get.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_get.data['documents']) + len(doc_ids[-2:]),
+                         len(doc_ids))
+        self.assertEqual(set([d['title'] for d in res_get.data['documents']]),
+                         set([d['title'] for d in doc_payloads1[:-2]]))

@@ -58,7 +58,7 @@ export async function PATCH(req: NextRequest) {
             req,
             params: {
                 documentIds: params.documentIds,
-                append: params.append?? false
+                mode: params.mode?? null 
             },
             returnRes: {
                 fail: NextResponse.json({ error: "Fail to create playlist." }, { status: 400 }),

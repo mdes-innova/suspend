@@ -36,14 +36,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Fragment, memo } from "react";
+import { Fragment, memo, useEffect, useState } from "react";
 import { number } from "zod";
 import { MyPagination, type Paginor } from "./my-pagination";
-
-type Doctype = {
-  title: string
-  date: string
-}
+import { type Group, type Document } from "@/lib/types";
+import CategoryGroup from "./document-category";
+import axios from "axios";
 
 type Logtype = {
   id: number
@@ -62,12 +60,31 @@ type LogactivityType = {
 }
 
 export default function DocumentView(
-  { logData, docData, ap }: { logData: LogactivityType, docData: Doctype, ap: number}) {
+  { logData, docData, ap }: { logData: LogactivityType, docData: Document, ap: number}) {
+    const [group, setGroup] = useState<Group | null>(null);
+
+    useEffect(() => {
+      const getGroup = async() => {
+        try {
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_FRONTEND}/api/group/${docData.id}/`);
+          setGroup(res.data.data);
+        } catch (e) {
+          setGroup(null);
+        }
+      }
+      getGroup();
+    }, []);
+
   return (
     <div className="h-full w-full flex flex-col justify-start items-center p-4">
       <div className="flex w-full justify-between h-[500px]">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
+            <div className="flex">
+              <CategoryGroup category={docData?.category?.name} group={group?? undefined} doc={docData}
+                setGroup={setGroup}
+              />
+            </div>
             <div className="w-full text-start text-2xl font-bold">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>
             <div className="w-full text-start text-md">{new Date(docData.date).toLocaleString("en-GB", {
                 year: "numeric",

@@ -3,15 +3,9 @@
 import { ArrowUpDown } from "lucide-react";
 import { Card } from "./ui/card";
 import { useRouter } from "next/navigation";
+import { type Group } from "@/lib/types";
 
-export type GroupType = {
-    id: number,
-    createdAt: string,
-    name: string,
-    documents: any[]
-}
-
-export default function GroupList({ data }: { data: GroupType[] }) {
+export default function GroupList({ data }: { data: Group[] }) {
     const router = useRouter();
     return (
         

@@ -21,6 +21,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 
+GROUP_URL = reverse('group:group-list')
 DOCUMENT_URL = reverse('document:document-list')
 
 

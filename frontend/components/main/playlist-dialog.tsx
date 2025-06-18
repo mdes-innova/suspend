@@ -51,7 +51,7 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
                       credentials: 'include',
                       body: JSON.stringify({
                         documentIds: docIds,
-                        append: true
+                        mode: 'append' 
                       })
                     }
                   );

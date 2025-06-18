@@ -94,7 +94,7 @@ export function NewPlaylistSheet() {
                     e.preventDefault();
                     if (docIds && docIds.length)
                       try {
-                        const res = await fetch('api/playlist/', {
+                        const res = await fetch('/api/playlist/', {
                           method: 'POST',
                           credentials: 'include',
                           body: JSON.stringify({
@@ -106,13 +106,13 @@ export function NewPlaylistSheet() {
                         if (!res.ok) dispatch(closeModal({ui: PLAYLISTUI.new, info: [resJson.error], err: true }));
                         else {
                           try {
-                            const addRes = await fetch(`api/playlist/${resJson.data.id}/`,
+                            const addRes = await fetch(`/api/playlist/${resJson.data.id}/`,
                               {
                                 method: 'PATCH',
                                 credentials: 'include',
                                 body: JSON.stringify({
                                   documentIds: docIds,
-                                  append: true
+                                  mode: 'append' 
                                 })
                               }
                             );

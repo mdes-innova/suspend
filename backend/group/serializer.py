@@ -22,7 +22,6 @@ class GroupSerializer(serializers.ModelSerializer):
         read_only_fields = ['documents', 'created_at', 'modified_at']
 
     def validate(self, data):
-        print(data)
         user = self.context['request'].user
         name =\
             data.get('name') or self.instance.name if self.instance else None
@@ -69,7 +68,7 @@ class GroupSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         user = self.context['request'].user
         documents = validated_data.pop('document_ids', None)
-        append = self.context['request'].data.get('append', False)
+        mode = self.context['request'].data.get('mode', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -77,7 +76,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
         if documents is not None:
             # Clear and re-add only allowed documents
-            if append:
+            if mode == 'append':
                 had_doc_ids = list(
                     GroupDocument.objects
                     .filter(group=instance)
@@ -90,6 +89,12 @@ class GroupSerializer(serializers.ModelSerializer):
                                                  document=Document.objects
                                                  .get(id=doc_id),
                                                  user=user)
+            elif mode == 'remove':
+                GroupDocument.objects.filter(
+                    group=instance,
+                    document__in=documents,
+                    user=user
+                    ).delete()
             else:
                 GroupDocument.objects.filter(group=instance).delete()
                 for doc in documents:

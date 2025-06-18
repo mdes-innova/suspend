@@ -214,6 +214,14 @@ class DocumentView(viewsets.ModelViewSet):
 
         return Response(data)
     
+    @action(
+        detail=False,
+        methods=['patch'],
+        url_path='by-group/(?P<gid>[^/]+)/remove',
+        # name='document-category-by-title'
+    )
+    def remove_by_group(self, request, gid=None): 
+        pass
     # @action(
     #     detail=True,
     #     methods=['get'],
