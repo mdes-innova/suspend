@@ -48,6 +48,7 @@ urlpatterns = [
     path('api/isp/', include('isp.urls')),
     path('api/group/', include('group.urls')),
     path('api/activity/', include('activity.urls')),
+    path('api/mail/', include('mail.urls')),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
     path(

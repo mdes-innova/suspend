@@ -42,6 +42,7 @@ import { MyPagination, type Paginor } from "./my-pagination";
 import { type Group, type Document } from "@/lib/types";
 import CategoryGroup from "./document-category";
 import axios from "axios";
+import { useAppSelector } from "./store/hooks";
 
 type Logtype = {
   id: number
@@ -60,30 +61,14 @@ type LogactivityType = {
 }
 
 export default function DocumentView(
-  { logData, docData, ap }: { logData: LogactivityType, docData: Document, ap: number}) {
-    const [group, setGroup] = useState<Group | null>(null);
-
-    useEffect(() => {
-      const getGroup = async() => {
-        try {
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_FRONTEND}/api/group/${docData.id}/`);
-          setGroup(res.data.data);
-        } catch (e) {
-          setGroup(null);
-        }
-      }
-      getGroup();
-    }, []);
-
+  { logData, docData, group, ap }: { logData: LogactivityType, docData: Document, group: Group | null, ap: number}) {
   return (
     <div className="h-full w-full flex flex-col justify-start items-center p-4">
       <div className="flex w-full justify-between h-[500px]">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
             <div className="flex">
-              <CategoryGroup category={docData?.category?.name} group={group?? undefined} doc={docData}
-                setGroup={setGroup}
-              />
+              <CategoryGroup category={docData?.category?.name} group={group?? null} doc={docData} />
             </div>
             <div className="w-full text-start text-2xl font-bold">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>
             <div className="w-full text-start text-md">{new Date(docData.date).toLocaleString("en-GB", {

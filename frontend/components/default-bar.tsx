@@ -56,10 +56,8 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                     <div className="text-2xl font-bold">ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์</div>
                     <div>กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ</div>
                 </div>
-                <div className='flex relative'>
-                    <UserMailbox />
-                    <DropdownMenuUser user={user}/>
-                </div>
+                <UserMailbox />
+                <DropdownMenuUser user={user}/>
             </div>
             <div className="flex justify-start items-start w-full h-full ">
                 <SlideBar />

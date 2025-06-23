@@ -14,10 +14,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation";
-import { type Group, Document } from "@/lib/types";
+import { type Group, type Document, type User } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { useAppSelector } from "./store/hooks";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export default function CategoryGroup({ category, group, doc, setGroup }:
-    { category: string, group?: Group, doc?: Document, setGroup: (group: Group | null) => {} }) {
+export default function CategoryGroup({ category, group, doc }:
+    { category: string, group: Group | null, doc?: Document }) {
+
+    const [groupData, setGroupData] = useState<Group | null>(group);
+    const user = useAppSelector(state => state.userAuth.user);
+    const isOwner = user && groupData && user.id === groupData.user.id;
+
     const router = useRouter();
     const baseColors = {
         uncategorized: 'bg-muted',
@@ -39,43 +47,63 @@ export default function CategoryGroup({ category, group, doc, setGroup }:
                 {label}
             </Button>
             {
-                group &&
+                groupData &&
                 <div className="px-2 flex justify-center items-center">
-                    <div className=" p-0 px-1 underline cursor-pointer" onClick={(e: any) => {
-                        e.preventDefault();
-                        router.push(`/document-groups/${group?.id}/`);
-                    }}>
-                        {group?.name}
-                    </div>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Ban size={16} color="red" className="cursor-pointer"/>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>คุณต้องการนำเอกสารนี้ออกจาก {group?.name} หรือไม่?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={async(e: any) => {
-                                e.preventDefault();
-                                await fetch(`/api/playlist/${group?.id}/`,
-                                {
-                                    method: 'PATCH',
-                                    credentials: 'include',
-                                    body: JSON.stringify({
-                                    documentIds: [doc?.id],
-                                    mode: 'remove' 
-                                    })
-                                }
-                                );
-                                setGroup(null);
-                            }}>Continue</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    {
+                        isOwner &&
+                        <div className="p-0 px-1 underline cursor-pointer" onClick={(e: any) => {
+                            e.preventDefault();
+                            if (!isOwner) return;
+                            router.push(`/document-groups/${groupData?.id}/`);
+                        }}>
+                            {groupData?.name}
+                        </div>
+                    }
+                    {
+                        !isOwner &&
+                         <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="p-0 px-1 cursor-not-allowed text-gray-400">
+                                    {groupData?.name}
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Belong to {groupData.user.username}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    }
+                    {
+                        isOwner &&
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Ban size={16} color="red" className="cursor-pointer"/>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>คุณต้องการนำเอกสารนี้ออกจาก {group?.name} หรือไม่?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={async(e: any) => {
+                                    e.preventDefault();
+                                    await fetch(`/api/playlist/${group?.id}/`,
+                                    {
+                                        method: 'PATCH',
+                                        credentials: 'include',
+                                        body: JSON.stringify({
+                                        documentIds: [doc?.id],
+                                        mode: 'remove' 
+                                        })
+                                    }
+                                    );
+                                    setGroupData(null);
+                                }}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    }
                 </div>
             }
         </>

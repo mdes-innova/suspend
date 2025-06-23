@@ -1,12 +1,20 @@
 """Serializer module for group app."""
 from rest_framework import serializers
-
-from core.models import Group, KindType, Document, GroupDocument
+from django.db.utils import IntegrityError
+from django.contrib.auth import get_user_model
+from core.models import Group, Document, GroupDocument
 from document.serializer import DocumentSerializer
+from user.serializer import UserSerializer
 
 
 class GroupSerializer(serializers.ModelSerializer):
     """Group serializer class."""
+    user = UserSerializer(read_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all(),
+        write_only=True,
+        required=False
+    )
     document_ids = serializers.PrimaryKeyRelatedField(
         queryset=Document.objects.all(),
         many=True,
@@ -17,8 +25,11 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'kind', 'documents', 'document_ids',
-                  'created_at', 'modified_at']
+        fields = [
+            'id', 'name', 'kind', 'documents', 'document_ids',
+            'user', 'user_id',
+            'created_at', 'modified_at'
+            ]
         read_only_fields = ['documents', 'created_at', 'modified_at']
 
     def validate(self, data):
@@ -76,30 +87,40 @@ class GroupSerializer(serializers.ModelSerializer):
 
         if documents is not None:
             # Clear and re-add only allowed documents
-            if mode == 'append':
-                had_doc_ids = list(
-                    GroupDocument.objects
-                    .filter(group=instance)
-                    .values_list('document_id', flat=True)
+            try:
+                if mode == 'append':
+                    had_doc_ids = list(
+                        GroupDocument.objects
+                        .filter(group=instance)
+                        .values_list('document_id', flat=True)
+                    )
+                    doc_ids = [getattr(doc, 'id') for doc in documents]
+                    new_doc_ids = set(doc_ids).difference(had_doc_ids)
+                    for doc_id in new_doc_ids:
+                        GroupDocument.objects.create(
+                            group=instance,
+                            document=Document.objects.get(id=doc_id),
+                            user=user
+                            )
+                elif mode == 'remove':
+                    GroupDocument.objects.filter(
+                        group=instance,
+                        document__in=documents
+                        ).delete()
+                else:
+                    GroupDocument.objects.filter(group=instance).delete()
+                    for doc in documents:
+                        GroupDocument.objects.create(
+                            group=instance,
+                            document=doc,
+                            document_kind=instance.kind,
+                            user=user
+                        )
+            except IntegrityError:
+                raise serializers.ValidationError(
+                    {
+                        'detail':
+                            'Some documents are already in a group.'
+                    }
                 )
-                doc_ids = [getattr(doc, 'id') for doc in documents]
-                new_doc_ids = set(doc_ids).difference(had_doc_ids)
-                for doc_id in new_doc_ids:
-                    GroupDocument.objects.create(group=instance,
-                                                 document=Document.objects
-                                                 .get(id=doc_id),
-                                                 user=user)
-            elif mode == 'remove':
-                GroupDocument.objects.filter(
-                    group=instance,
-                    document__in=documents,
-                    user=user
-                    ).delete()
-            else:
-                GroupDocument.objects.filter(group=instance).delete()
-                for doc in documents:
-                    GroupDocument.objects.create(group=instance,
-                                                 document=doc,
-                                                 user=user,
-                                                 document_kind=instance.kind)
         return instance

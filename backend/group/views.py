@@ -25,11 +25,11 @@ class GroupView(viewsets.ModelViewSet):
     def by_document(self, request, did=None):
         try:
             doc = Document.objects.get(pk=did)
-            group = Group.objects.get(user=request.user, documents=doc)
+            group = Group.objects.get(documents=doc)
             return Response(GroupSerializer(group).data)
         except Document.DoesNotExist:
             return Response({'detail': 'Document not found.'},
                             status.HTTP_404_NOT_FOUND)
         except Group.DoesNotExist:
-            return Response({'detail': 'Document not found.'},
+            return Response({'detail': 'Group not found.'},
                             status.HTTP_404_NOT_FOUND)

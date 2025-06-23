@@ -1,10 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-type User = {
-  username: string;
-  isStaff: boolean;
-  isActive: boolean;
-};
+import { type User } from '@/lib/types';
 
 interface UIState {
   user: User | null;

@@ -180,24 +180,28 @@ export async function fetchWithAccessApp({ access, refresh, url, method, params:
 
     const res = await fetch(url, { headers, body, method });
 
-    if (!res.ok && res.status === 401 && refresh) {
-      const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh }),
-      });
-
-      if (!refreshRes.ok) throw new AuthError("Invalid refresh token");
-
-      const { access: newAccess } = await refreshRes.json();
-      headers.set("Authorization", `Bearer ${newAccess}`);
-
-      const retryRes = await fetch(url, { headers, method, body });
-      if (!retryRes.ok) {
-        if (res.status === 401) throw new AuthError("Authentication fail.");
-        else throw new Error("Retry fetch failed");
+    if (!res.ok) {
+      if (res.status === 401 && refresh) {
+        const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh }),
+        });
+  
+        if (!refreshRes.ok) throw new AuthError("Invalid refresh token");
+  
+        const { access: newAccess } = await refreshRes.json();
+        headers.set("Authorization", `Bearer ${newAccess}`);
+  
+        const retryRes = await fetch(url, { headers, method, body });
+        if (!retryRes.ok) {
+          if (res.status === 401) throw new AuthError("Authentication fail.");
+          else throw new Error("Retry fetch failed");
+        }
+        return retryRes.json();
+      } else {
+          throw new Error("Fetch failed");
       }
-      return retryRes.json();
     }
 
     return res.json();

@@ -23,4 +23,13 @@ export type Group = {
     createdAt: string,
     name: string,
     documents: any[]
+    user: User
 }
+
+export type User = {
+  id: number,
+  username: string,
+  isStaff: boolean,
+  isActive: boolean,
+  isp?: string
+};

@@ -15,14 +15,18 @@ class KindType(models.TextChoices):
 class GroupDocument(models.Model):
     group = models.ForeignKey('Group', on_delete=models.CASCADE)
     document = models.ForeignKey('Document', on_delete=models.CASCADE)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        default=None
+        )
     document_kind = models.CharField(max_length=20, default=KindType.Nokind)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'document', 'document_kind'],
-                name='unique_document_kind_per_document_per_user'
+                fields=['document', 'document_kind'],
+                name='unique_document_kind_per_document'
             )
         ]
 

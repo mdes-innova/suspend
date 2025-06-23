@@ -180,9 +180,9 @@ class PrivateTest(TestCase):
         self.assertEqual(set([r['title'] for r in res.data['documents']]),
                          set([r['title'] for r in doc_payloads]))
 
-    def test_assing_the_same_doc_different_users_success(self):
+    def test_assing_the_same_doc_different_users_fail(self):
         """Test to assign the same document to different users with the
-        same name of group
+        same name of group fail.
         """
         user_1 = get_user_model().objects.create_user(
             username='user_1',
@@ -218,8 +218,10 @@ class PrivateTest(TestCase):
 
         self.assertEqual(res_update1.status_code, status.HTTP_200_OK)
         self.assertEqual(res_update1.data['documents'][0]['title'], 'Title 1')
-        self.assertEqual(res_update2.status_code, status.HTTP_200_OK)
-        self.assertEqual(res_update2.data['documents'][0]['title'], 'Title 1')
+        self.assertEqual(res_update2.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(res_update2.data['detail']),
+                         'Some documents are already in a group.')
 
     def test_assing_the_same_doc_the_same_user_fail(self):
         """Test to assign the same document to the same with the

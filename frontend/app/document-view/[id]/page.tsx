@@ -5,6 +5,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+const getGroupUrl = (docId: number) => 
+  `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/by-document/${docId}/`;
+
 async function Components({ params, searchParams }: { params: any, searchParams: any }) {
   const { id } = (await params);
   const { ap } = (await searchParams);
@@ -21,9 +24,23 @@ async function Components({ params, searchParams }: { params: any, searchParams:
     const logData = await fetchWithAccessApp({
       access, refresh, url: logUrl, method: 'GET'
     });
-    return (
-      <DocumentView logData={logData} docData={docData} ap={parseInt(ap)?? 0}/>
-    );
+
+    try {
+      const groupUrl = getGroupUrl(docData.id);
+      const groupData = await fetchWithAccessApp({
+        access, refresh, url: groupUrl, method: 'GET'
+      });
+
+      return (
+        <DocumentView logData={logData} docData={docData}
+          group={groupData} ap={parseInt(ap)?? 0}/>
+      );
+    } catch (error2){
+      return (
+        <DocumentView logData={logData} docData={docData}
+          group={null} ap={parseInt(ap)?? 0}/>
+      );
+    }
   } catch (error) {
     let access = cookieStore?.get("access")?.value;
     if (access) {

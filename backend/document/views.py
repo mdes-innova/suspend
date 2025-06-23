@@ -206,14 +206,14 @@ class DocumentView(viewsets.ModelViewSet):
                 )
             d['downloads'] = f'{len(pdf_downloads)}/{len(xlsx_downloads)}'
             try:
-                GroupDocument.objects.get(document=doc, user=user)
+                GroupDocument.objects.get(document=doc)
                 d['active'] = False
             except GroupDocument.DoesNotExist:
                 d['active'] = True
             d['selected'] = False
 
         return Response(data)
-    
+
     @action(
         detail=False,
         methods=['patch'],

@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ['username', 'password', 'isp', 'is_staff', 'is_active']
+        fields = ['id', 'username', 'password', 'isp', 'is_staff', 'is_active']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
     def validate_username(self, value):
