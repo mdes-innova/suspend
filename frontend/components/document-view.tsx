@@ -185,12 +185,8 @@ function Urls() {
           <Button variant="outline">เปิด Urls</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
-          {/* <ol className="list-decimal list-outside pl-6">
-            {urls.map((e: string) => <li key={`urls-${e}`}>{e}</li>)}
-          </ol> */}
           <ScrollArea className="h-72">
             <ol className="list-decimal list-outside pl-6 p-4">
-              {/* <h4 className="mb-4 text-sm leading-none font-medium">Tags</h4> */}
               {urls.map((url) => (
                 <Fragment key={url}>
                   <li className="text-sm">{url}</li>

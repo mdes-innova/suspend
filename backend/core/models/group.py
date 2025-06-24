@@ -18,7 +18,8 @@ class GroupDocument(models.Model):
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
-        default=None
+        default=None,
+        null=True
         )
     document_kind = models.CharField(max_length=20, default=KindType.Nokind)
 

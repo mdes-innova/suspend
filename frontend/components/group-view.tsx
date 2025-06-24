@@ -39,9 +39,10 @@ import { Label } from "@/components/ui/label";
 import { Fragment, memo, useEffect } from "react";
 import { number } from "zod";
 import { MyPagination, type Paginor } from "./my-pagination";
-import { type GroupType } from "./group-list";
+import { User, type Group } from "@/lib/types";
 import DocumentList from "./document-list/document-list";
 import DragDrop from "./document-list/drag-drop";
+import { GroupForm } from "./mail/group-form";
 
 type Logtype = {
   id: number
@@ -60,7 +61,7 @@ type LogactivityType = {
 }
 
 export default function GroupView(
-  { logData, groupData, ap }: { logData: LogactivityType, groupData: GroupType, ap: number}) {
+  { logData, groupData, ap, ispUsers}: { logData: LogactivityType, groupData: Group, ap: number, ispUsers: User[]}) {
   return (
     <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
       <div className="flex w-full justify-between">
@@ -73,7 +74,9 @@ export default function GroupView(
                 day: "2-digit",
               })}</div>
           </div>
-        <DocumentList data={groupData.documents} />
+        <GroupForm ispUsers={ispUsers}>
+          <DocumentList data={groupData.documents} />
+        </GroupForm>
         {/* <DragDrop /> */}
           {/* <div className="mt-auto">
           <Urls />

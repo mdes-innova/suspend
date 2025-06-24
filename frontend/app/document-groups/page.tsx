@@ -43,6 +43,7 @@ async function Components() {
 export default function Page() {
   return (
     <Suspense>
+      <div className="text-3xl mb-4 pl-2">เลือกหมวดหมู่ที่ท่านต้องการสร้าง</div>
       <Components />
     </Suspense>
   );

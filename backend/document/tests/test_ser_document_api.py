@@ -654,7 +654,7 @@ class FileDownloadUploadTest(TestCase):
         self.__document.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('core.models.document.uuid.uuid4')
+    @patch('core.utils.uuid.uuid4')
     def test_dowload_file_success(self, mock_uuid):
         """Test to download an file from a document."""
         mock_uuid.return_value = 'test-uuid'
@@ -677,7 +677,7 @@ class FileDownloadUploadTest(TestCase):
         content = b''.join(res.streaming_content)
         self.assertEqual(content, b'Test file content')
     
-    @patch('core.models.document.uuid.uuid4')
+    @patch('core.utils.uuid.uuid4')
     def test_dowload_pdf_file_success(self, mock_uuid):
         """Test to download an file from a document."""
         mock_uuid.return_value = 'test-uuid'
@@ -700,7 +700,7 @@ class FileDownloadUploadTest(TestCase):
         content = b''.join(res.streaming_content)
         self.assertEqual(content, b'Test file content')
 
-    @patch('core.models.document.uuid.uuid4')
+    @patch('core.utils.uuid.uuid4')
     def test_dowload_xlsx_file_success(self, mock_uuid):
         """Test to download an file from a document."""
         mock_uuid.return_value = 'test-uuid'
@@ -723,7 +723,7 @@ class FileDownloadUploadTest(TestCase):
         content = b''.join(res.streaming_content)
         self.assertEqual(content, b'Test file content')
 
-    @patch('core.models.document.uuid.uuid4')
+    @patch('core.utils.uuid.uuid4')
     def test_dowload_file_document_does_not_exists(self, mock_uuid):
         """Test to download an file from no document."""
         mock_uuid.return_value = 'test-uuid'
@@ -753,7 +753,7 @@ class FileDownloadUploadTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(res.data['detail'], 'File not available')
 
-    @patch('core.models.document.uuid.uuid4')
+    @patch('core.utils.uuid.uuid4')
     def test_get_document_content_success(self, mock_uuid):
         """Test to get document content successful."""
         mock_uuid.return_value = 'test-uuid'

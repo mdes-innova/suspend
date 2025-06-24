@@ -207,7 +207,7 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
     return (
         
         <div className="flex flex-col justify-start gap-y-2 px-2 w-full ">
-            <Button className={`w-fit ml-auto ${edit? 'bg-accent': ''}`} variant='outline' 
+            <Button className={`w-fit ml-auto mr-6 ${edit? 'bg-accent': ''}`} variant='outline' 
                 id={documentListEditId} onClick={(e: any) => {
                 e.preventDefault();
                 setEdit(prev => !prev);

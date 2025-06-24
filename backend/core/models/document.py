@@ -1,17 +1,9 @@
 """Document model module."""
-import os
-import uuid
 from django.db import models
 from core.models.category import Category
 from django.db.models.functions import Lower
 from django.core.validators import FileExtensionValidator
-
-
-def document_file_path(instance, filename):
-    """Generate file path for new recipe file."""
-    ext = os.path.splitext(filename)[1]
-    filename = '{}{}'.format(uuid.uuid4(), ext)
-    return os.path.join('uploads', 'document', filename)
+from core.utils import document_file_path
 
 
 class Document(models.Model):
@@ -27,7 +19,14 @@ class Document(models.Model):
         related_name='documents',
         null=True,
         blank=True,
-        default=None
+    )
+    mail = models.ForeignKey(
+        'Mail',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        related_name='documents'
     )
     tags = models.ManyToManyField('Tag', related_name='documents')
     links = models.ManyToManyField('Link', related_name='documents')

@@ -7,4 +7,4 @@ from .link import Link
 from .isp import ISP
 from .group import Group, KindType, GroupDocument
 from .activity import Activity, ActivityType
-from .mail import Mail
+from .mail import Mail, FromUser

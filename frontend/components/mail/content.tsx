@@ -93,33 +93,6 @@ function PinIcon({docId}: {docId: number}) {
 
 export const columns: ColumnDef<DocumentType | any>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => {
-      const { selected, active } = row.original;
-        if (active)
-          return (
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
-              disabled={!active}
-            />
-          );
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     id: 'ชื่อเรื่อง',
     accessorKey: "title",
     header: ({ column }) => {
@@ -136,7 +109,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     cell: ({ row }) => 
     {
       const { title } = row.original;
-      return (<div className="lowercase ml-4">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>);
+      return (<div className="lowercase ml-4 hover:underline">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>);
     }
   },
     {
@@ -159,66 +132,18 @@ export const columns: ColumnDef<DocumentType | any>[] = [
       );
     },
   },
-  {
+    {
     id: 'คดีหมายเลขดำ',
     accessorKey: "blackNumber",
-    header: "คดีหมายเลขดำ",
+    // header: "คดีหมายเลขดำ",
+    header: ({ column }) => (<div className=""></div>),
     cell: ({ row }) => {
       const { blackNumber } = row.original;
       return (
-        <div>
+        <div className="text-right">
           {blackNumber?? '-'}
           </div>
       );
-    },
-  },
-  {
-    id: 'คดีหมายเลขแดง',
-    accessorKey: "redNumber",
-    header: "คดีหมายเลขแดง",
-    cell: ({ row }) => {
-      const { redNumber } = row.original;
-
-      return (
-        <div>
-          {redNumber?? '-'}
-          </div>
-      );
-    },
-  }, {
-    id: 'มาตรา',
-    accessorKey: "section",
-    header: "มาตรา",
-    cell: ({ row }) => {
-      const { section } = row.original;
-
-      return (
-        <div>
-          {section?? '-'}
-          </div>
-      );
-    },
-  },
-    {
-      id: 'ดาวน์โหลด',
-    accessorKey: "downloads",
-    header: () => <div className="text-right">ดาวน์โหลด</div>,
-    cell: ({ row }) => {
-      const { downloads } = row.original;
-      return (<div className="text-right">{downloads}</div>);
-
-    }
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const { id, active } = row.original;
-      return (
-        <ActionDropdown docId={ id } active={active}>
-          <MoreHorizontal />
-        </ActionDropdown>
-      )
     },
   },
 ]
@@ -318,41 +243,6 @@ export default function DataTable({ data }: { data: Document[] }) {
           }
           className="max-w-sm"
         />
-        <div className="ml-auto flex items-center gap-x-2">
-          {Object.keys(rowSelection || {}).length > 0 ? (
-            <ActionDropdown>
-                <SlidersVertical />
-            </ActionDropdown>
-          ) : (
-            <></>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -382,7 +272,7 @@ export default function DataTable({ data }: { data: Document[] }) {
                 <TableRow
                   key={row.id}
                   data-state={active? row.getIsSelected() && "selected": ""}
-                  className={`${active? selected? "bg-muted": "": "bg-gray-100 text-gray-400"}`}
+                  className={`cursor-default ${active? selected? "bg-muted": "": "bg-gray-100 text-gray-400"}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
