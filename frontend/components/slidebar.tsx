@@ -92,12 +92,12 @@ function SlideBar() {
         <div className="h-full w-54 bg-sidebar border-r-2 border-sidebar-border flex flex-col justify-start items-start">
             <div className="w-full">
             {menus.map((menu: any, idx: number) => {
-                if (menu.pathname === '/mail')
+                if (menu.pathname === '/mail' || menu.pathname === '/mail/draft' || menu.pathname === '/mail/sent')
                     return (
                         <div key={`sidebar-div-${idx}`}>
                             <div
                                 key={`sidebar-div-${idx}-0`}
-                                className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === menu.pathname? "bg-gray-300": "hover:bg-gray-200"}`}>
+                                className="w-full flex px-2 py-1 border-b cursor-pointer bg-gray-300">
                                 <Link className="w-full" href={`${process.env.NEXT_PUBLIC_FRONTEND}${menu.pathname}`}>
                                     <span>{menu.name}</span>
                                 </Link>
@@ -106,7 +106,7 @@ function SlideBar() {
                                 user && !user.isp &&
                                 <div
                                     key={`sidebar-div-${idx}-1`}
-                                    className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === '/mail/all'? "bg-gray-300": "hover:bg-gray-200"}`}>
+                                    className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === '/mail'? "bg-gray-200 font-bold": "hover:bg-gray-200"}`}>
                                     <Link className="w-full" href={`${process.env.NEXT_PUBLIC_FRONTEND}${menu.pathname}`}>
                                         <span className="pl-4">&#10146; ทั้งหมด</span>
                                     </Link>
@@ -116,7 +116,7 @@ function SlideBar() {
                                 user && !user.isp &&
                                 <div
                                     key={`sidebar-div-${idx}-2`}
-                                    className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === '/mail/draft'? "bg-gray-300": "hover:bg-gray-200"}`}>
+                                    className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === '/mail/draft'? "bg-gray-100 font-bold": "hover:bg-gray-200"}`}>
                                     <Link className="w-full" href={`${process.env.NEXT_PUBLIC_FRONTEND}${menu.pathname}`}>
                                         <span className="pl-4">&#10146; ฉบับร่าง</span>
                                     </Link>
@@ -126,7 +126,7 @@ function SlideBar() {
                                 user && !user.isp &&
                                 <div
                                     key={`sidebar-div-${idx}-3`}
-                                    className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === '/mail/draft'? "bg-gray-300": "hover:bg-gray-200"}`}>
+                                    className={`w-full flex px-2 py-1 border-b cursor-pointer ${pathname === '/mail/sent'? "bg-gray-300 font-bold": "hover:bg-gray-200"}`}>
                                     <Link className="w-full" href={`${process.env.NEXT_PUBLIC_FRONTEND}${menu.pathname}`}>
                                         <span className="pl-4">&#10146; ส่งแล้ว</span>
                                     </Link>

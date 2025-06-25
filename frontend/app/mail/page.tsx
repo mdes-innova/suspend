@@ -11,12 +11,20 @@ async function getData() {
   const cookieStore = await cookies();
   const refresh = cookieStore?.get("refresh")?.value;
   const access = cookieStore?.get("access")?.value;
-  const url = `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/content/`;
+  const meUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/me/`;
+  const url = `${process.env.NEXT_PUBLIC_BACKEND}/api/mail/mails/`;
 
   try {
-    const data = await fetchWithAccessApp({
-      access, refresh, url, method: 'GET'
+    const userData = await fetchWithAccessApp({
+      access, refresh, url: meUrl, method: 'GET'
     });
+    console.log(userData);
+    const data = userData.isp? await fetchWithAccessApp({
+      access, refresh, url, method: 'GET'
+    }) : await fetchWithAccessApp({
+      access, refresh, url, method: 'GET'
+    })
+    ;
     return data;
   } catch (error) {
     if (error instanceof AuthError) redirect('/login') ;

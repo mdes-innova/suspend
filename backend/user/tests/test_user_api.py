@@ -9,7 +9,7 @@ from django.db.utils import IntegrityError
 from unittest.mock import patch
 from django.core.exceptions import ValidationError
 from django.db import transaction
-
+from user.serializer import UserSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -119,7 +119,6 @@ class AdminUserTest(TestCase):
 
     def test_create_user_with_isp_success(self):
         """Test to create user with isp."""
-        print(CREATE_USER_URL)
         payload = {
             'username': 'admin1',
             'password': 'testpass123',
@@ -127,6 +126,7 @@ class AdminUserTest(TestCase):
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data, {
+            'id': res.data['id'],
             'username': 'admin1',
             'isp': None,
             'is_staff': False,
@@ -141,6 +141,7 @@ class AdminUserTest(TestCase):
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data, {
+            'id': res.data['id'],
             'username': 'admin2',
             'isp': None,
             'is_staff': False,
@@ -301,14 +302,14 @@ class AdminUserTest(TestCase):
 
 class PrivateUserApiTest(TestCase):
     """Test API requests that require authentication."""
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.__user = get_user_model().objects.create_superuser(
             username="Testname",
             password='test-user-password123',
-            isp=None
+            isp=None,
+            is_staff=True
         )
         cls.__url = reverse('user:user-detail',
                                       args=[cls.__user.pk])
@@ -322,6 +323,7 @@ class PrivateUserApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, {
+            'id': res.data['id'],
             'username': self.__user.username,
             'isp': None,
             'is_staff': True,
@@ -338,19 +340,21 @@ class PrivateUserApiTest(TestCase):
         payload = {
             'username': 'Tokenname',
             'password': 'tokenpass123',
-            'isp': None
+            'isp': None,
+            'is_staff': True
         }
         payload_with_ip = {
             'username': 'Tokenname',
             'password': 'tokenpass123',
             'ip_address': '::1',
-            'isp': None
+            'isp': None,
+            'is_staff': True
         }
         payload_check = {
             'username': 'Tokenname',
             'password': 'tokenpass123',
             'isp': None,
-            'is_staff': False,
+            'is_staff': True,
             'is_active': True
         }
         user = get_user_model().objects.create_user(**payload)
@@ -365,6 +369,7 @@ class PrivateUserApiTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data,
+                         {'id': response.data['id']} |
                          {k: v for k, v in payload_check.items()
                           if k != 'password'})
 
@@ -379,6 +384,7 @@ class PrivateUserApiTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data,
+                         {'id': response.data['id']} |
                          {k: v for k, v in payload_check.items()
                           if k != 'password'})
 
@@ -389,6 +395,7 @@ class PrivateUserApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data,
                          {
+                            'id': res.data['id'],
                             'username': 'Testname', 'isp': None,
                             'is_staff': True, 'is_active': True
                             })
@@ -498,3 +505,37 @@ class TwoFactorTest(TestCase):
         self.assertEqual(qr_response['Content-Type'],
                          'image/svg+xml; charset=utf-8')
         self.assertGreater(len(qr_response.content), 100)
+
+
+class PrivateUserTest(TestCase):
+    """Test API requests that require authentication."""
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.__user = get_user_model().objects.create_user(
+            username="Testname",
+            password='test-user-password123',
+        )  # type: ignore
+        cls.__client = APIClient()
+        cls.__client.force_authenticate(cls.__user)
+
+    def test_get_users_fail(self):
+        """Test to get users fail."""
+        res = self.__client.get(CREATE_USER_URL)
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+    
+    def test_create_user_fail(self):
+        """Test to create user fail."""
+        res = self.__client.get(CREATE_USER_URL, {
+            'username': 'arnon',
+            'password': 'arnon@3339'
+        })
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_my_user_success(self):
+        """Test to get users success."""
+        res = self.__client.get(reverse('user:user-me'))
+
+        user_data = UserSerializer(self.__user).data
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, user_data)

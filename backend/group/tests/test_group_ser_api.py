@@ -51,14 +51,15 @@ class PublicTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateTest(TestCase):
+class PrivateStaffTest(TestCase):
     """Test for private access."""
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         user_payload = {
             'username': 'user',
-            'password': 'user_password_123'
+            'password': 'user_password_123',
+            'is_staff': True
         }
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(**user_payload)
@@ -115,7 +116,8 @@ class PrivateTest(TestCase):
         """Test to get auto-create group after user creation."""
         payload = {
             'username': 'user1',
-            'password': 'user1_password_123'
+            'password': 'user1_password_123',
+            'is_staff': True
         }
         user = get_user_model().objects.create_user(**payload)
         group = Group.objects.get(user=user)
@@ -186,11 +188,13 @@ class PrivateTest(TestCase):
         """
         user_1 = get_user_model().objects.create_user(
             username='user_1',
-            password='password_1'
+            password='password_1',
+            is_staff=True
         )
         user_2 = get_user_model().objects.create_user(
             username='user_2',
-            password='password_2'
+            password='password_2',
+            is_staff=True
         )
         client_1 = APIClient()
         client_2 = APIClient()
@@ -229,7 +233,8 @@ class PrivateTest(TestCase):
         """
         user_1 = get_user_model().objects.create_user(
             username='user_1',
-            password='password_1'
+            password='password_1',
+            is_staff=True
         )
         client_1 = APIClient()
         client_1.force_authenticate(user_1)
@@ -458,3 +463,40 @@ class PrivateTest(TestCase):
                          len(doc_ids))
         self.assertEqual(set([d['title'] for d in res_get.data['documents']]),
                          set([d['title'] for d in doc_payloads1[:-2]]))
+
+
+class PrivateUserTest(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        user_payload = {
+            'username': 'user',
+            'password': 'user_password_123',
+        }
+        cls.__client = APIClient()
+        cls.__user = get_user_model().objects.create_user(**user_payload)
+        cls.__client.force_authenticate(cls.__user)
+
+    def test_non_admin_create_group_fail(self):
+        """Test to create a group from non admin fail."""
+        admin_user = get_user_model().objects.create_superuser(
+            username='admin',
+            password='admin@password'
+        )  # type: ignore
+        admin_client = APIClient()
+        admin_client.force_authenticate(admin_user)
+
+        res_admin = admin_client.post(GROUP_URL, {
+            'name': 'admin group',
+            'kind': 'Kind1'
+        }, format='json')
+
+        self.assertEqual(res_admin.status_code, status.HTTP_201_CREATED)
+
+        res_non_admin = self.__client.post(GROUP_URL, {
+            'name': 'user group',
+            'kind': 'Kind1'
+        }, format='json')
+
+        self.assertEqual(res_non_admin.status_code,
+                        status.HTTP_403_FORBIDDEN)

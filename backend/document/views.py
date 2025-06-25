@@ -15,6 +15,7 @@ from category.serializer import CategorySerializer
 from link.serializer import LinkSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class DocumentView(viewsets.ModelViewSet):
@@ -222,6 +223,13 @@ class DocumentView(viewsets.ModelViewSet):
     )
     def remove_by_group(self, request, gid=None): 
         pass
+
+    def get_permissions(self):
+        match self.request.method:
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()
     # @action(
     #     detail=True,
     #     methods=['get'],

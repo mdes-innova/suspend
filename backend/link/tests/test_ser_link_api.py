@@ -39,7 +39,7 @@ class LinkSerializerTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateLinkSerializerTest(TestCase):
+class PrivateStaffTest(TestCase):
     """Test case for authenticated user."""
 
     @classmethod
@@ -49,7 +49,8 @@ class PrivateLinkSerializerTest(TestCase):
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
             username='Testuser',
-            password='test_password'
+            password='test_password',
+            is_staff=True
         )
         cls.__client.force_authenticate(cls.__user)
 
@@ -109,3 +110,42 @@ class PrivateLinkSerializerTest(TestCase):
         res = self.__client.post(LINK_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(res.data['url'][0].code, 'unique')
+
+
+class PrivateUserTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Setup for the test case"""
+        super().setUpClass()
+        cls.__client = APIClient()
+        cls.__user = get_user_model().objects.create_user(
+            username='Testuser',
+            password='test_password',
+        )
+        cls.__client.force_authenticate(cls.__user)
+
+    def test_get_link_with_success(self):
+        """test to get a link with success."""
+        Link.objects.bulk_create(
+            [
+                Link(
+                        url=f'https://example{i}.com'
+                    ) for i in range(3)
+            ]
+        )
+
+        link = Link.objects.all().order_by('id').first()
+        serializer = LinkSerializer(link)
+        url = reverse('link:link-detail', args=[serializer.data['id']])
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_link_with_fail(self):
+        """Test to create link fail."""
+        payload = {
+            'url': 'https://example.com'
+        }
+
+        res = self.__client.post(LINK_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)

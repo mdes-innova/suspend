@@ -27,7 +27,7 @@ class PublicISPSerializerTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateISPSerialzierTest(TestCase):
+class PrivateStaffTest(TestCase):
     """Test class for private ISP serializer."""
     @classmethod
     def setUpClass(cls):
@@ -36,7 +36,8 @@ class PrivateISPSerialzierTest(TestCase):
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
             username='Testuser',
-            password='Test_password123'
+            password='Test_password123',
+            is_staff=True
         )
         cls.__client.force_authenticate(cls.__user)
 
@@ -81,52 +82,38 @@ class PrivateISPSerialzierTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(res.data[0].code, 'invalid')
 
-    # def test_unauth_user_visit_success(self):
-    #     """Test to store unauthenticated user login."""
-    #     url = reverse('isp:isp-activity-by-activity',
-    #                   kwargs={'activity': 'login'})
-    #     client = APIClient()
-    #     res = client.post(url, {
-    #         'ip_address': '127.0.0.1',
-    #         'path': 'login'
-    #     })
 
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(res.data, ActivitySerializer(
-    #             Activity.objects.get(pk=res.data['id'])
-    #         ).data)
+class PrivateUserTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Setup for test class."""
+        super().setUpClass()
+        cls.__client = APIClient()
+        cls.__user = get_user_model().objects.create_user(
+            username='Testuser',
+            password='Test_password123',
+        )
+        cls.__client.force_authenticate(cls.__user) 
+    
+    def test_create_fail(self):
+        """Test to create fail."""
+        payload = {'name': 'New isp'}
+        res = self.__client.post(ISP_URL, payload, format='json')
 
-    # def test_auth_user_visit_success(self):
-    #     """Test to store authenticated user login."""
-    #     url = reverse('isp:isp-activity-by-activity',
-    #                   kwargs={'activity': 'visit'})
-    #     print(url)
-    #     res = self.__client.post(url, {
-    #         'ip_address': '127.0.0.1',
-    #         'path': 'login'
-    #     })
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(res.data, ActivitySerializer(
-    #             Activity.objects.get(pk=res.data['id'])
-    #         ).data)
+    def test_get_success(self):
+        """Test to get success."""
+        payload = [
+            ISP(
+                name=f'ISP {i}'
+            ) for i in range(3)
+        ]
 
-    # def test_get_activity_static_success(self):
-    #     """Test to get activity static."""
-    #     url = reverse('isp:isp-activity-by-activity',
-    #                   kwargs={'activity': 'visit'})
-    #     res = self.__client.post(url, {
-    #         'ip_address': '127.0.0.1',
-    #         'path': 'login'
-    #     })
-    #     url = reverse('isp:isp-by-activity-static')
-    #     res = self.__client.get(url)
+        ISP.objects.bulk_create(payload)
+        categories = ISP.objects.all().order_by('id')
+        serializers = ISPSerializer(categories, many=True)
+        res = self.__client.get(ISP_URL)
 
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(res.data), 1)
-    #     self.assertEqual(set((
-    #         res.data[0]['ip_address'],
-    #         res.data[0]['path'])), set((
-    #             '127.0.0.1',
-    #             'login'
-    #         )))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializers.data)

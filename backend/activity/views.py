@@ -7,7 +7,7 @@ from core.models import ISP, Document, Activity
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class ActivityView(viewsets.ModelViewSet):
@@ -154,7 +154,16 @@ class ActivityView(viewsets.ModelViewSet):
             return Response({'detail': 'ActivityType not found.'},
                             status.HTTP_404_NOT_FOUND)
 
+    # def get_permissions(self):
+    #     if self.action == 'by_activity' and self.request.method == 'POST':
+    #         return [AllowAny()]
+    #     return super().get_permissions()
+
     def get_permissions(self):
-        if self.action == 'by_activity' and self.request.method == 'POST':
-            return [AllowAny()]
-        return super().get_permissions()
+        match self.request.method:
+            case 'POST':
+                return [AllowAny()]
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()

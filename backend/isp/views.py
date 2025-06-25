@@ -7,12 +7,20 @@ from core.models import ISP, Document, Activity
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class ISPView(viewsets.ModelViewSet):
     serializer_class = ISPSerializer
     queryset = ISP.objects.all().order_by('id')
+
+    def get_permissions(self):
+        match self.request.method:
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()
+
 
     @action(
         detail=False,
@@ -26,4 +34,3 @@ class ISPView(viewsets.ModelViewSet):
             return Response({'detail': 'Document not found.'},
                             status.HTTP_404_NOT_FOUND)
         return Response(DocumentSerializer(docs, many=True).data)
-

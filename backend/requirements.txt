@@ -31,3 +31,4 @@ django-two-factor-auth>=1.17.0
 phonenumbers>=9.0.4
 pillow>=11.2.1
 djangorestframework-camel-case>=1.4.2
+reportlab>=4.4.2

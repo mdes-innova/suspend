@@ -66,10 +66,10 @@ class PrivateSerializerTest(TestCase):
         """Setup for the class test."""
         super().setUpClass()
         cls.__client = APIClient()
-        cls.__user = get_user_model().objects.create_user(
+        cls.__user = get_user_model().objects.create_superuser(
             username='Testname',
             password='test1234567890'
-        )
+        )  # type: ignore
         cls.__client.force_authenticate(cls.__user) 
         cls.__categories = Category.objects.bulk_create(
             [
@@ -106,7 +106,13 @@ class PrivateSerializerTest(TestCase):
         document = Document.objects.all().order_by('id').first()
         serializer = DocumentDetailSerializer(document)
         url = reverse('document:document-detail', args=[serializer.data['id']])
-        res = self.__client.get(url)
+        user = get_user_model().objects.create_user(
+            username='user1',
+            password='user1@1234'
+        )
+        client = APIClient()
+        client.force_authenticate(user)
+        res = client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
@@ -135,6 +141,18 @@ class PrivateSerializerTest(TestCase):
         # Reload the object from DB
         updated_doc = Document.objects.get(pk=res.data['id'])
         self.assertNotEqual(updated_doc.created_at, updated_doc.modified_at)
+    
+    def test_create_document_no_admin_fail(self):
+        """Test to create a document with non admin fail."""
+        user = get_user_model().objects.create_user(
+            username='user1',
+            password='user1@1234'
+        )
+        client = APIClient()
+        client.force_authenticate(user)
+        payload = {'title': 'Title x'}
+        res = client.post(DOCUMENT_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_document_with_tags_success(self):
         """Test to create documents with tags."""
@@ -586,7 +604,7 @@ class FileDownloadUploadTest(TestCase):
             'username': 'test1',
             'password': 'Password_123'
         }
-        user = get_user_model().objects.create_user(**user)
+        user = get_user_model().objects.create_superuser(**user)
         cls.__client = APIClient()
         cls.__client.force_authenticate(user)
 

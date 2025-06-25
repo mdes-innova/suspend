@@ -39,7 +39,7 @@ class TagSerializerTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateTagSerializerTest(TestCase):
+class PrivateStaffTest(TestCase):
     """Test case for authenticated user."""
 
     @classmethod
@@ -49,7 +49,8 @@ class PrivateTagSerializerTest(TestCase):
         cls.__client = APIClient()
         cls.__user = get_user_model().objects.create_user(
             username='Testuser',
-            password='test_password'
+            password='test_password',
+            is_staff=True
         )
         cls.__client.force_authenticate(cls.__user)
 
@@ -104,3 +105,59 @@ class PrivateTagSerializerTest(TestCase):
         res = self.__client.post(TAG_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(res.data[0].code, 'invalid')
+
+
+class PrivateUserTest(TestCase):
+    """Test case for authenticated user."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup for the test case"""
+        super().setUpClass()
+        cls.__client = APIClient()
+        cls.__user = get_user_model().objects.create_user(
+            username='Testuser',
+            password='test_password',
+        )
+        cls.__client.force_authenticate(cls.__user)
+
+    def test_get_tags_with_success(self):
+        """test to get tags with success."""
+        Tag.objects.bulk_create(
+            [
+                Tag(
+                    name=f'Name {i}'
+                ) for i in range(3)
+            ]
+        )
+
+        res = self.__client.get(TAG_URL)
+        tags = Tag.objects.all().order_by('id')
+        serializers = TagSerializer(tags, many=True)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializers.data)
+
+    def test_get_tag_with_success(self):
+        """test to get a tag with success."""
+        Tag.objects.bulk_create(
+            [
+                Tag(name=f'Name {i}') for i in range(3)
+            ]
+        )
+
+        tag = Tag.objects.all().order_by('id').first()
+        serializer = TagSerializer(tag)
+        url = reverse('tag:tag-detail', args=[serializer.data['id']])
+        res = self.__client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_tag_with_fail(self):
+        """Test to create tag fail."""
+        payload = {
+            'name': 'Tag 1'
+        }
+
+        res = self.__client.post(TAG_URL, payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+

@@ -4,6 +4,7 @@ from document.serializer import DocumentSerializer
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from urllib.parse import unquote
 
@@ -12,6 +13,14 @@ class LinkView(viewsets.ModelViewSet):
     """Link view."""
     serializer_class = LinkSerializer
     queryset = Link.objects.all().order_by('id')
+
+    def get_permissions(self):
+        match self.request.method:
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()
+
 
     @action(
         detail=False,

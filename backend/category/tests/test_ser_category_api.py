@@ -34,10 +34,10 @@ class PrivateCategorySerialzierTest(TestCase):
         """Setup for test class."""
         super().setUpClass()
         cls.__client = APIClient()
-        cls.__user = get_user_model().objects.create_user(
+        cls.__user = get_user_model().objects.create_superuser(
             username='Testuser',
             password='Test_password123'
-        )
+        )  # type: ignore
         cls.__client.force_authenticate(cls.__user)
 
     def test_get_categories_success(self):
@@ -66,6 +66,19 @@ class PrivateCategorySerialzierTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data, serializer.data)
+    
+    def test_create_category_with_no_admin_fail(self):
+        """Test to create a category with no admin fail."""
+        user = get_user_model().objects.create_user(
+            username='user1',
+            password='user1@1234'
+        )
+        client = APIClient()
+        client.force_authenticate(user)
+        payload = {'name': 'New category'}
+        res = client.post(CATEGORY_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_existing_category_fail(self):
         """Test to create an existing category failure."""

@@ -5,6 +5,7 @@ from document.serializer import DocumentSerializer
 from core.models import Category, Document
 from rest_framework.decorators import action
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 
@@ -24,3 +25,10 @@ class CategoryView(viewsets.ModelViewSet):
             return Response({'detail': 'Document not found.'},
                             status.HTTP_404_NOT_FOUND)
         return Response(DocumentSerializer(docs, many=True).data)
+
+    def get_permissions(self):
+        match self.request.method:
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()

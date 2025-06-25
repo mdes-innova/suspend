@@ -20,14 +20,6 @@ class Document(models.Model):
         null=True,
         blank=True,
     )
-    mail = models.ForeignKey(
-        'Mail',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        default=None,
-        related_name='documents'
-    )
     tags = models.ManyToManyField('Tag', related_name='documents')
     links = models.ManyToManyField('Link', related_name='documents')
     description = models.TextField(blank=True)

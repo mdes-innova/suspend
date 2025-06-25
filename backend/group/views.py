@@ -5,6 +5,8 @@ from core.models import Group, Document
 from .serializer import GroupSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from core.permissions import IsActiveUser, IsAdminOrStaff
+from rest_framework.permissions import IsAuthenticated
 
 
 class GroupView(viewsets.ModelViewSet):
@@ -16,6 +18,13 @@ class GroupView(viewsets.ModelViewSet):
         """Get group object data."""
         data = self.queryset.filter(user=self.request.user).order_by('-id')
         return data
+
+    def get_permissions(self):
+        match self.request.method:
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()
 
     @action(
         detail=False,
