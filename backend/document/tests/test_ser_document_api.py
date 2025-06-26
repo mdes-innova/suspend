@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from core.models import Document, Category, DocumentFile
+from core.models import Document, DocumentFile
 from document.serializer import DocumentSerializer, DocumentDetailSerializer
 from tag.serializer import TagSerializer, Tag
 from link.serializer import Link, LinkSerializer
@@ -37,12 +37,6 @@ class DocumentSerializerTest(TestCase):
             username='Testname',
             password='test1234567890'
         )
-        cls.__categories = Category.objects.bulk_create(
-            [
-                Category(name=f'Category {i}')
-                for i in range(3)
-            ]
-        )
 
     def test_get_document_with_unauthentication_fail(self):
         """Get documents with unauthenticated user."""
@@ -51,7 +45,6 @@ class DocumentSerializerTest(TestCase):
             Document(
                 title=f'Test title {i}',
                 description=f'Test description {i}',
-                category=self.__categories[i]
             ) for i in range(3)
         ])
 
@@ -71,19 +64,12 @@ class PrivateSerializerTest(TestCase):
             password='test1234567890'
         )  # type: ignore
         cls.__client.force_authenticate(cls.__user) 
-        cls.__categories = Category.objects.bulk_create(
-            [
-                Category(name=f'Category {i}')
-                for i in range(3)
-            ]
-        )
 
     def test_get_documents_success(self):
         documents = Document.objects.bulk_create([
             Document(
                     title=f'Test title {i}',
                     description=f'Test description {i}',
-                    category=self.__categories[i]
                 ) for i in range(3)
             ])
         res = self.__client.get(DOCUMENT_URL)
@@ -99,7 +85,6 @@ class PrivateSerializerTest(TestCase):
             Document(
                     title=f'Test title {i}',
                     description=f'Test description {i}',
-                    category=self.__categories[i]
                 ) for i in range(3)
             ])
 
@@ -159,7 +144,6 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {i}',
             'description': f'New description {i}',
-            'category': self.__categories[i].name,
             'tags': [
                 {'name': f'Tag {j}'}
                 for j in range(i)
@@ -175,8 +159,7 @@ class PrivateSerializerTest(TestCase):
 
         payloads = [{
             'title': f'New title {3 + i}',
-            'description': f'New description {3 + i}', 
-            'category': self.__categories[i].name,
+            'description': f'New description {3 + i}',
             'tags': [
                 f'Tag {3 + j}'
                 for j in range(i)
@@ -193,7 +176,6 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {6 + i}',
             'description': f'New description {6 + i}',
-            'category': self.__categories[i].name,
             'tags': [
                 'Tag 6', {'name': 'Tag 7'}, 'Tag 8'
             ]
@@ -215,7 +197,6 @@ class PrivateSerializerTest(TestCase):
         """Test to get tags from a document."""
         payload = {
             'title': 'Title',
-            'category': 'Category 1',
             'tags': ['Tag 1', 'Tag 2']
         }
 
@@ -260,12 +241,10 @@ class PrivateSerializerTest(TestCase):
         payloads = [
             {
                 'title': 'Title 1',
-                'category': 'Category 1',
                 'tags': ['Tag 1', 'Tag 2']
             },
             {
                 'title': 'Title 2',
-                'category': 'Category 2',
                 'tags': ['Tag 1', 'Tag 3']
             }
         ]
@@ -312,7 +291,6 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {i}',
             'description': f'New description {i}',
-            'category': self.__categories[i].name,
             'links': [
                 {'url': f'https://example{j}.com'}
                 for j in range(i)
@@ -329,7 +307,6 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {3 + i}',
             'description': f'New description {3 + i}',
-            'category': self.__categories[i].name,
             'links': [
                 f'https://example{3 + j}.com'
                 for j in range(i)
@@ -346,7 +323,6 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {6 + i}',
             'description': f'New description {6 + i}',
-            'category': self.__categories[i].name,
             'links': [
                 'https://example6.com', {'url': 'https://example7.com'},
                 'https://example8.com'
@@ -369,7 +345,6 @@ class PrivateSerializerTest(TestCase):
         """Test to get links from a document."""
         payload = {
             'title': 'Title',
-            'category': 'Category 1',
             'links': ['https://example1.com', 'https://example2.com']
         }
 
@@ -414,12 +389,10 @@ class PrivateSerializerTest(TestCase):
         payloads = [
             {
                 'title': 'Title 1',
-                'category': 'Category 1',
                 'links': ['https://example1.com', 'https://example2.com']
             },
             {
                 'title': 'Title 2',
-                'category': 'Category 2',
                 'links': ['https://example2.com', 'https://example3.com']
             }
         ]
@@ -468,131 +441,6 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(len(res_docs.data), 1)
         self.assertEqual('Title 2', res_docs.data[0]['title'])
 
-    def test_create_document_with_category_success(self):
-        """Test to create documents with category successful."""
-        payloads = [
-            {
-                'title': 'Document 1',
-                'category': 'Category 1'
-            },
-            {
-                'title': 'Document 2',
-                'category': 'Category 1'
-            },
-            {
-                'title': 'Document 3',
-                'category': 'Category 1'
-            },
-            {
-                'title': 'Document 4',
-                'category': 'Category 2'
-            },
-            {
-                'title': 'Document 4',
-                'category': {
-                    'name': 'Category 3'
-                }
-            }
-        ]
-
-        res_data = []
-        for payload in payloads:
-            res = self.__client.post(DOCUMENT_URL, payload, format='json')
-            self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-            del res.data['description']
-            del res.data['files']
-            res_data.append(res.data)
-        docs = Document.objects.order_by('title').all()
-        serializers = DocumentSerializer(docs, many=True)
-        self.assertEqual(sorted(res_data, key=lambda x: x['id']),
-                         serializers.data)
-
-    def test_get_documents_by_category_name_success(self):
-        """Test to get a document by category' name successful."""
-        payloads = [
-            {
-                'title': 'Title 1',
-                'category': 'Category 1'
-            },
-            {
-                'title': 'Title 2',
-                'category': 'Category 1'
-            }
-        ]
-
-        for payload in payloads:
-            self.__client.post(DOCUMENT_URL, payload, format='json')
-
-        url = reverse('category:category-documents-by-name',
-                      kwargs={'name': 'Category 1'})
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
-        self.assertEqual(set([d['title'] for d in res.data]),
-                         {'Title 1', 'Title 2'})
-
-        url = reverse('category:category-documents-by-name',
-                      kwargs={'name': 'category 1'})
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 2)
-        self.assertEqual(set([d['title'] for d in res.data]),
-                         {'Title 1', 'Title 2'})
-
-    def test_get_documnet_by_category_name_fail(self):
-        """Test to get a document by category' name failure."""
-        payloads = [
-            {
-                'title': 'Title 1',
-                'category': 'Category 1'
-            },
-            {
-                'title': 'Title 2',
-                'category': 'Category 2'
-            }
-        ]
-
-        for payload in payloads:
-            self.__client.post(DOCUMENT_URL, payload, format='json')
-
-        url = reverse('category:category-documents-by-name',
-                      kwargs={'name': 'Category 3'})
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_get_category_by_document_title_success(self):
-        """Test to get a category by document's title successful."""
-        payload = {
-            'title': 'Title',
-            'category': 'Category'
-        }
-        self.__client.post(DOCUMENT_URL, payload, format='json')
-
-        url = reverse('document:document-category-by-title',
-                      kwargs={'title': 'Title'})
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data['name'], 'Category')
-
-        url = reverse('document:document-category-by-title',
-                      kwargs={'title': 'title'})
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data['name'], 'Category')
-
-    def test_get_category_by_document_title_fail(self):
-        """Test to get a category by document's title failure."""
-        payload = {
-            'title': 'Title',
-            'category': 'Category'
-        }
-        self.__client.post(DOCUMENT_URL, payload, format='json')
-
-        url = reverse('document:document-category-by-title',
-                      kwargs={'title': 'Title1'})
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
-
 
 class FileDownloadUploadTest(TestCase):
     """Testcase for image uploading."""
@@ -611,18 +459,12 @@ class FileDownloadUploadTest(TestCase):
         document_payload = {
             'title': 'Title',
             'description': 'Description',
-            'category': 'Category',
             'tags': ['Tag 1', 'Tag 2'],
             'links': ['https://example1.com', 'https://example2.com']
         }
 
-        category = Category.objects.create(
-            name=document_payload['category']
-        )
-
         cls.__document = Document.objects.create(
             title=document_payload['title'],
-            category=category,
             description=document_payload['description']
         )
         tags = Tag.objects.bulk_create(
@@ -791,7 +633,7 @@ class FileDownloadUploadTest(TestCase):
             document_ids.append(res.data['id'])
 
             upload_url = reverse('document:document-file-upload',
-                        args=[res.data['id']])
+                                 args=[res.data['id']])
 
             with NamedTemporaryFile(suffix='.pdf') as temp:
                 temp.write(b'Test file content')
@@ -804,14 +646,15 @@ class FileDownloadUploadTest(TestCase):
                 temp.write(b'Test file content')
                 temp.seek(0)
                 django_file = File(temp, name='example.xlsx')
-                payload = {'file': django_file, 'original_name': 'example.xlsx'}
+                payload = {'file': django_file,
+                           'original_name': 'example.xlsx'}
                 self.__client.post(upload_url, payload, format='multipart')
 
         self.__document.refresh_from_db()
         pdf_download_rnds = random.choices(document_ids,
                                            k=num_pdf_dowloads)
         xlsx_download_rnds = random.choices(document_ids,
-                                           k=num_xlsx_downloads)
+                                            k=num_xlsx_downloads)
 
         activity_url = reverse('activity:activity-by-activity',
                                kwargs={'activity': 'download'})
@@ -823,19 +666,38 @@ class FileDownloadUploadTest(TestCase):
             'isp': None
         }
         for pdf_download_id in pdf_download_rnds: 
-            isp_payload['did'] = pk=pdf_download_id
+            isp_payload['did'] = pdf_download_id
             self.__client.post(activity_url, isp_payload, format='json')
             download_url = reverse('document:document-file-download',
-                        args=[pdf_download_id])
-            res = self.__client.post(download_url, {'ext': 'pdf'}, format='json')
+                                   args=[pdf_download_id])
+            res = self.__client.post(download_url, {'ext': 'pdf'},
+                                     format='json')
 
         for xlsx_download_id in xlsx_download_rnds:
             isp_payload['did'] = xlsx_download_id
             self.__client.post(activity_url, isp_payload, format='json')
             download_url = reverse('document:document-file-download',
-                        args=[xlsx_download_id])
-            res = self.__client.post(download_url, {'ext': 'xlsx'}, format='json')
+                                   args=[xlsx_download_id])
+            res = self.__client.post(download_url, {'ext': 'xlsx'},
+                                     format='json')
 
         self.__document.refresh_from_db()
         res = self.__client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_get_order_ids_success(self):
+        """Test to create documents by counting them success."""
+        payloads = [
+            {
+                'title': f'Title {i + 1}'
+            } for i in range(10)
+        ]
+
+        for payload in payloads:
+            res = self.__client.post(DOCUMENT_URL, payload, format='json')
+
+        res = self.__client.get(DOCUMENT_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted([r['order_id'] for r in res.data]),
+                         list(range(1, len(res.data) + 1)))

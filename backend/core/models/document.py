@@ -6,20 +6,26 @@ from django.core.validators import FileExtensionValidator
 from core.utils import document_file_path
 
 
+class DocumentCounter(models.Model):
+    total = models.PositiveIntegerField(default=0)
+
+    @classmethod
+    def increment(cls):
+        counter, created = cls.objects.get_or_create(pk=1)
+        counter.total += 1
+        counter.save()
+        return counter.total
+
+
 class Document(models.Model):
     """Document model class."""
+    order_id = models.PositiveIntegerField(editable=False, default=0)
     title = models.CharField(max_length=512)
     date = models.DateField(null=True)
-    section = models.BigIntegerField(null=True)
-    red_number = models.CharField(max_length=32, null=True)
-    black_number = models.CharField(max_length=32, null=True)
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.SET_NULL,
-        related_name='documents',
-        null=True,
-        blank=True,
-    )
+    order_number = models.CharField(max_length=32, null=True)
+    order_date = models.DateField(null=True)
+    orderred_number = models.CharField(max_length=32, null=True)
+    orderred_date = models.DateField(null=True)
     tags = models.ManyToManyField('Tag', related_name='documents')
     links = models.ManyToManyField('Link', related_name='documents')
     description = models.TextField(blank=True)

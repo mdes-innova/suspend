@@ -11,15 +11,14 @@ class DocumentSerializer(serializers.ModelSerializer):
     """Document seriaizer class without a description field."""
     tags = TagSerializer(many=True, required=False, read_only=True)
     links = LinkSerializer(many=True, required=False, read_only=True)
-    category = CategorySerializer(read_only=True)
 
     class Meta:
         """Meta class for Document serializer."""
         model = Document
-        fields = ['id', 'title', 'date', 'category', 'links', 'tags',
-                  'red_number', 'black_number', 'section', 'created_at',
-                  'modified_at']
-        read_only_fields = ['id', 'created_at', 'modified_at']
+        fields = ['id', 'title', 'date', 'links', 'tags', 'order_id',
+                  'order_number', 'order_date', 'orderred_number',
+                  'orderred_date', 'created_at', 'modified_at']
+        read_only_fields = ['id', 'created_at', 'modified_at', 'order_id']
 
 
 class FileSerializer(serializers.ModelSerializer):
@@ -28,6 +27,7 @@ class FileSerializer(serializers.ModelSerializer):
         """Meta class for FileSerializer."""
         model = DocumentFile
         fields = ['id', 'original_name', 'file', 'uploaded_at']        
+
 
 class DocumentDetailSerializer(DocumentSerializer):
     """Document detail serializer with a description field."""
@@ -40,26 +40,7 @@ class DocumentDetailSerializer(DocumentSerializer):
     def create(self, validated_data):
         tags_data = self.initial_data.get('tags', [])
         links_data = self.initial_data.get('links', [])
-        category_data = self.initial_data.get('category', None)
 
-        category_obj = None
-        if category_data:
-            if isinstance(category_data, str):
-                category_obj =\
-                    Category.objects.get_or_create(name=category_data)[0]
-            elif isinstance(category_data, dict):
-                category_obj =\
-                    Category.objects.get_or_create(**category_data)[0]
-            else:
-                raise serializers.ValidationError({
-                        'error': 'Bad Request - Integrity constraint violation'
-                    })
-
-            if not category_obj:
-                raise serializers.ValidationError({
-                    'error': 'Bad Request - Category field is required.'
-                    })
-        validated_data['category'] = category_obj
         doc = Document.objects.create(**validated_data)
 
         tag_objects = []

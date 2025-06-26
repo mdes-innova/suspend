@@ -1,6 +1,6 @@
 # flake8: noqa
 from .user import User
-from .document import Document, DocumentFile
+from .document import Document, DocumentFile, DocumentCounter
 from .tag import Tag
 from .category import Category
 from .link import Link
