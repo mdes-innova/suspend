@@ -59,12 +59,12 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                 <UserMailbox />
                 <DropdownMenuUser user={user}/>
             </div>
-            <div className="flex justify-start items-start w-full h-full ">
+            {/* <div className="flex justify-start items-start w-full h-full ">
                 <SlideBar />
-                <div className="w-full pt-2">
+                <div className="w-full pt-2"> */}
                     { children }
-                </div>
-            </div>
+                {/* </div> */}
+            {/* </div> */}
         </div>
     );
 }

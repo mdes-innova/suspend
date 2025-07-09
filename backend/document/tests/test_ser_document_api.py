@@ -15,7 +15,7 @@ from django.contrib.auth import get_user_model
 from core.models import Document, DocumentFile
 from document.serializer import DocumentSerializer, DocumentDetailSerializer
 from tag.serializer import TagSerializer, Tag
-from link.serializer import Link, LinkSerializer
+from url.serializer import Url, LinkSerializer
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -286,12 +286,12 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(len(res_docs.data), 1)
         self.assertEqual('Title 2', res_docs.data[0]['title'])
 
-    def test_create_document_with_links_success(self):
-        """Test to create documents with links."""
+    def test_create_document_with_urls_success(self):
+        """Test to create documents with urls."""
         payloads = [{
             'title': f'New title {i}',
             'description': f'New description {i}',
-            'links': [
+            'urls': [
                 {'url': f'https://example{j}.com'}
                 for j in range(i)
             ]
@@ -307,7 +307,7 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {3 + i}',
             'description': f'New description {3 + i}',
-            'links': [
+            'urls': [
                 f'https://example{3 + j}.com'
                 for j in range(i)
             ]
@@ -323,7 +323,7 @@ class PrivateSerializerTest(TestCase):
         payloads = [{
             'title': f'New title {6 + i}',
             'description': f'New description {6 + i}',
-            'links': [
+            'urls': [
                 'https://example6.com', {'url': 'https://example7.com'},
                 'https://example8.com'
             ]
@@ -341,27 +341,27 @@ class PrivateSerializerTest(TestCase):
         self.assertEqual(sorted(serializers.data, key=lambda x: x['id']),
                          sorted(res_data, key=lambda x: x['id']))
 
-    def test_get_links_from_document_success(self):
-        """Test to get links from a document."""
+    def test_get_urls_from_document_success(self):
+        """Test to get urls from a document."""
         payload = {
             'title': 'Title',
-            'links': ['https://example1.com', 'https://example2.com']
+            'urls': ['https://example1.com', 'https://example2.com']
         }
 
         res_create = self.__client.post(DOCUMENT_URL, payload, format='json')
         created_id = res_create.data['id']
-        url = reverse('document:document-links',
+        url = reverse('document:document-urls',
                       kwargs={'pk': created_id})
-        res_links = self.__client.get(url)
-        links = res_links.data
+        res_urls = self.__client.get(url)
+        urls = res_urls.data
         doc = DocumentSerializer(Document.objects.get(pk=created_id))
 
-        self.assertEqual(res_links.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(links, key=lambda x: x['id']),
-                         sorted(doc.data['links'], key=lambda x: x['id']))
+        self.assertEqual(res_urls.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(urls, key=lambda x: x['id']),
+                         sorted(doc.data['urls'], key=lambda x: x['id']))
 
         res_create = self.__client.post(DOCUMENT_URL, payload, format='json')
-        url = reverse('document:document-links-by-title',
+        url = reverse('document:document-urls-by-title',
                       kwargs={'title': 'Title'})
         res = self.__client.get(url)
         res_data = res.data
@@ -384,63 +384,6 @@ class PrivateSerializerTest(TestCase):
             }
         )
 
-    def test_get_documents_from_link_success(self):
-        """Test to get documents from a link."""
-        payloads = [
-            {
-                'title': 'Title 1',
-                'links': ['https://example1.com', 'https://example2.com']
-            },
-            {
-                'title': 'Title 2',
-                'links': ['https://example2.com', 'https://example3.com']
-            }
-        ]
-
-        for payload in payloads:
-            res_create = self.__client.post(DOCUMENT_URL, payload,
-                                            format='json')
-            self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
-
-        links = ['https://example1.com', 'https://example2.com',
-                 'https://example3.com']
-        seriailizer_links = LinkSerializer(Link.objects.all(), many=True)
-        self.assertEqual(set(links),
-                         set([s['url'] for s in seriailizer_links.data]))
-
-        link = Link.objects.first()
-        serializer = LinkSerializer(link)
-        url = reverse('link:link-detail', args=(serializer.data['id'],))
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
-
-        encoded_url = quote('https://example1.com', safe='')
-        url = reverse('link:link-documents-by-url',
-                      kwargs={'url': encoded_url})
-        res_docs = self.__client.get(url)
-        self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res_docs.data), 1)
-        self.assertEqual('Title 1', res_docs.data[0]['title'])
-
-        encoded_url = quote('https://example2.com', safe='')
-        url = reverse('link:link-documents-by-url',
-                      kwargs={'url': encoded_url})
-        res_docs = self.__client.get(url)
-        self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res_docs.data), 2)
-        self.assertEqual({'Title 1', 'Title 2'},
-                         set([res_docs.data[0]['title'],
-                              res_docs.data[1]['title']]))
-
-        encoded_url = quote('https://example3.com', safe='')
-        url = reverse('link:link-documents-by-url',
-                      kwargs={'url': encoded_url})
-        res_docs = self.__client.get(url)
-        self.assertEqual(res_docs.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res_docs.data), 1)
-        self.assertEqual('Title 2', res_docs.data[0]['title'])
-
 
 class FileDownloadUploadTest(TestCase):
     """Testcase for image uploading."""
@@ -460,7 +403,7 @@ class FileDownloadUploadTest(TestCase):
             'title': 'Title',
             'description': 'Description',
             'tags': ['Tag 1', 'Tag 2'],
-            'links': ['https://example1.com', 'https://example2.com']
+            'urls': ['https://example1.com', 'https://example2.com']
         }
 
         cls.__document = Document.objects.create(

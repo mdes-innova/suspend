@@ -1,21 +1,21 @@
 """Document serializer module."""
 from rest_framework import serializers
-from core.models import Document, Tag, Category, Link, DocumentFile
+from core.models import Document, Tag, Category, Url, DocumentFile
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
-from link.serializer import LinkSerializer
+from url.serializer import UrlSerializer
 from django.db.utils import IntegrityError
 
 
 class DocumentSerializer(serializers.ModelSerializer):
     """Document seriaizer class without a description field."""
     tags = TagSerializer(many=True, required=False, read_only=True)
-    links = LinkSerializer(many=True, required=False, read_only=True)
+    urls = UrlSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         """Meta class for Document serializer."""
         model = Document
-        fields = ['id', 'title', 'date', 'links', 'tags', 'order_id',
+        fields = ['id', 'title', 'date', 'urls', 'tags', 'order_id',
                   'order_number', 'order_date', 'orderred_number',
                   'orderred_date', 'created_at', 'modified_at']
         read_only_fields = ['id', 'created_at', 'modified_at', 'order_id']
@@ -39,7 +39,7 @@ class DocumentDetailSerializer(DocumentSerializer):
 
     def create(self, validated_data):
         tags_data = self.initial_data.get('tags', [])
-        links_data = self.initial_data.get('links', [])
+        urls_data = self.initial_data.get('urls', [])
 
         doc = Document.objects.create(**validated_data)
 
@@ -62,15 +62,15 @@ class DocumentDetailSerializer(DocumentSerializer):
                 })
         doc.tags.set(tag_objects)
 
-        link_objects = []
+        url_objects = []
         try:
-            for link in links_data:
-                if isinstance(link, str):
-                    link_objects.append(Link.objects.get_or_create(
-                        url=link)[0])
-                elif isinstance(link, dict):
-                    link_objects.append(Link.objects.get_or_create(
-                        url=link['url'])[0])
+            for url in urls_data:
+                if isinstance(url, str):
+                    url_objects.append(Url.objects.get_or_create(
+                        url=url)[0])
+                elif isinstance(url, dict):
+                    url_objects.append(Url.objects.get_or_create(
+                        url=url['url'])[0])
                 else:
                     raise serializers.ValidationError({
                         'error': 'Bad Request - Integrity constraint violation'
@@ -79,7 +79,7 @@ class DocumentDetailSerializer(DocumentSerializer):
             raise serializers.ValidationError({
                 'error': 'Bad Request - Integrity constraint violation'
                 })
-        doc.links.set(link_objects)
+        doc.urls.set(url_objects)
 
         return doc
     

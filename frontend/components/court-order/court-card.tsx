@@ -129,7 +129,10 @@ export function CourtCard() {
               credentials: 'include',
           });
 
-          if (!response.ok) throw new Error("Upload failed");
+          if (!response.ok) {
+            const resJson = await response.json();
+            throw new Error("Upload failed.\n" + resJson.error);
+          }
 
           const data = await response.json();
           console.log("Uploaded:", data);
@@ -140,21 +143,20 @@ export function CourtCard() {
           });
           alert("File uploaded successfully!");
           setShowInput(true);
+          const fileNames = (e.target.value as string).split('\\');
+          const fileName = fileNames[fileNames.length - 1];
+          setUploading(false);
+          setUploadedFiles(prev => {
+            const updated = [...prev];
+            updated[idx] = fileName;
+            return updated;
+          });
+          e.target.value = "";
       } catch (error) {
           console.error(error);
-          alert("Upload failed");
-      } finally {
-        const fileNames = (e.target.value as string).split('\\');
-        const fileName = fileNames[fileNames.length - 1];
-        setUploading(false);
-        setUploadedFiles(prev => {
-          const updated = [...prev];
-          updated[idx] = fileName;
-          return updated;
-        });
-        e.target.value = "";
+          alert(error);
       }
-  };
+    };
 
   return (
     <Card className="w-full border-2">
@@ -237,6 +239,7 @@ export function CourtCard() {
                   <TableCell className="max-w-[100px]">
                     {
                       uploadedFiles[idx]?
+                        <div className="flex flex-col gap-y-2">
                           <div className="underline text-primary cursor-pointer"
                             onClick={ async (e: any) => {
                               e.preventDefault();
@@ -244,7 +247,17 @@ export function CourtCard() {
                             }}
                           >
                             {uploadedFiles[idx]}
-                          </div>:
+                          </div>
+                          <div className="underline text-chart-2 cursor-pointer"
+                            onClick={ async (e: any) => {
+                              e.preventDefault();
+                              await handleDownload(idx);
+                            }}
+                          >
+                            urls.xlsx
+                          </div>
+                        </div>
+                          :
                         <div>
                           <Button
                             type="button"

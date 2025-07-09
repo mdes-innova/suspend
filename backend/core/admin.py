@@ -8,7 +8,7 @@ from .models import (
     Document, DocumentFile,
     Tag,
     Category,
-    Link,
+    Url,
     ISP,
     Group, GroupDocument,
     Activity
@@ -38,7 +38,7 @@ admin.site.register(DocumentFile)
 admin.site.register(Category)
 admin.site.register(Tag)
 admin.site.register(ISP)
-admin.site.register(Link)
+admin.site.register(Url)
 admin.site.register(Group)
 admin.site.register(GroupDocument)
 admin.site.register(Activity)

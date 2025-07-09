@@ -4,10 +4,12 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import DefaultBar from "@/components/default-bar";
 import Providers from './providers';
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import { cookies } from 'next/headers';
 import { Toaster } from "@/components/ui/sonner"
 import { type User } from "@/lib/types";
+import { CustomTrigger } from "@/components/sidebar-trigger";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,10 +73,16 @@ export default async function RootLayout({
           <div className="w-full min-h-full relative">
               <Providers>
                 <SidebarProvider>
+                  <AppSidebar />
+                {/* <SidebarProvider> */}
                   <DefaultBar user={user ?? null}>
+                    <div className="absolute top-0 left-0 w-24 h-24">
+                      <CustomTrigger />
+                    </div>
                     {children}
                   </DefaultBar>
                 </SidebarProvider>
+                {/* </SidebarProvider> */}
               </Providers>
           </div>
           <Toaster />

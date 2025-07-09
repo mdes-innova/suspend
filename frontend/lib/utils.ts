@@ -54,7 +54,7 @@ function handleFailure(res: Response, returnRes: ReturnRes) {
   if (res.status === 401) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  return returnRes.fail;
+  return res;
 }
 
 export async function getAccessFromRefreshApi(refresh: string) {

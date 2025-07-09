@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'document',
     'tag',
     'category',
-    'link',
+    'url',
     'group',
     'activity',
     'mail',

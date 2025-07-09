@@ -43,7 +43,7 @@ urlpatterns = [
     path('api/user/', include('user.urls')),
     path('api/document/', include('document.urls')),
     path('api/tag/', include('tag.urls')),
-    path('api/link/', include('link.urls')),
+    path('api/url/', include('url.urls')),
     path('api/category/', include('category.urls')),
     path('api/isp/', include('isp.urls')),
     path('api/group/', include('group.urls')),

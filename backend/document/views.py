@@ -1,4 +1,6 @@
 import os
+import xml.etree.ElementTree as ET
+import fitz
 from core.models import Document, Activity, GroupDocument, DocumentFile
 from .serializer import (
     DocumentDetailSerializer,
@@ -12,7 +14,7 @@ from django.http import FileResponse
 from rest_framework.decorators import action
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
-from link.serializer import LinkSerializer
+from url.serializer import UrlSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -81,21 +83,21 @@ class DocumentView(viewsets.ModelViewSet):
         return Response(serializers)
 
     @action(detail=True, methods=['get'])
-    def links(self, request, pk=None):
-        """Return links for a specific document with id."""
+    def urls(self, request, pk=None):
+        """Return urls for a specific document with id."""
         document = self.get_object()
-        links = document.links.all()
-        serializer = LinkSerializer(links, many=True)
+        urls = document.urls.all()
+        serializer = UrlSerializer(urls, many=True)
         return Response(serializer.data)
 
     @action(
         detail=False,
         methods=['get'],
-        url_path='by-title/(?P<title>[^/]+)/links',
-        name='document-links-by-title'
+        url_path='by-title/(?P<title>[^/]+)/urls',
+        name='document-urls-by-title'
     )
-    def links_by_title(self, request, title=None):
-        """Return links for a specific document with title."""
+    def urls_by_title(self, request, title=None):
+        """Return urls for a specific document with title."""
         docs = Document.objects.filter(title__iexact=title)
         if not docs.exists():
             return Response({'detail': 'Document not found'},
@@ -105,25 +107,9 @@ class DocumentView(viewsets.ModelViewSet):
         for doc in docs:
             serializers.append({'title': doc.title,
                                 'created_at': doc.created_at,
-                                'links': LinkSerializer(doc.links.all(),
+                                'urls': UrlSerializer(doc.urls.all(),
                                                         many=True).data})
         return Response(serializers)
-
-    @action(
-        detail=False,
-        methods=['get'],
-        url_path='by-title/(?P<title>[^/]+)/category',
-        name='document-category-by-title'
-    )
-    def category_by_title(self, request, title=None):
-        """Get category by document's name view."""
-        try:
-            doc = Document.objects.get(title__iexact=title)
-        except Document.DoesNotExist:
-            return Response({'detail': 'Document does not exists.'},
-                            status.HTTP_404_NOT_FOUND)
-
-        return Response(CategorySerializer(doc.category).data)
 
     @action(
         detail=True,
@@ -133,6 +119,28 @@ class DocumentView(viewsets.ModelViewSet):
     )
     def file_upload(self, request, pk=None):
         document = self.get_object()
+        file_obj = request.FILES.get("file")
+        file_bytes = file_obj.read()
+        try:
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+            file_data = doc.embfile_get(0)
+            xml_string = file_data.decode("utf-8")
+            ns = {'ns': 'https://www.w3schools.com'}
+            root = ET.fromstring(xml_string)
+            order_data = root.find('ns:OrderData', ns)
+
+            domain_list = order_data.find('ns:DomainList', ns)
+            domains = [d.text for d in domain_list.findall('ns:Domain', ns)]
+
+            if not len(domains):
+                raise Exception("Empty urls.")
+        except Exception as e:
+            if str(e) == "'0' not in EmbeddedFiles array.":
+                return Response({"error": "Not found urls."}, status=400)
+            elif str(e) == "Empty urls.":
+                return Response({"error": "Empty urls."}, status=400)
+            else:
+                return Response({"error": "Invalid PDF"}, status=400)
         serializer = FileSerializer(data=request.data)
 
         if serializer.is_valid():

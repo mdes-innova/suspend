@@ -63,9 +63,12 @@ export async function POST(req: NextRequest) {
             } else {
                 if (docRes.status === 401)
                     return NextResponse.redirect(loginUrl);
-                else
-                    return NextResponse.json({ error: "Upload file fail." },
+                else {
+                    const uploadResJson = await uploadRes.json();
+                    return NextResponse.json({ error: uploadResJson.error},
                     { status: 400 });
+
+                }
             }
         } else {
             if (docRes.status === 401)

@@ -1,7 +1,5 @@
 """Document model module."""
 from django.db import models
-from core.models.category import Category
-from django.db.models.functions import Lower
 from django.core.validators import FileExtensionValidator
 from core.utils import document_file_path
 
@@ -27,7 +25,7 @@ class Document(models.Model):
     orderred_number = models.CharField(max_length=32, null=True)
     orderred_date = models.DateField(null=True)
     tags = models.ManyToManyField('Tag', related_name='documents')
-    links = models.ManyToManyField('Link', related_name='documents')
+    urls = models.ManyToManyField('Url', related_name='documents')
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

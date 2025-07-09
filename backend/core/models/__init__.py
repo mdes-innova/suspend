@@ -3,7 +3,7 @@ from .user import User
 from .document import Document, DocumentFile, DocumentCounter
 from .tag import Tag
 from .category import Category
-from .link import Link
+from .url import Url
 from .isp import ISP
 from .group import Group, KindType, GroupDocument
 from .activity import Activity, ActivityType
