@@ -11,6 +11,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { usePathname } from "next/navigation";
+
+const HIDDEN_ROUTES = ['/login', '/secret', '/no-navbar'];
 
 // Menu items.
 const items = [
@@ -42,11 +45,15 @@ const items = [
 ]
 
 export function AppSidebar() {
+  const pathname = usePathname();
+  if (HIDDEN_ROUTES.includes(pathname)) {
+      return null;
+  }
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Suspend</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

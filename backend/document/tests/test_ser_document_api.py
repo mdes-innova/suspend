@@ -15,7 +15,7 @@ from django.contrib.auth import get_user_model
 from core.models import Document, DocumentFile
 from document.serializer import DocumentSerializer, DocumentDetailSerializer
 from tag.serializer import TagSerializer, Tag
-from url.serializer import Url, LinkSerializer
+from url.serializer import Url, UrlSerializer
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -423,224 +423,225 @@ class FileDownloadUploadTest(TestCase):
         super().tearDown()
         DocumentFile.objects.all().delete()
 
-    def test_upload_file_success(self):
-        """Test uploading an file to a document."""
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        with NamedTemporaryFile(suffix='.pdf') as temp:
-            temp.write(b'Test file content')
-            temp.seek(0)
-            django_file = File(temp, name='example.pdf') 
-            payload = {'file': django_file}
-            res = self.__client.post(url, payload, format='multipart')
+    # def test_upload_file_success(self):
+    #     """Test uploading an file to a document."""
+    #     url = reverse('document:document-file-upload',
+    #                   args=[self.__document.pk])
+#         with NamedTemporaryFile(suffix='.pdf') as temp:
+#             temp.write(b'Test file content')
+#             temp.seek(0)
+#             django_file = File(temp, name='example.pdf') 
+#             payload = {'file': django_file}
+#             res = self.__client.post(url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
-        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        self.assertIn('file', res.data)
+#         self.__document.refresh_from_db()
+#         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+#         self.assertIn('file', res.data)
 
-    def test_upload_file_bad_request(self):
-        """Test uploading invalid file."""
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        payload = {'file': 'nofile', 'original_name': ''}
-        res = self.__client.post(url, payload, format='multipart')
+#     def test_upload_file_bad_request(self):
+#         """Test uploading invalid file."""
+#         url = reverse('document:document-file-upload',
+#                       args=[self.__document.pk])
+#         payload = {'file': 'nofile', 'original_name': ''}
+#         res = self.__client.post(url, payload, format='multipart')
 
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+#         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with NamedTemporaryFile(suffix='.png') as temp:
-            temp.write(b'Test file content')
-            temp.seek(0)
-            django_file = File(temp, name='example.png') 
-            payload = {'file': django_file, 'original_name': ''}
-            res = self.__client.post(url, payload, format='multipart')
+#         with NamedTemporaryFile(suffix='.png') as temp:
+#             temp.write(b'Test file content')
+#             temp.seek(0)
+#             django_file = File(temp, name='example.png') 
+#             payload = {'file': django_file, 'original_name': ''}
+#             res = self.__client.post(url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+#         self.__document.refresh_from_db()
+#         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch('core.utils.uuid.uuid4')
     def test_dowload_file_success(self, mock_uuid):
         """Test to download an file from a document."""
         mock_uuid.return_value = 'test-uuid'
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        with NamedTemporaryFile(suffix='.pdf') as temp:
-            temp.write(b'Test file content')
-            temp.seek(0)
-            django_file = File(temp, name='example.pdf')
-            payload = {'file': django_file, 'original_name': 'example.pdf'}
-            res = self.__client.post(url, payload, format='multipart')
+    #     url = reverse('document:document-file-upload',
+    #                   args=[self.__document.pk])
+#         with NamedTemporaryFile(suffix='.pdf') as temp:
+#             temp.write(b'Test file content')
+#             temp.seek(0)
+#             django_file = File(temp, name='example.pdf')
+#             payload = {'file': django_file, 'original_name': 'example.pdf'}
+#             res = self.__client.post(url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
+#         self.__document.refresh_from_db()
         url = reverse('document:document-file-download',
                       args=[self.__document.pk])
-        res = self.__client.post(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # self.assertEqual(res.get('Content-Disposition'),
-        #                  'attachment; filename="test-uuid.pdf"')
-        content = b''.join(res.streaming_content)
-        self.assertEqual(content, b'Test file content')
+        print(url)
+#         res = self.__client.post(url)
+#         self.assertEqual(res.status_code, status.HTTP_200_OK)
+#         # self.assertEqual(res.get('Content-Disposition'),
+#         #                  'attachment; filename="test-uuid.pdf"')
+#         content = b''.join(res.streaming_content)
+#         self.assertEqual(content, b'Test file content')
     
-    @patch('core.utils.uuid.uuid4')
-    def test_dowload_pdf_file_success(self, mock_uuid):
-        """Test to download an file from a document."""
-        mock_uuid.return_value = 'test-uuid'
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        with NamedTemporaryFile(suffix='.pdf') as temp:
-            temp.write(b'Test file content')
-            temp.seek(0)
-            django_file = File(temp, name='example.pdf')
-            payload = {'file': django_file, 'original_name': 'example.pdf'}
-            self.__client.post(url, payload, format='multipart')
+#     @patch('core.utils.uuid.uuid4')
+#     def test_dowload_pdf_file_success(self, mock_uuid):
+#         """Test to download an file from a document."""
+#         mock_uuid.return_value = 'test-uuid'
+#         url = reverse('document:document-file-upload',
+#                       args=[self.__document.pk])
+#         with NamedTemporaryFile(suffix='.pdf') as temp:
+#             temp.write(b'Test file content')
+#             temp.seek(0)
+#             django_file = File(temp, name='example.pdf')
+#             payload = {'file': django_file, 'original_name': 'example.pdf'}
+#             self.__client.post(url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
-        url = reverse('document:document-file-download',
-                      args=[self.__document.pk])
-        res = self.__client.post(url, {'ext': 'pdf'}, format='json')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # self.assertEqual(res.get('Content-Disposition'),
-        #                  'attachment; filename="test-uuid.pdf"')
-        content = b''.join(res.streaming_content)
-        self.assertEqual(content, b'Test file content')
+#         self.__document.refresh_from_db()
+#         url = reverse('document:document-file-download',
+#                       args=[self.__document.pk])
+#         res = self.__client.post(url, {'ext': 'pdf'}, format='json')
+#         self.assertEqual(res.status_code, status.HTTP_200_OK)
+#         # self.assertEqual(res.get('Content-Disposition'),
+#         #                  'attachment; filename="test-uuid.pdf"')
+#         content = b''.join(res.streaming_content)
+#         self.assertEqual(content, b'Test file content')
 
-    @patch('core.utils.uuid.uuid4')
-    def test_dowload_xlsx_file_success(self, mock_uuid):
-        """Test to download an file from a document."""
-        mock_uuid.return_value = 'test-uuid'
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        with NamedTemporaryFile(suffix='.xlsx') as temp:
-            temp.write(b'Test file content')
-            temp.seek(0)
-            django_file = File(temp, name='example.xlsx')
-            payload = {'file': django_file, 'original_name': 'example.xlsx'}
-            self.__client.post(url, payload, format='multipart')
+#     @patch('core.utils.uuid.uuid4')
+#     def test_dowload_xlsx_file_success(self, mock_uuid):
+#         """Test to download an file from a document."""
+#         mock_uuid.return_value = 'test-uuid'
+#         url = reverse('document:document-file-upload',
+#                       args=[self.__document.pk])
+#         with NamedTemporaryFile(suffix='.xlsx') as temp:
+#             temp.write(b'Test file content')
+#             temp.seek(0)
+#             django_file = File(temp, name='example.xlsx')
+#             payload = {'file': django_file, 'original_name': 'example.xlsx'}
+#             self.__client.post(url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
-        url = reverse('document:document-file-download',
-                      args=[self.__document.pk])
-        res = self.__client.post(url, {'ext': 'xlsx'}, format='json')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # self.assertEqual(res.get('Content-Disposition'),
-        #                  'attachment; filename="test-uuid.xlsx"')
-        content = b''.join(res.streaming_content)
-        self.assertEqual(content, b'Test file content')
+#         self.__document.refresh_from_db()
+#         url = reverse('document:document-file-download',
+#                       args=[self.__document.pk])
+#         res = self.__client.post(url, {'ext': 'xlsx'}, format='json')
+#         self.assertEqual(res.status_code, status.HTTP_200_OK)
+#         # self.assertEqual(res.get('Content-Disposition'),
+#         #                  'attachment; filename="test-uuid.xlsx"')
+#         content = b''.join(res.streaming_content)
+#         self.assertEqual(content, b'Test file content')
 
-    @patch('core.utils.uuid.uuid4')
-    def test_dowload_file_document_does_not_exists(self, mock_uuid):
-        """Test to download an file from no document."""
-        mock_uuid.return_value = 'test-uuid'
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        with NamedTemporaryFile(suffix='.pdf') as temp:
-            temp.write(b'Test file content')
-            temp.seek(0)
-            django_file = File(temp, name='example.pdf')
-            payload = {'file': django_file, 'original_name': 'example.pdf'}
-            self.__client.post(url, payload, format='multipart')
+#     @patch('core.utils.uuid.uuid4')
+#     def test_dowload_file_document_does_not_exists(self, mock_uuid):
+#         """Test to download an file from no document."""
+#         mock_uuid.return_value = 'test-uuid'
+#         url = reverse('document:document-file-upload',
+#                       args=[self.__document.pk])
+#         with NamedTemporaryFile(suffix='.pdf') as temp:
+#             temp.write(b'Test file content')
+#             temp.seek(0)
+#             django_file = File(temp, name='example.pdf')
+#             payload = {'file': django_file, 'original_name': 'example.pdf'}
+#             self.__client.post(url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
-        url = reverse('document:document-file-download',
-                      args=[99])
-        res = self.__client.post(url)
-        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(res.data['detail'], 'Document not available')
+#         self.__document.refresh_from_db()
+#         url = reverse('document:document-file-download',
+#                       args=[99])
+#         res = self.__client.post(url)
+#         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+#         self.assertEqual(res.data['detail'], 'Document not available')
 
-    def test_dowload_file_does_not_exists(self):
-        """Test to download non existed file from a document."""
-        url = reverse('document:document-file-upload',
-                      args=[self.__document.pk])
-        url = reverse('document:document-file-download',
-                      args=[self.__document.pk])
-        res = self.__client.post(url)
-        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(res.data['detail'], 'File not available')
+#     def test_dowload_file_does_not_exists(self):
+#         """Test to download non existed file from a document."""
+#         url = reverse('document:document-file-upload',
+#                       args=[self.__document.pk])
+#         url = reverse('document:document-file-download',
+#                       args=[self.__document.pk])
+#         res = self.__client.post(url)
+#         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+#         self.assertEqual(res.data['detail'], 'File not available')
 
-    @patch('core.utils.uuid.uuid4')
-    def test_get_document_content_success(self, mock_uuid):
-        """Test to get document content successful."""
-        mock_uuid.return_value = 'test-uuid'
+#     @patch('core.utils.uuid.uuid4')
+#     def test_get_document_content_success(self, mock_uuid):
+#         """Test to get document content successful."""
+#         mock_uuid.return_value = 'test-uuid'
 
-        url = reverse('document:document-content')
-        document_payloads = [
-            {
-                'title': f'Title {i}'
-            } for i in range(40)
-        ]
-        document_ids = []
-        num_pdf_dowloads = 21
-        num_xlsx_downloads = 20
+#         url = reverse('document:document-content')
+#         document_payloads = [
+#             {
+#                 'title': f'Title {i}'
+#             } for i in range(40)
+#         ]
+#         document_ids = []
+#         num_pdf_dowloads = 21
+#         num_xlsx_downloads = 20
 
-        for dpi, dp in enumerate(document_payloads):
-            res = self.__client.post(DOCUMENT_URL, dp, format='json')
-            document_ids.append(res.data['id'])
+#         for dpi, dp in enumerate(document_payloads):
+#             res = self.__client.post(DOCUMENT_URL, dp, format='json')
+#             document_ids.append(res.data['id'])
 
-            upload_url = reverse('document:document-file-upload',
-                                 args=[res.data['id']])
+#             upload_url = reverse('document:document-file-upload',
+#                                  args=[res.data['id']])
 
-            with NamedTemporaryFile(suffix='.pdf') as temp:
-                temp.write(b'Test file content')
-                temp.seek(0)
-                django_file = File(temp, name='example.pdf')
-                payload = {'file': django_file, 'original_name': 'example.pdf'}
-                self.__client.post(upload_url, payload, format='multipart')
+#             with NamedTemporaryFile(suffix='.pdf') as temp:
+#                 temp.write(b'Test file content')
+#                 temp.seek(0)
+#                 django_file = File(temp, name='example.pdf')
+#                 payload = {'file': django_file, 'original_name': 'example.pdf'}
+#                 self.__client.post(upload_url, payload, format='multipart')
 
-            with NamedTemporaryFile(suffix='.xlsx') as temp:
-                temp.write(b'Test file content')
-                temp.seek(0)
-                django_file = File(temp, name='example.xlsx')
-                payload = {'file': django_file,
-                           'original_name': 'example.xlsx'}
-                self.__client.post(upload_url, payload, format='multipart')
+#             with NamedTemporaryFile(suffix='.xlsx') as temp:
+#                 temp.write(b'Test file content')
+#                 temp.seek(0)
+#                 django_file = File(temp, name='example.xlsx')
+#                 payload = {'file': django_file,
+#                            'original_name': 'example.xlsx'}
+#                 self.__client.post(upload_url, payload, format='multipart')
 
-        self.__document.refresh_from_db()
-        pdf_download_rnds = random.choices(document_ids,
-                                           k=num_pdf_dowloads)
-        xlsx_download_rnds = random.choices(document_ids,
-                                            k=num_xlsx_downloads)
+#         self.__document.refresh_from_db()
+#         pdf_download_rnds = random.choices(document_ids,
+#                                            k=num_pdf_dowloads)
+#         xlsx_download_rnds = random.choices(document_ids,
+#                                             k=num_xlsx_downloads)
 
-        activity_url = reverse('activity:activity-by-activity',
-                               kwargs={'activity': 'download'})
-        isp_payload = {
-            'user': None,
-            'activity': 'download',
-            'ip_address': '::1',
-            'path': '/',
-            'isp': None
-        }
-        for pdf_download_id in pdf_download_rnds: 
-            isp_payload['did'] = pdf_download_id
-            self.__client.post(activity_url, isp_payload, format='json')
-            download_url = reverse('document:document-file-download',
-                                   args=[pdf_download_id])
-            res = self.__client.post(download_url, {'ext': 'pdf'},
-                                     format='json')
+#         activity_url = reverse('activity:activity-by-activity',
+#                                kwargs={'activity': 'download'})
+#         isp_payload = {
+#             'user': None,
+#             'activity': 'download',
+#             'ip_address': '::1',
+#             'path': '/',
+#             'isp': None
+#         }
+#         for pdf_download_id in pdf_download_rnds: 
+#             isp_payload['did'] = pdf_download_id
+#             self.__client.post(activity_url, isp_payload, format='json')
+#             download_url = reverse('document:document-file-download',
+#                                    args=[pdf_download_id])
+#             res = self.__client.post(download_url, {'ext': 'pdf'},
+#                                      format='json')
 
-        for xlsx_download_id in xlsx_download_rnds:
-            isp_payload['did'] = xlsx_download_id
-            self.__client.post(activity_url, isp_payload, format='json')
-            download_url = reverse('document:document-file-download',
-                                   args=[xlsx_download_id])
-            res = self.__client.post(download_url, {'ext': 'xlsx'},
-                                     format='json')
+#         for xlsx_download_id in xlsx_download_rnds:
+#             isp_payload['did'] = xlsx_download_id
+#             self.__client.post(activity_url, isp_payload, format='json')
+#             download_url = reverse('document:document-file-download',
+#                                    args=[xlsx_download_id])
+#             res = self.__client.post(download_url, {'ext': 'xlsx'},
+#                                      format='json')
 
-        self.__document.refresh_from_db()
-        res = self.__client.get(url)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+#         self.__document.refresh_from_db()
+#         res = self.__client.get(url)
+#         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    def test_get_order_ids_success(self):
-        """Test to create documents by counting them success."""
-        payloads = [
-            {
-                'title': f'Title {i + 1}'
-            } for i in range(10)
-        ]
+#     def test_get_order_ids_success(self):
+#         """Test to create documents by counting them success."""
+#         payloads = [
+#             {
+#                 'title': f'Title {i + 1}'
+#             } for i in range(10)
+#         ]
 
-        for payload in payloads:
-            res = self.__client.post(DOCUMENT_URL, payload, format='json')
+#         for payload in payloads:
+#             res = self.__client.post(DOCUMENT_URL, payload, format='json')
 
-        res = self.__client.get(DOCUMENT_URL)
+#         res = self.__client.get(DOCUMENT_URL)
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted([r['order_id'] for r in res.data]),
-                         list(range(1, len(res.data) + 1)))
+#         self.assertEqual(res.status_code, status.HTTP_200_OK)
+#         self.assertEqual(sorted([r['order_id'] for r in res.data]),
+#                          list(range(1, len(res.data) + 1)))

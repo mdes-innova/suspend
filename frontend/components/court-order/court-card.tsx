@@ -37,6 +37,7 @@ import {
 import { useRef, useState } from 'react';
 import { usePathname } from "next/navigation";
 import DatePicker from "../date-picker";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function CourtCard() {
   const inputRefs = useRef<Array<Array<React.RefObject<HTMLInputElement | null>>>>([
@@ -240,22 +241,31 @@ export function CourtCard() {
                     {
                       uploadedFiles[idx]?
                         <div className="flex flex-col gap-y-2">
-                          <div className="underline text-primary cursor-pointer"
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant='default' className="w-20 text-xs cursor-pointer h-8"
+                                onClick={ async (e: any) => {
+                                  e.preventDefault();
+                                  await handleDownload(idx);
+                                }}
+                              >
+                                {/* {uploadedFiles[idx]} */}
+                                คำสั่งสาร
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{uploadedFiles[idx]}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                          <Button variant='secondary' className="w-20 text-xs cursor-pointer h-8"
                             onClick={ async (e: any) => {
                               e.preventDefault();
                               await handleDownload(idx);
                             }}
                           >
-                            {uploadedFiles[idx]}
-                          </div>
-                          <div className="underline text-chart-2 cursor-pointer"
-                            onClick={ async (e: any) => {
-                              e.preventDefault();
-                              await handleDownload(idx);
-                            }}
-                          >
-                            urls.xlsx
-                          </div>
+                            {/* urls.xlsx */}
+                            urls
+                          </Button>
                         </div>
                           :
                         <div>

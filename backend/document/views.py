@@ -149,15 +149,13 @@ class DocumentView(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
-        detail=True,
-        methods=['post'],
+        detail=False,
+        methods=['get'],
         name='document-file-download',
         url_path='file-download'
     )
     def file_download(self, request, pk):
-        file_ext = request.data.get('ext')
-        if not file_ext:
-            file_ext = 'pdf'
+        file_ext = request.query_params.get('ext', 'pdf')
         try:
             document = Document.objects.get(pk=pk)
         except Document.DoesNotExist:
@@ -233,6 +231,7 @@ class DocumentView(viewsets.ModelViewSet):
         pass
 
     def get_permissions(self):
+        print(self.action)
         match self.request.method:
             case 'GET':
                 return [IsAuthenticated()]
