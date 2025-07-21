@@ -11,18 +11,21 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class = TokenObtainPairSerializer
 
+    def get_permissions(self):
+        print(super().get_permissions())
+        return super().get_permissions()
+
     def post(self, request, *args, **kwargs):
+        ip_address = request.data.pop('ip_address', '')
         serializer = self.get_serializer(data=request.data)
 
         try:
             serializer.is_valid(raise_exception=True)
         except Exception:
-            # Log or modify error response here if needed
             raise
 
         user = serializer.user
         isp = getattr(user, 'isp', None)
-        ip_address = request.data.get('ip_address')
 
         try:
             Activity.objects.create(

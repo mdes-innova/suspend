@@ -30,7 +30,7 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
         }
     }, [user, dispatch, reduxUser]);
 
-    if (HIDDEN_ROUTES.includes(pathname)) {
+    if (HIDDEN_ROUTES.map(elem => pathname.includes(elem)).some(Boolean)) {
         return (
             <>{ children }</>
         );

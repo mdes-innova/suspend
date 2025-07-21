@@ -28,6 +28,7 @@ import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSearchParams } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { loginUser } from "./actions/user";
 
 
 const FormSchema = z.object({
@@ -56,46 +57,27 @@ export default function LoginForm() {
     },
   })
 
-  // function onSubmit(data: z.infer<typeof FormSchema>) {
-  //   toast({
-  //     title: "You submitted the following values:",
-  //     description: (
-  //       <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-  //         <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-  //       </pre>
-  //     ),
-  //   })
-  // }
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    // const rawFormData = {
-    //   username: formData.get('username'),
-    //   password: formData.get('password'),
-    // };
-    const extendedValues = {
-      ...values,
-      path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
-    };
     try {
-      const res = await fetch('api/auth/login/', 
-        {
-          method: 'POST',
-          body: JSON.stringify(
-            {
-              ...extendedValues
-            }
-          ),
-          credentials: 'include'
-        }
-      );
+      // const res = await fetch('api/auth/login/', 
+      //   {
+      //     method: 'POST',
+      //     body: JSON.stringify(
+      //       {
+      //         ...values
+      //       }
+      //     ),
+      //     credentials: 'include'
+      //   }
+      // );
+      await loginUser({
+        ...values
+      });
 
-      if (!res.ok) setErrorMessage('ไม่สามารถเข้าสู่ระบบได้');
-      else {
-        router.push(params.get('pathname')?? '/');
-        router.refresh();
-      }
+      router.push(params.get('pathname')?? '/');
+      router.refresh();
     } catch (error) {
-      // setLoginLoading(false);
       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
     }
   }

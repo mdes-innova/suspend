@@ -10,6 +10,8 @@ import { cookies } from 'next/headers';
 import { Toaster } from "@/components/ui/sonner"
 import { type User } from "@/lib/types";
 import { CustomTrigger } from "@/components/sidebar-trigger";
+import { getAccess } from "@/components/actions/auth";
+import { getProfile } from "@/components/actions/user";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,23 +41,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const cookieStore = await cookies();
-    let access = cookieStore.get('access')?.value;
-    let user: User | null = null;
-
-    if (access) {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/me/`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${access}` },
-      });
-      if (res.ok) {
-        const resJson = await res.json();
-        user = resJson;
-
-        if (user && resJson.isp) user['isp'] = resJson.isp.name;
-      }
-    }
-
+  let user: User | null = null;
+  try {
+    const resJson = await getProfile();
+    user = resJson;
+    if (user && resJson.isp) user['isp'] = resJson.isp.name;
+  } catch (error) {
+    user = null;
+  }
 
   return (
     // <html lang="en" suppressHydrationWarning>

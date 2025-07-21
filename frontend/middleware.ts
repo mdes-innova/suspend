@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
     const docviewIdx = fullPathList.findIndex(e => e === 'document-view');
 
     const _ = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/visit/`,
+      `${process.env.BACKEND_URL}/api/activity/activities/by-activity/visit/`,
       {
         method: 'POST',
         headers: headerss,
@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
   
   if (!access && refresh) {
-    const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+    const tokenRes = await fetch(`${process.env.BACKEND_URL}/api/token/refresh/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

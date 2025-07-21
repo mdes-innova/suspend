@@ -18,6 +18,7 @@ from url.serializer import UrlSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.core.cache import cache
 
 
 class DocumentView(viewsets.ModelViewSet):
@@ -186,6 +187,14 @@ class DocumentView(viewsets.ModelViewSet):
     )
     def content(self, request):
         user = request.user
+
+        try:
+            if user.is_staff:
+                value = cache.get(f'selected-documents-user-{user.id}')
+                print(value)
+        except:
+            pass
+
         data = DocumentSerializer(self.queryset, many=True).data
         for d in data:
             doc = self.queryset.get(pk=d['id'])
@@ -231,7 +240,6 @@ class DocumentView(viewsets.ModelViewSet):
         pass
 
     def get_permissions(self):
-        print(self.action)
         match self.request.method:
             case 'GET':
                 return [IsAuthenticated()]

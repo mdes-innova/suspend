@@ -32,6 +32,8 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { AuthError } from "./exceptions/auth";
+import { registerUser } from "./actions/user";
 
 const FormSchema = z.object({
   // username: z.string().min(2, {
@@ -76,33 +78,23 @@ export default function LoginForm() {
       password: values.password,
       isp,
       userType,
-      path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
     };
 
+    console.log(extendedValues)
+
     try {
-      const res = await fetch('api/register/', 
-        {
-          body: JSON.stringify({
-            ...extendedValues
-          }),
-          method: 'POST',
-          credentials: 'include'
-        }
-      );
-      if (!res.ok) {
-        setSuccess(false);
-        setErrorMessage('ไม่สามารถเข้าสู่ระบบได้');
-      }
-      else {
-        router.refresh();
-        setErrorMessage('');
-        setSuccess(true);
-      }
+      await registerUser(extendedValues);
+      router.refresh();
+      setErrorMessage('');
+      setSuccess(true);
 
     } catch (error) {
-      // setLoginLoading(false);
-      setSuccess(false);
-      setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+      if (error instanceof AuthError)
+        router.redirect('/login?path=/register');
+      else{
+        setSuccess(false);
+        setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+      }
     }
   }
 

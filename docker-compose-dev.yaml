@@ -7,6 +7,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - mdes_network
+  
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"  # Optional: expose Redis port if you want to connect from host
+    networks:
+      - mdes_network
 
   backend:
     build:
