@@ -11,12 +11,18 @@ from core.models.user import username_validator
 
 class UserSerializer(serializers.ModelSerializer):
     """UserSerializer class."""
-    isp = ISPSerializer(required=False, allow_null=True, read_only=True)
+    isp = ISPSerializer(read_only=True)
+    isp_id = serializers.PrimaryKeyRelatedField(
+        queryset=ISP.objects.all(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = get_user_model()
-        fields = ['id', 'username', 'password', 'isp', 'is_staff', 'is_active']
+        fields = ['id', 'username', 'password', 'isp', 'isp_id', 'is_staff', 'is_active']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+        read_only_fields = ['isp']
 
     def validate_username(self, value):
         try:
@@ -25,32 +31,17 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(e.message)  # raise DRF's HTTP 400 error
         return value
 
+    def validate(self, data):
+        print(data)
+        return data
+
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
         if get_user_model().objects.filter(
                 username=validated_data.get('username')).exists():
             raise serializers.ValidationError("Duplicate entry.")
 
-        isp_data = self.initial_data.get('isp', None)
-        isp_obj = None
-        if isp_data:
-            if isinstance(isp_data, str):
-                isp_obj =\
-                    ISP.objects.get_or_create(name=isp_data)[0]
-            elif isinstance(isp_data, dict):
-                isp_obj =\
-                    ISP.objects.get_or_create(**isp_data)[0]
-            else:
-                raise serializers.ValidationError({
-                        'error': 'Bad Request - Integrity constraint violation'
-                    })
-
-            if not isp_obj:
-                raise serializers.ValidationError({
-                    'error': 'Bad Request - ISP field is required.'
-                    })
-
-        validated_data['isp'] = isp_obj
+        # isp = validated_data.pop('isp_id', None)
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):

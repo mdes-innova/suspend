@@ -1,5 +1,6 @@
 'use server';
 
+import { type UserRegister } from "@/lib/types";
 import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 import { cookies, headers } from 'next/headers';
@@ -26,19 +27,9 @@ export async function getProfile() {
     }
 }
 
-export async function registerUser({
-    username,
-    password,
-    userType,
-    isp,
-}: {
-    username: string,
-    password: string,
-    userType: string
-    isp: string,
-}) {
+export async function registerUser(userRegisterParams: UserRegister) {
    const access = await getAccess(); 
-
+    console.log(userRegisterParams)
     try {
         const res = await fetch(`${process.env.BACKEND_URL}/api/user/users/`, {
         method: 'POST',
@@ -46,21 +37,20 @@ export async function registerUser({
           Authorization: `Bearer ${access}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            username,
-            password,
-            isp,
-            isStaff: userType === 'user'? false: true
-        })
+        body: JSON.stringify(
+            userRegisterParams
+        )
       });
         
         if (!res.ok) {
             if (res.status === 401)
                 throw new AuthError('Authentication fail.')
         }
+        console.log(res);
         const profile = await res.json();
         return profile;
     } catch (error) {
+        console.log(error)
        throw error; 
     }
 }

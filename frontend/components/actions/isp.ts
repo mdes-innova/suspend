@@ -8,7 +8,7 @@ export async function getIsps() {
 
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/isp/isps/`,
+      `${process.env.BACKEND_URL}/api/isp/isps/`,
       {
         headers: {
           Authorization: `Bearer ${access}`

@@ -41,7 +41,7 @@ class DocumentFile(models.Model):
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
-        related_name='files'
+        related_name='files',
     )
     file = models.FileField(
         upload_to=document_file_path,

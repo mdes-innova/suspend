@@ -34,6 +34,7 @@ import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AuthError } from "./exceptions/auth";
 import { registerUser } from "./actions/user";
+import { type UserRegister, type Isp } from "@/lib/types";
 
 const FormSchema = z.object({
   // username: z.string().min(2, {
@@ -44,12 +45,12 @@ const FormSchema = z.object({
   confirmPassword: z.string()
 })
 
-export default function LoginForm() {
+export default function RegisterForm({ ispData }: { ispData: Isp }) {
 
   const [errorMessage, setErrorMessage] = useState('');
   const [userType, setUserType]= useState('user');
   const [success, setSuccess] = useState(false);
-  const [isp, setIsp] = useState('')
+  const [isp, setIsp] = useState("")
   const router = useRouter();
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -73,14 +74,14 @@ export default function LoginForm() {
   // }
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    const extendedValues = {
+    const extendedValues: UserRegister = {
       username: values.username,
       password: values.password,
-      isp,
-      userType,
+      isStaff: userType === 'user'? false: true
     };
 
-    console.log(extendedValues)
+    // if (isp != "")
+    //   extendedValues['ispId'] = parseInt(isp);
 
     try {
       await registerUser(extendedValues);
@@ -180,25 +181,28 @@ export default function LoginForm() {
                     ISP
                 </label>
                 <Select
-                    name="isp"
-                    required
-                    value={isp} onValueChange={(val) => setIsp(val)}
-
-                >
-                    <SelectTrigger className="w-[180px]" disabled={userType != 'user'? true: false}>
-                    <SelectValue placeholder="Select a ISP" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                        <SelectLabel>ISP</SelectLabel>
-                        <SelectItem value="apple">Apple</SelectItem>
-                        <SelectItem value="banana">Banana</SelectItem>
-                        <SelectItem value="blueberry">Blueberry</SelectItem>
-                        <SelectItem value="grapes">Grapes</SelectItem>
-                        <SelectItem value="pineapple">Pineapple</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
+                name="isp-user"
+                required
+                value={isp}
+                onValueChange={(value: string) => {
+                  setIsp(value);
+                }}
+              >
+                <SelectTrigger className="w-full" >
+                  <SelectValue placeholder="เลือก ISP" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    <SelectLabel>ISP</SelectLabel>
+                    <>
+                      {ispData.map((isp: Isp, idx: number) => (<SelectItem  
+                          key={`isp-${idx}`} value={`${isp.id}`}> {isp.name}
+                          </SelectItem>)
+                      )}
+                    </>
+                    </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           <Button type="submit">Register</Button>
         </form>

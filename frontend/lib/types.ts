@@ -33,3 +33,29 @@ export type User = {
   isActive: boolean,
   isp?: string
 };
+
+export type File = {
+  id: number,
+  name: string,
+  red: string,
+  black: string,
+  date: string
+}
+
+export type Kind = {
+  kindId: number,
+  name: string
+}
+
+export type Isp = {
+  id: number,
+  name: string,
+  ispId: number
+}
+
+export type UserRegister = {
+  username: string,
+  password: string,
+  isStaff: boolean,
+  ispId?: number
+}
