@@ -12,6 +12,7 @@ from django.db import transaction
 from user.serializer import UserSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
+from core.models import ISP
 
 
 CREATE_USER_URL = reverse('user:user-list')
@@ -148,47 +149,52 @@ class AdminUserTest(TestCase):
             'is_active': True
         })
 
+        isp = ISP.objects.create(
+            name="New isp1",
+            isp_id=0
+        )
+
         payload = {
             'username': 'admin3',
             'password': 'testpass123',
-            'isp': 'ISP1',
+            'isp_id': isp.id,
             'is_staff': False,
-            'is_active': True
         }
+
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        isp = res.data['isp']
         self.assertEqual({'username': res.data['username'],
-                          'isp': isp['name']}, {
+                          'isp_id': isp.id}, {
             'username': 'admin3',
-            'isp': 'ISP1'
+            'isp_id': isp.id
         })
 
         payload = {
-            'username': 'a1', 'password': 'GJoker_0828415971', 'isp': 'apple'
+            'username': 'arnon', 'password': 'Arnon@1234', 'isp_id': isp.id,
+            'is_staff': False
         }
+        print(payload)
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        isp = res.data['isp']
         self.assertEqual({'username': res.data['username'],
-                          'isp': isp['name']}, {
-            'username': 'a1',
-            'isp': 'apple'
+                          'isp_id': isp.id}, {
+            'username': 'arnon',
+            'isp_id': isp.id
         })
 
-#     def test_password_too_short_error(self):
-#         """Test if password to short."""
-#         payload = {
-#             'email': 'test@example.com',
-#             'password': '123',
-#             'name': 'Test name'
-#         }
-#         res = self.client.post(CREATE_USER_URL, payload)
-#         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-#         user_exists = get_user_model().objects.filter(
-#             email=payload['email']
-#         ).exists()
-#         self.assertFalse(user_exists)
+    def test_password_too_short_error(self):
+        """Test if password to short."""
+        payload = {
+            'email': 'test@example.com',
+            'password': '123',
+            'name': 'Test name'
+        }
+        res = self.client.post(CREATE_USER_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        user_exists = get_user_model().objects.filter(
+            email=payload['email']
+        ).exists()
+        self.assertFalse(user_exists)
 
     def test_get_access_token_success(self):
         """Test get tokens from a user successful."""

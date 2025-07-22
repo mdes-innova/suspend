@@ -80,8 +80,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
       isStaff: userType === 'user'? false: true
     };
 
-    // if (isp != "")
-    //   extendedValues['ispId'] = parseInt(isp);
+    if (isp != "")
+      extendedValues['ispId'] = parseInt(isp);
 
     try {
       await registerUser(extendedValues);

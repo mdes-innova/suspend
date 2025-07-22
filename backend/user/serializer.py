@@ -31,18 +31,14 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(e.message)  # raise DRF's HTTP 400 error
         return value
 
-    def validate(self, data):
-        print(data)
-        return data
-
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
         if get_user_model().objects.filter(
                 username=validated_data.get('username')).exists():
             raise serializers.ValidationError("Duplicate entry.")
 
-        # isp = validated_data.pop('isp_id', None)
-        return get_user_model().objects.create_user(**validated_data)
+        isp = validated_data.pop('isp_id', None)
+        return get_user_model().objects.create_user(isp=isp, **validated_data)
 
     def update(self, instance, validated_data):
         """Update and return user."""

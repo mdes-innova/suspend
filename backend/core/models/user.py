@@ -23,7 +23,7 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.full_clean()
         if user.is_staff:
-            cache.set(f'selected-documents-user-{user.id}', {})
+            cache.set(f'selected-documents-user-{username}', {})
         user.save(using=self._db)
         return user
 

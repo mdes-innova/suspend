@@ -185,20 +185,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
           </div>
       );
     },
-  }, {
-    id: 'มาตรา',
-    accessorKey: "section",
-    header: "มาตรา",
-    cell: ({ row }) => {
-      const { section } = row.original;
-
-      return (
-        <div>
-          {section?? '-'}
-          </div>
-      );
-    },
-  },
+  }, 
     {
       id: 'ดาวน์โหลด',
     accessorKey: "downloads",

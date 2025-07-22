@@ -1,4 +1,5 @@
 import os
+import sys
 import xml.etree.ElementTree as ET
 import fitz
 from core.models import Document, Activity, GroupDocument, DocumentFile
@@ -19,6 +20,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.cache import cache
+import httpx
+from datetime import datetime
 
 
 class DocumentView(viewsets.ModelViewSet):
@@ -183,23 +186,87 @@ class DocumentView(viewsets.ModelViewSet):
 
     @action(
         detail=False,
+        methods=['post'],
+        url_path='clear-selection'
+    )
+    def clear_selection(self, request):
+        user = request.user
+        try:
+            if user.is_staff:
+                cache.set(f'selected-documents-user-{user.username}', {})
+        except Exception as e:
+            return Response({'error': str(e)},
+                                status.HTTP_404_NOT_FOUND)
+        return Response({'data': 'Selections cleared.'})
+
+    @action(
+        detail=False,
         methods=['get'],
     )
     def content(self, request):
         user = request.user
+        page = request.query_params.get('page', '0')
+        page = int(page)
+        sorts = request.query_params.get('sorts', '-1')
+        amount = 40
 
+        sort_list = [int(s) for s in sorts.split(',')]
+
+        selected_cache = {}
         try:
             if user.is_staff:
-                value = cache.get(f'selected-documents-user-{user.id}')
-                print(value)
-        except:
-            pass
+                selected_cache =\
+                    cache.get(f'selected-documents-user-{user.username}')
+        except Exception as e:
+            return Response({'error': str(e)},
+                                status.HTTP_404_NOT_FOUND)
 
-        data = DocumentSerializer(self.queryset, many=True).data
+        try:
+            bearer_token = os.environ.get("WEBD_TOKEN")
+            res = httpx.post(
+                'https://webdapi.deinno.cloud:18381/api/getcourtorder',
+                headers={
+                    'Authorization': f'Bearer {bearer_token}',
+                    'Content-Type': 'application/json'
+                },
+                json={"beginrow": 226644, "amount": 100}
+            )
+            if res.status_code != 200:
+                raise Exception('Fail to get court orders from WebD.')
+        except Exception as e:
+            return Response({'error': str(e)},
+                                status.HTTP_404_NOT_FOUND)
+
+        # data = DocumentSerializer(self.queryset, many=True).data
+        data_json = res.json()
+        data = data_json['urllist']
+
+        for s in sort_list:
+            match s:
+                case -1:
+                    data = sorted(
+                        data,
+                        key=lambda x: datetime.strptime(x['order_date'],
+                                                        "%Y-%m-%d").date(),
+                        reverse=True)
+                case 1:
+                    data = sorted(
+                        data,
+                        key=lambda x: datetime.strptime(x['order_date'],
+                                                        "%Y-%m-%d").date()
+                    )
+                case _:
+                    data = sorted(
+                        data,
+                        key=lambda x: datetime.strptime(x['order_date'],
+                                                        "%Y-%m-%d").date()
+                    )
+
         for d in data:
-            doc = self.queryset.get(pk=d['id'])
-            files = (DocumentDetailSerializer(doc).data)['files']
-            files = sorted(files, key=lambda x: x['id'], reverse=True)
+            d['selected'] = True if d['order_id'] in selected_cache else False
+            # doc = d['order_id']
+            # files = (DocumentDetailSerializer(doc).data)['files']
+            # files = sorted(files, key=lambda x: x['id'], reverse=True)
             # pdf_file = None
             # xlsx_file = None
             # for f in files:
@@ -210,25 +277,31 @@ class DocumentView(viewsets.ModelViewSet):
             #         xlsx_file = fname
             # d['pdf'] = pdf_file
             # d['xlsx'] = xlsx_file
-            pdf_downloads = Activity.objects.filter(
-                document=doc,
-                activity='download',
-                file__file__endswith='.pdf'
-                )
-            xlsx_downloads = Activity.objects.filter(
-                document=doc,
-                activity='download',
-                file__file__endswith='.xlsx'
-                )
-            d['downloads'] = f'{len(pdf_downloads)}/{len(xlsx_downloads)}'
+            # pdf_downloads = Activity.objects.filter(
+            #     document=doc,
+            #     activity='download',
+            #     file__file__endswith='.pdf'
+            #     )
+            # xlsx_downloads = Activity.objects.filter(
+            #     document=doc,
+            #     activity='download',
+            #     file__file__endswith='.xlsx'
+            #     )
+            # d['downloads'] = f'{len(pdf_downloads)}/{len(xlsx_downloads)}'
             try:
-                GroupDocument.objects.get(document=doc)
-                d['active'] = False
+                # GroupDocument.objects.get(document=doc)
+                d['active'] = True
             except GroupDocument.DoesNotExist:
                 d['active'] = True
-            d['selected'] = False
-
-        return Response(data)
+            # d['selected'] = False
+        if page * amount < len(data):
+            return Response(data[page * amount: (page + 1) * amount])
+        else:
+            return Response({
+                'error': 'Data out of range.',
+            },
+                status.HTTP_404_NOT_FOUND
+            )
 
     @action(
         detail=False,

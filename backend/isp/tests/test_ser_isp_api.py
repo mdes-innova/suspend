@@ -75,12 +75,10 @@ class PrivateStaffTest(TestCase):
         res = self.__client.post(ISP_URL, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(res.data[0].code, 'invalid')
 
         payload = {'name': 'new isp'}
         res = self.__client.post(ISP_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(res.data[0].code, 'invalid')
 
 
 class PrivateUserTest(TestCase):

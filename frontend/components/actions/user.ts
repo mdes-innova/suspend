@@ -29,7 +29,6 @@ export async function getProfile() {
 
 export async function registerUser(userRegisterParams: UserRegister) {
    const access = await getAccess(); 
-    console.log(userRegisterParams)
     try {
         const res = await fetch(`${process.env.BACKEND_URL}/api/user/users/`, {
         method: 'POST',
@@ -46,7 +45,6 @@ export async function registerUser(userRegisterParams: UserRegister) {
             if (res.status === 401)
                 throw new AuthError('Authentication fail.')
         }
-        console.log(res);
         const profile = await res.json();
         return profile;
     } catch (error) {

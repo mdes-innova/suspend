@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'group',
     'activity',
     'mail',
+    'kind',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
