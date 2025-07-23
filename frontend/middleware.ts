@@ -9,36 +9,6 @@ export async function middleware(request: NextRequest) {
   const access = request.cookies.get('access')?.value;
   const refresh = request.cookies.get('refresh')?.value;
   const isLoginPage = pathname === '/login';
-  const fullPath =  process.env.NEXT_PUBLIC_FRONTEND + url.pathname + url.search;
-
-  const headersList = await headers();
-  const forwardedFor = headersList.get('x-forwarded-for') || '';
-  const ip = forwardedFor.split(',')[0];
-  const headerss = new Headers();
-  headerss.set("Content-Type", "application/json");
-  if (access) {
-    headerss.set("Authorization", `Bearer ${access}`);
-  }
-
-  try {
-    const fullPathList = fullPath.split('/');
-    const docviewIdx = fullPathList.findIndex(e => e === 'document-view');
-
-    const _ = await fetch(
-      `${process.env.BACKEND_URL}/api/activity/activities/by-activity/visit/`,
-      {
-        method: 'POST',
-        headers: headerss,
-        body: JSON.stringify({
-          ipAddress: ip,
-          path: fullPath,
-          did: parseInt(fullPathList[docviewIdx + 1])
-        })
-      }
-    );
-  } catch (error) {
-    
-  }
 
   // Allow public paths (you can customize this list)
   const publicPaths = ['/login'];

@@ -4,7 +4,6 @@ import xml.etree.ElementTree as ET
 import fitz
 from core.models import Document, Activity, GroupDocument, DocumentFile
 from .serializer import (
-    DocumentDetailSerializer,
     DocumentSerializer,
     FileSerializer
     )
@@ -15,6 +14,7 @@ from django.http import FileResponse
 from rest_framework.decorators import action
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
+from group.serializer import GroupSerializer
 from url.serializer import UrlSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,15 +26,8 @@ from datetime import datetime
 
 class DocumentView(viewsets.ModelViewSet):
     """Document view."""
-    queryset = Document.objects.all().order_by('-id')
-
-    def get_serializer_class(self):
-        """Return the serializer class for request."""
-        if self.action == 'list':
-            return DocumentSerializer
-        elif self.action == 'file_upload':
-            return FileSerializer
-        return DocumentDetailSerializer
+    serializer_class = DocumentSerializer
+    queryset = Document.objects.all().order_by('-order_id')
 
     def list(self, request, *args, **kwargs):
         user = request.user
@@ -65,27 +58,6 @@ class DocumentView(viewsets.ModelViewSet):
         serializer = TagSerializer(tags, many=True)
         return Response(serializer.data)
 
-    @action(
-        detail=False,
-        methods=['get'],
-        url_path='by-title/(?P<title>[^/]+)/tags',
-        name='document-tags-by-title'
-    )
-    def tags_by_title(self, request, title=None):
-        """Return tags for a specific document with title."""
-        docs = Document.objects.filter(title__iexact=title)
-        if not docs.exists():
-            return Response({'detail': 'Document not found'},
-                            status=status.HTTP_404_NOT_FOUND)
-
-        serializers = []
-        for doc in docs:
-            serializers.append({'title': doc.title,
-                                'created_at': doc.created_at,
-                                'tags': TagSerializer(doc.tags.all(),
-                                                      many=True).data})
-        return Response(serializers)
-
     @action(detail=True, methods=['get'])
     def urls(self, request, pk=None):
         """Return urls for a specific document with id."""
@@ -93,27 +65,6 @@ class DocumentView(viewsets.ModelViewSet):
         urls = document.urls.all()
         serializer = UrlSerializer(urls, many=True)
         return Response(serializer.data)
-
-    @action(
-        detail=False,
-        methods=['get'],
-        url_path='by-title/(?P<title>[^/]+)/urls',
-        name='document-urls-by-title'
-    )
-    def urls_by_title(self, request, title=None):
-        """Return urls for a specific document with title."""
-        docs = Document.objects.filter(title__iexact=title)
-        if not docs.exists():
-            return Response({'detail': 'Document not found'},
-                            status=status.HTTP_404_NOT_FOUND)
-
-        serializers = []
-        for doc in docs:
-            serializers.append({'title': doc.title,
-                                'created_at': doc.created_at,
-                                'urls': UrlSerializer(doc.urls.all(),
-                                                        many=True).data})
-        return Response(serializers)
 
     @action(
         detail=True,
@@ -204,101 +155,25 @@ class DocumentView(viewsets.ModelViewSet):
         methods=['get'],
     )
     def content(self, request):
-        user = request.user
-        page = request.query_params.get('page', '0')
-        page = int(page)
-        sorts = request.query_params.get('sorts', '-1')
-        amount = 40
-
-        sort_list = [int(s) for s in sorts.split(',')]
-
-        selected_cache = {}
         try:
-            if user.is_staff:
-                selected_cache =\
-                    cache.get(f'selected-documents-user-{user.username}')
+            documents = self.queryset
+            data = DocumentSerializer(documents, many=True).data
+            for d in data:
+                try:
+                    group = GroupDocument.objects.get(document=Document.objects.get(pk=d['id']))
+                    group_data = GroupSerializer(group).data
+                    d['active'] = False
+                    d['group_id'] = group_data['id']
+                    d['group_name'] = group_data['name']
+                except GroupDocument.DoesNotExist:
+                    d['active'] = True
+                    d['group_id'] = None
+                    d['group_name'] = None
+            return Response(data)
+
         except Exception as e:
-            return Response({'error': str(e)},
-                                status.HTTP_404_NOT_FOUND)
-
-        try:
-            bearer_token = os.environ.get("WEBD_TOKEN")
-            res = httpx.post(
-                'https://webdapi.deinno.cloud:18381/api/getcourtorder',
-                headers={
-                    'Authorization': f'Bearer {bearer_token}',
-                    'Content-Type': 'application/json'
-                },
-                json={"beginrow": 226644, "amount": 100}
-            )
-            if res.status_code != 200:
-                raise Exception('Fail to get court orders from WebD.')
-        except Exception as e:
-            return Response({'error': str(e)},
-                                status.HTTP_404_NOT_FOUND)
-
-        # data = DocumentSerializer(self.queryset, many=True).data
-        data_json = res.json()
-        data = data_json['urllist']
-
-        for s in sort_list:
-            match s:
-                case -1:
-                    data = sorted(
-                        data,
-                        key=lambda x: datetime.strptime(x['order_date'],
-                                                        "%Y-%m-%d").date(),
-                        reverse=True)
-                case 1:
-                    data = sorted(
-                        data,
-                        key=lambda x: datetime.strptime(x['order_date'],
-                                                        "%Y-%m-%d").date()
-                    )
-                case _:
-                    data = sorted(
-                        data,
-                        key=lambda x: datetime.strptime(x['order_date'],
-                                                        "%Y-%m-%d").date()
-                    )
-
-        for d in data:
-            d['selected'] = True if d['order_id'] in selected_cache else False
-            # doc = d['order_id']
-            # files = (DocumentDetailSerializer(doc).data)['files']
-            # files = sorted(files, key=lambda x: x['id'], reverse=True)
-            # pdf_file = None
-            # xlsx_file = None
-            # for f in files:
-            #     _, fname = f['original_name']
-            #     if not pdf_file and 'pdf' in fname:
-            #         pdf_file = fname
-            #     if not xlsx_file and ('xlsx' in fname or 'xls' in fname):
-            #         xlsx_file = fname
-            # d['pdf'] = pdf_file
-            # d['xlsx'] = xlsx_file
-            # pdf_downloads = Activity.objects.filter(
-            #     document=doc,
-            #     activity='download',
-            #     file__file__endswith='.pdf'
-            #     )
-            # xlsx_downloads = Activity.objects.filter(
-            #     document=doc,
-            #     activity='download',
-            #     file__file__endswith='.xlsx'
-            #     )
-            # d['downloads'] = f'{len(pdf_downloads)}/{len(xlsx_downloads)}'
-            try:
-                # GroupDocument.objects.get(document=doc)
-                d['active'] = True
-            except GroupDocument.DoesNotExist:
-                d['active'] = True
-            # d['selected'] = False
-        if page * amount < len(data):
-            return Response(data[page * amount: (page + 1) * amount])
-        else:
             return Response({
-                'error': 'Data out of range.',
+                'error': str(e),
             },
                 status.HTTP_404_NOT_FOUND
             )

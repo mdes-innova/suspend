@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { addToGroup, postGroup } from '../actions/group';
 
 const Kinds = [
   { value: 'Nokind', text: 'ไม่มี'},
@@ -69,7 +70,7 @@ export function NewPlaylistSheet() {
                 </Label>
                 <Input id="name" ref={inputNameRef} defaultValue="New playlist" className="col-span-3" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              {/* <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">
                   ชนิด 
                 </Label>
@@ -85,51 +86,28 @@ export function NewPlaylistSheet() {
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                {/* <Input id="kind" ref={inputKindRef} defaultValue="New playlist" className="col-span-3" /> */}
-              </div>
+              </div> */}
             </div>
             <SheetFooter>
               <SheetClose asChild>
                 <Button className='w-fit ml-auto' type="submit" onClick={async(e: any) => {
-                    e.preventDefault();
-                    if (docIds && docIds.length)
-                      try {
-                        const res = await fetch('/api/playlist/', {
-                          method: 'POST',
-                          credentials: 'include',
-                          body: JSON.stringify({
-                            name: inputNameRef.current?.value,
-                            kind
-                          })
-                        });
-                        const resJson = await res.json();
-                        if (!res.ok) dispatch(closeModal({ui: PLAYLISTUI.new, info: [resJson.error], err: true }));
-                        else {
-                          try {
-                            const addRes = await fetch(`/api/playlist/${resJson.data.id}/`,
-                              {
-                                method: 'PATCH',
-                                credentials: 'include',
-                                body: JSON.stringify({
-                                  documentIds: docIds,
-                                  mode: 'append' 
-                                })
-                              }
-                            );
-                            const addResJson = await addRes.json();
-                            if (!addRes.ok) dispatch(closeModal({ui: PLAYLISTUI.new, info: [addResJson.error], err: true }));
-                            else {
-                              const newPlaylist = addResJson.data.name;
-                              const docs = addResJson.data.documents.map((doc: any) => doc.title).slice(0, 3);
-                              dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
-                            }
-                          } catch (error1) {
-                            dispatch(closeModal({ui: PLAYLISTUI.new, info: [error1 as string], err: true }));
-                          }
-                        }
-                      } catch (error) {
-                        dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
-                      }
+                  e.preventDefault();
+                  if (docIds && docIds.length) {
+                    try {
+                      const newGroup = await postGroup(inputNameRef.current.value);
+                      const newDocsGroup = await addToGroup({
+                        groupId: newGroup.id,
+                        docIds,
+                        mode: 'append'
+                      });
+                      console.log(newDocsGroup)
+                      const newPlaylist = newDocsGroup.data.name;
+                      const docs = newDocsGroup.data.documents.map((doc: any) => doc.title).slice(0, 3);
+                      dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
+                    } catch (error) {
+                      dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
+                    }
+                  }
                 }}>Save</Button>
               </SheetClose>
             </SheetFooter>

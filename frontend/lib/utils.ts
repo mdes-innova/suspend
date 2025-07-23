@@ -206,3 +206,17 @@ export async function fetchWithAccessApp({ access, refresh, url, method, params:
 
     return res.json();
 }
+
+export function Date2Thai(date: string) {
+  const newDate = new Date(date);
+  return Text2Thai(new Intl.DateTimeFormat('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(newDate));
+}
+
+export function Text2Thai(text: string) {
+  const digitsMap = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+  return text.replace(/\d/g, (d) => digitsMap[parseInt(d)]);
+}

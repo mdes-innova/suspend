@@ -9,3 +9,4 @@ from .group import Group, KindType, GroupDocument
 from .activity import Activity, ActivityType
 from .mail import Mail, FromUser
 from .kind import Kind
+from .request_log import RequestLog

@@ -5,17 +5,22 @@ export type Category = {
 
 export type Document = {
   id: number, 
-  pinned: boolean,
-  download?: string,
-  redNumber?: string,
-  blackNumber?: string,
-  section?: string,
-  title: string,
-  date: string,
-  selected: boolean,
-  downloads: string,
-  active: boolean,
-  category: Category
+  kindId?: number,
+  kindName?: string,
+  orderId: number,
+  orderNo?: string,
+  orderList?: string,
+  orderDate?: string,
+  orderFilename?: string,
+  orderredNo?: string,
+  orderredDate?: string,
+  orderblackNo?: string,
+  orderblackDate?: string,
+  ispNo?: string,
+  ispDate?: string,
+  active?: boolean,
+  groupName?: string,
+  groupId?: number
 }
 
 export type Group = {

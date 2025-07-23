@@ -49,3 +49,27 @@ export async function clearSelections() {
       throw error; 
   }
 }
+
+export async function getDocument(docId: number) {
+  const access = await getAccess();
+
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/api/document/documents/${docId}/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get a document fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}

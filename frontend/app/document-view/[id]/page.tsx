@@ -1,70 +1,28 @@
-import Activity from "@/components/activity";
+import { getDocument } from "@/components/actions/document";
 import DocumentView from "@/components/document-view";
-import { fetchWithAccessApp } from "@/lib/utils";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { AuthError } from "@/components/exceptions/auth";
+import { redirect, notFound } from "next/navigation";
 import { Suspense } from "react";
 
-const getGroupUrl = (docId: number) => 
-  `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/by-document/${docId}/`;
-
-async function Components({ params, searchParams }: { params: any, searchParams: any }) {
-  const { id } = (await params);
-  const { ap } = (await searchParams);
-  const cookieStore = await cookies();
-  const refresh = cookieStore?.get("refresh")?.value;
-  let access = cookieStore?.get("access")?.value;
-  const docUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/${id}/`;
-  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-document/${id}/?ap=${ap?? 0}`;
+async function Components({ params }: { params: { id: string } }) {
+  const { id } = params;
 
   try {
-    const docData = await fetchWithAccessApp({
-      access, refresh, url: docUrl, method: 'GET'
-    });
-    const logData = await fetchWithAccessApp({
-      access, refresh, url: logUrl, method: 'GET'
-    });
-
-    try {
-      const groupUrl = getGroupUrl(docData.id);
-      const groupData = await fetchWithAccessApp({
-        access, refresh, url: groupUrl, method: 'GET'
-      });
-
-      return (
-        <DocumentView logData={logData} docData={docData}
-          group={groupData} ap={parseInt(ap)?? 0}/>
-      );
-    } catch (error2){
-      return (
-        <DocumentView logData={logData} docData={docData}
-          group={null} ap={parseInt(ap)?? 0}/>
-      );
-    }
+    const docData = await getDocument(parseInt(id));
+    return <DocumentView docData={docData} />;
   } catch (error) {
-    let access = cookieStore?.get("access")?.value;
-    if (access) {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/me/`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${access}` },
-      });
-      if (!res.ok && res.status === 401) {
-        redirect(`/login?path=/document-view/${id}/`)
-      } else {
-        return <></>;
-      }
+    if (error instanceof AuthError) {
+      redirect(`/login?path=/document-view/${id}/`);
     } else {
-      redirect(`/login?path=/document-view/${id}/`)
+      notFound(); // or return <div>Error</div>;
     }
-    return <></>;
   }
 }
 
-export default function Page({ params, searchParams }:
-  { params: { id: string }, searchParams: { [key: string]: string }}) {
+export default function Page({ params }: { params: { id: string } }) {
   return (
-    <Suspense>
-      <Components params={params} searchParams={searchParams} />
+    <Suspense fallback={<div>Loading document...</div>}>
+      <Components params={params} />
     </Suspense>
   );
 }

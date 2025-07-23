@@ -12,6 +12,10 @@ interface ContentListUiState {
   columnFilters: ColumnFiltersState;
   columnVisibility: VisibilityState;
   rowSelection: RowSelectionState;
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  };
 }
 
 // Initial state with type annotation
@@ -20,6 +24,10 @@ const initialState: ContentListUiState = {
   columnFilters: [],
   columnVisibility: {},
   rowSelection: {},
+  pagination: {
+    pageIndex: 0,
+    pageSize: 20,
+  },
 };
 
 // Create the slice
@@ -39,6 +47,9 @@ const mailboxUiSlice = createSlice({
     setRowSelection(state, action: PayloadAction<RowSelectionState>) {
       state.rowSelection = action.payload;
     },
+    setPagination(state, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
+      state.pagination = action.payload;
+    },
   },
 });
 
@@ -48,6 +59,7 @@ export const {
   setColumnFilters,
   setColumnVisibility,
   setRowSelection,
+  setPagination,
 } = mailboxUiSlice.actions;
 
 export default mailboxUiSlice.reducer;

@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Plus } from "lucide-react";
+import { getGroups } from "../actions/group";
 
 type Playlist = {
   id: number,
@@ -86,25 +87,15 @@ export default function PlaylistDialog() {
     useEffect(() => {
       const getData = async() => {
         if (uiOpen) {
-          setData([]);
-          try {
-            const res = await fetch('api/playlist/',
-              {
-                credentials: 'include'
-              }
-            );
-            if (!res.ok)
-              throw new Error('Get playlists fail.')
-
-            const resJson = await res.json();
-            setData(resJson.data);
+          try{
+            const playlist = await getGroups(); 
+            setData(playlist);
           } catch (error) {
            dispatch(closeModal({ui: PLAYLISTUI.list}));
            dispatch(closeModal({ui: PLAYLISTUI.new, info: ["error"], err: true}));
           }
         }
       }
-
       getData();
     }, [uiOpen]);
 

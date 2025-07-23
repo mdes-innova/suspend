@@ -89,13 +89,13 @@ def update_documents():
     # while True:
     #     try:
     bearer_token = os.environ.get("WEBD_TOKEN")
+    webd_url = os.environ.get("WEBD_URL")
     res = httpx.post(
-        'https://webdapi.deinno.cloud:18381/api/getcourtorder',
+        f'{webd_url}/api/getcourtorder',
         headers={
             'Authorization': f'Bearer {bearer_token}',
             'Content-Type': 'application/json'
-        },
-        json={"beginrow": 226644, "amount": 100}
+        }
     )
     if res.status_code != 200:
         raise Exception('Fail to get court orders from WebD.')

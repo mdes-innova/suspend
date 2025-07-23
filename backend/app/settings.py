@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'activity',
     'mail',
     'kind',
+    'celr',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,7 +62,8 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
     'two_factor',
     'django_otp.plugins.otp_static',
-    'corsheaders'
+    'corsheaders',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -74,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'logs.middleware.RequestLoggingMiddleware'
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -218,3 +221,7 @@ SPECTACULAR_SETTINGS = {
 
 LOGIN_URL = '/account/login/'
 LOGIN_REDIRECT_URL = '/admin/'
+
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

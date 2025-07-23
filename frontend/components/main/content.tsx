@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react";
+import Link from 'next/link';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -14,7 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
-import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting } 
+import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting, setPagination} 
   from "../store/features/content-list-ui-slice";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -105,10 +106,10 @@ export const columns: ColumnDef<DocumentType | any>[] = [
       />
     ),
     cell: ({ row }) => {
-      const { selected, active } = row.original;
+      const { active } = row.original;
         if (active)
           return (
-            <Checkbox
+            <Checkbox 
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
               aria-label="Select row"
@@ -120,37 +121,55 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     enableHiding: false,
   },
   {
-    id: 'ชื่อเรื่อง',
-    accessorKey: "title",
+    id: 'คำสั่งศาล',
+    accessorKey: "orderNo",
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        <div className='inline-flex gap-x-2 w-full '
         >
-          ชื่อเรื่อง
-          <ArrowUpDown />
-        </Button>
+          คำสั่งศาล
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
       )
     },
     cell: ({ row }) => 
     {
-      const { title } = row.original;
-      return (<div className="lowercase ml-4">ขอให้มีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์</div>);
+      const { orderNo, id } = row.original;
+      return (<Link
+        href={`/document-view/${id}`}
+        className="text-left underline cursor-pointer hover:text-blue-400">{orderNo}</Link>);
     }
   },
     {
       id: 'วันที่',
-    accessorKey: "date",
-    header: "วันที่",
+    accessorKey: "orderDate",
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId));
+      const dateB = new Date(rowB.getValue(columnId));
+      return dateA.getTime() - dateB.getTime(); // ascending
+    },
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          วันที่
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            // column.getToggleSortingHandler();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
     cell: ({ row }) => {
-      // const value = row.getValue("Date");
-      // const date = new Date(value as string);
-      const { date } = row.original;
+      const { orderDate } = row.original;
 
       return (
         <div>
-          {(new Date(date)).toLocaleString("en-GB", {
+          {(new Date(orderDate)).toLocaleString("en-GB", {
             year: "numeric",
             day: "2-digit",
             month: "2-digit"
@@ -161,27 +180,49 @@ export const columns: ColumnDef<DocumentType | any>[] = [
   },
   {
     id: 'คดีหมายเลขดำ',
-    accessorKey: "blackNumber",
-    header: "คดีหมายเลขดำ",
+    accessorKey: "orderblackNo",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          หมายเลขคดีดำ
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
     cell: ({ row }) => {
-      const { blackNumber } = row.original;
+      const { orderblackNo } = row.original;
       return (
         <div>
-          {blackNumber?? '-'}
+          {orderblackNo?? '-'}
           </div>
       );
     },
   },
   {
     id: 'คดีหมายเลขแดง',
-    accessorKey: "redNumber",
-    header: "คดีหมายเลขแดง",
+    accessorKey: "orderredNo",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          หมายเลขคดีแดง
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
     cell: ({ row }) => {
-      const { redNumber } = row.original;
+      const { orderredNo } = row.original;
 
       return (
         <div>
-          {redNumber?? '-'}
+          {orderredNo?? '-'}
           </div>
       );
     },
@@ -189,7 +230,18 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     {
       id: 'ดาวน์โหลด',
     accessorKey: "downloads",
-    header: () => <div className="text-right">ดาวน์โหลด</div>,
+     header: ({ column }) => {
+      return (
+        <div className='flex gap-x-2 w-full items-center justify-end '
+        >
+          ดาวน์โหลด
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
     cell: ({ row }) => {
       const { downloads } = row.original;
       return (<div className="text-right">{downloads}</div>);
@@ -211,13 +263,14 @@ export const columns: ColumnDef<DocumentType | any>[] = [
 ]
 
 export default function DataTable({ data }: { data: Document[] }) {
-
+  const ws = ['max-w-6', 'w-24', 'w-16', 'w-16', 'w-10', ''];
   const dispatch = useAppDispatch();
   const [tableData, setTableData] = React.useState<Document[]>(data);
   const sorting = useAppSelector((state) => state.contentListUi.sorting);
   const columnFilters = useAppSelector((state) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state) => state.contentListUi.columnVisibility);
   const rowSelection = useAppSelector((state) => state.contentListUi.rowSelection);
+  const pagination = useAppSelector(state=>state.contentListUi.pagination); 
   const playlistUi = useAppSelector(state=>state.playlistDialogUi.listOpen);
   const playlistNewUi = useAppSelector(state=>state.playlistDialogUi.newOpen);
   const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged); 
@@ -233,6 +286,8 @@ export default function DataTable({ data }: { data: Document[] }) {
       dispatch(setColumnVisibility(resolveUpdater(updater, columnVisibility))),
     onRowSelectionChange: (updater) =>
       dispatch(setRowSelection(resolveUpdater(updater, rowSelection))),
+    onPaginationChange: (updater) =>
+      dispatch(setPagination(resolveUpdater(updater, pagination))),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -242,7 +297,9 @@ export default function DataTable({ data }: { data: Document[] }) {
       columnFilters,
       columnVisibility,
       rowSelection,
+      pagination
     },
+    enableMultiSort: true
   });
 
   React.useEffect(()=>{
@@ -298,10 +355,10 @@ export default function DataTable({ data }: { data: Document[] }) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter title..."
-          value={(table.getColumn("ชื่อเรื่อง")?.getFilterValue() as string) ?? ""}
+          placeholder="ค้นหาคำสั่งศาล..."
+          value={(table.getColumn("คำสั่งศาล")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("ชื่อเรื่อง")?.setFilterValue(event.target.value)
+            table.getColumn("คำสั่งศาล")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

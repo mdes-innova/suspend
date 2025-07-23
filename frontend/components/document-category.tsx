@@ -18,36 +18,62 @@ import { type Group, type Document, type User } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "./store/hooks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { getGroup } from "./actions/group";
 
-export default function CategoryGroup({ category, group, doc }:
-    { category: string, group: Group | null, doc?: Document }) {
+export default function CategoryGroup({ doc }:
+    { doc: Document }) {
 
-    const [groupData, setGroupData] = useState<Group | null>(group);
+    const bgColors = [
+        '#F87171', // red-400
+        '#FB923C', // orange-400
+        '#FBBF24', // yellow-400
+        '#34D399', // green-400
+        '#60A5FA', // blue-400
+        '#818CF8', // indigo-400
+        '#A78BFA', // violet-400
+        '#F472B6', // pink-400
+        '#4ADE80', // emerald-400
+        '#FACC15', // amber-400
+        '#2DD4BF', // teal-400
+        '#38BDF8', // sky-400
+        '#C084FC', // purple-400
+        '#F97316', // orange-500
+        '#84CC16', // lime-500
+        '#E879F9', // fuchsia-400
+        '#A3E635', // lime-400
+        '#FCD34D', // yellow-300
+        '#67E8F9', // cyan-300
+        '#FDBA74', // orange-300
+    ];
+
+    const [groupData, setGroupData] = useState<Group | null>(null);
     const user = useAppSelector(state => state.userAuth.user);
     const isOwner = user && groupData && user.id === groupData.user.id;
 
     const router = useRouter();
-    const baseColors = {
-        uncategorized: 'bg-muted',
-        courtorder: 'bg-primary',
-        up2sign: 'bg-accent'
-    };
 
-    const baseLabels = {
-        uncategorized: 'ไม่มีหมวดหมู่',
-        courtorder: 'คำสั่งศาล',
-        up2sign: 'ดศร. ๑'
-    };
+    const label = doc.kindName?? 'ไม่มีหมวดหมู่';
 
-    const bgColor = baseColors[category as keyof typeof baseColors]?? 'bg-muted';
-    const label = baseLabels[category as keyof typeof baseColors]?? 'ไม่มีหมวดหมู่';
+    // useEffect(() => {
+    //     const getGroupData = async() => {
+    //         try {
+    //             const group = await getGroup(doc.groupId);
+    //             setGroupData(group);
+    //         } catch (error) {
+    //             setGroupData(null);
+    //         }
+    //     }
+
+    //     getGroupData();
+    // }, []);
+
     return (
         <>
-            <Button className={`${bgColor} rounded-xl px-2 py-1 hover:${bgColor}`}>
+            <Button className={`${bgColors[doc.kindId]} rounded-xl px-2 py-1 hover:${bgColors[doc.kindId]}`}>
                 {label}
             </Button>
             {
-                groupData &&
+                doc.groupName &&
                 <div className="px-2 flex justify-center items-center">
                     {
                         isOwner &&
@@ -56,7 +82,7 @@ export default function CategoryGroup({ category, group, doc }:
                             if (!isOwner) return;
                             router.push(`/document-groups/${groupData?.id}/`);
                         }}>
-                            {groupData?.name}
+                            {doc.groupName}
                         </div>
                     }
                     {
