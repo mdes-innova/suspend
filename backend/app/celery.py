@@ -10,6 +10,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'update-table-every-30s': {
         'task': 'celr.tasks.update_data_task',
-        'schedule': 30.0,  # or use crontab(minute='*/1') for 1-minute interval
+        'schedule': 30.0, 
     },
 }

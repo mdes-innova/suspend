@@ -39,42 +39,23 @@ import { Label } from "@/components/ui/label";
 import { Fragment, memo, useEffect } from "react";
 import { number } from "zod";
 import { MyPagination, type Paginor } from "./my-pagination";
-import { User, type Group } from "@/lib/types";
+import { type Isp, User, type Group } from "@/lib/types";
 import DocumentList from "./document-list/document-list";
 import DragDrop from "./document-list/drag-drop";
 import { GroupForm } from "./mail/group-form";
-
-type Logtype = {
-  id: number
-  activity: string
-  createdAt: string
-}
-
-type Downloads = {
-  pdf: number,
-  xlsx: number
-}
-type LogactivityType = {
-  count: number,
-  downloads: Downloads,
-  data: Logtype[]
-}
+import { Date2Thai, Text2Thai } from "@/lib/utils";
 
 export default function GroupView(
-  { logData, groupData, ap, ispUsers}: { logData: LogactivityType, groupData: Group, ap: number, ispUsers: User[]}) {
+  { groupData, isps}: { groupData: Group, isps: Isp[] }) {
   return (
     <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
       <div className="flex w-full justify-between">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
             <div className="w-full text-start text-2xl font-bold">{groupData.name}</div>
-            <div className="w-full text-start text-md">{new Date(groupData.createdAt).toLocaleString("en-GB", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })}</div>
+            <div className="w-full text-start text-md">{Text2Thai(Date2Thai(groupData.createdAt))}</div>
           </div>
-        <GroupForm ispUsers={ispUsers}>
+        <GroupForm isps={isps}>
           <DocumentList data={groupData.documents} />
         </GroupForm>
         {/* <DragDrop /> */}
@@ -91,79 +72,4 @@ export default function GroupView(
       } /> */}
     </div>
   );
-}
-
-function DocumentLogs({ data, pagination }: { data: Logtype[], pagination: Paginor}) {
-  return (
-    <Table className="">
-      {/* <TableCaption>A list of your recent invoices.</TableCaption> */}
-      <TableHeader>
-        <TableRow>
-          {/* <TableHead className="w-[100px]">Invoice</TableHead> */}
-          <TableHead>วันที่ เวลา</TableHead>
-          <TableHead>กิจกรรม</TableHead>
-          <TableHead className="text-right">ไฟล์</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((log) => (
-          <TableRow key={`log-${log.id}`}>
-            {/* <TableCell className="font-medium">{log.}</TableCell> */}
-            <TableCell>{new Date(log.createdAt).toLocaleString("en-US", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</TableCell>
-            <TableCell>{log.activity}</TableCell>
-            <TableCell className="text-right">-</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3}>
-              <MyPagination pagination={pagination} />
-            </TableCell>
-          </TableRow>
-      </TableFooter>
-    </Table>
-  )
-}
-
-
-
-function Urls() {
-  const urls = Array.from({length: 10}).map((_, idx: number) => `https://example${idx}.com`);
-  return (
-    <Dialog>
-      <form>
-        <DialogTrigger asChild>
-          <Button variant="outline">เปิด Urls</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          {/* <ol className="list-decimal list-outside pl-6">
-            {urls.map((e: string) => <li key={`urls-${e}`}>{e}</li>)}
-          </ol> */}
-          <ScrollArea className="h-72">
-            <ol className="list-decimal list-outside pl-6 p-4">
-              {/* <h4 className="mb-4 text-sm leading-none font-medium">Tags</h4> */}
-              {urls.map((url) => (
-                <Fragment key={url}>
-                  <li className="text-sm">{url}</li>
-                  <Separator className="my-2" />
-                </Fragment>
-              ))}
-            </ol>
-          </ScrollArea>
-          <DialogHeader>
-            <DialogTitle></DialogTitle>
-            <DialogDescription>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </form>
-    </Dialog>
-  )
 }

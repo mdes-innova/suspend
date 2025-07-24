@@ -16,7 +16,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting, setPagination} 
-  from "../store/features/content-list-ui-slice";
+  from "./store/features/dialog-list-ui-slice";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -35,15 +35,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import ActionDropdown from "../action-dropdown";
-import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { setDocIds } from "./store/features/playlist-diaolog-ui-slice";
 
 import {
   type Updater,
 } from '@tanstack/react-table';
-import { getContent } from "../actions/document";
+import { getContent } from "./actions/document";
 
 
 function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
@@ -228,53 +226,16 @@ export const columns: ColumnDef<DocumentType | any>[] = [
       );
     },
   }, 
-    {
-      id: 'ดาวน์โหลด',
-    accessorKey: "downloads",
-     header: ({ column }) => {
-      return (
-        <div className='flex gap-x-2 w-full items-center justify-end '
-        >
-          ดาวน์โหลด
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const { downloads } = row.original;
-      return (<div className="text-right">{downloads}</div>);
-
-    }
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const { id, active } = row.original;
-      return (
-        <ActionDropdown docId={ id } active={active}>
-          <MoreHorizontal />
-        </ActionDropdown>
-      )
-    },
-  },
 ]
 
-export default function DataTable({ data }: { data: Document[] }) {
-  const ws = ['max-w-6', 'w-24', 'w-16', 'w-16', 'w-10', ''];
+export default function ContentDialog() {
   const dispatch = useAppDispatch();
-  const [tableData, setTableData] = React.useState<Document[]>(data);
-  const sorting = useAppSelector((state) => state.contentListUi.sorting);
-  const columnFilters = useAppSelector((state) => state.contentListUi.columnFilters);
-  const columnVisibility = useAppSelector((state) => state.contentListUi.columnVisibility);
-  const rowSelection = useAppSelector((state) => state.contentListUi.rowSelection);
-  const pagination = useAppSelector(state=>state.contentListUi.pagination); 
-  const playlistUi = useAppSelector(state=>state.playlistDialogUi.listOpen);
-  const playlistNewUi = useAppSelector(state=>state.playlistDialogUi.newOpen);
-  const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged); 
+  const [tableData, setTableData] = React.useState<Document[]>([]);
+  const sorting = useAppSelector((state) => state.dialogListUi.sorting);
+  const columnFilters = useAppSelector((state) => state.dialogListUi.columnFilters);
+  const columnVisibility = useAppSelector((state) => state.dialogListUi.columnVisibility);
+  const rowSelection = useAppSelector((state) => state.dialogListUi.rowSelection);
+  const pagination = useAppSelector(state=>state.dialogListUi.pagination); 
 
   const table = useReactTable({
     data: tableData,
@@ -313,26 +274,14 @@ export default function DataTable({ data }: { data: Document[] }) {
       }
     };
 
-    if (!playlistNewUi && !playlistUi && dataChaged) getData();
-  }, [playlistUi, playlistNewUi]);
+    getData();
+  }, []);
 
     React.useEffect(()=>{
      if (table) {
       table.resetRowSelection(true);
      }
     }, [tableData]);
-
-  // const [sorting, setSorting] = React.useState<SortingState>([])
-  // const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-  //   []
-  // )
-  // const [columnVisibility, setColumnVisibility] =
-  //   React.useState<VisibilityState>({})
-  // const [rowSelection, setRowSelection] = React.useState({})
-  // const [pagination, setPagination] = React.useState({
-  //   pageIndex: 0,
-  //   pageSize: 10, // 👈 max rows per page
-  // });
 
 
   React.useEffect(() => {
@@ -356,13 +305,6 @@ export default function DataTable({ data }: { data: Document[] }) {
           className="max-w-sm"
         />
         <div className="ml-auto flex items-center gap-x-2">
-          {Object.keys(rowSelection || {}).length > 0 ? (
-            <ActionDropdown>
-                <SlidersVertical />
-            </ActionDropdown>
-          ) : (
-            <></>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">

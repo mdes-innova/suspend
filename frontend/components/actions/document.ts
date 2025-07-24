@@ -7,7 +7,7 @@ export async function getContent() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/api/document/documents/content/`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/document/documents/content/`, {
       headers: {
           Authorization: `Bearer ${access}`
         },
@@ -30,7 +30,7 @@ export async function clearSelections() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/api/document/documents/clear-selection/`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/document/documents/clear-selection/`, {
       method: 'POST',
       headers: {
           Authorization: `Bearer ${access}`
@@ -54,7 +54,7 @@ export async function getDocument(docId: number) {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/api/document/documents/${docId}/`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/document/documents/${docId}/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -65,6 +65,34 @@ export async function getDocument(docId: number) {
       if (res.status === 401)
           throw new AuthError('Authentication fail.')
       throw new Error('Get a document fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function getDocumentList(ids) {
+  const access = await getAccess(); 
+
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/document/documents/document-list/`, {
+      method: 'POST',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        ids
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get document list fail.');
       }
 
       const content = await res.json();

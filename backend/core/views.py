@@ -5,6 +5,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny
 from .models import Activity
 from decouple import config
+from django.http import JsonResponse
+from django.utils import timezone
+
+
+def current_time_view(request):
+    now = timezone.now().date()
+    return JsonResponse({'current_date': now.isoformat()})
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

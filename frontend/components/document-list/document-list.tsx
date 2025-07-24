@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Plus } from "lucide-react";
 import { Card } from "../ui/card";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
@@ -14,6 +14,9 @@ import DroppableArea from "./drop";
 import { DragEndEvent } from "@dnd-kit/core";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setDragging } from "../store/features/document-list-ui-slice";
+import { Date2Thai, Text2Thai } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/playlist-dialog";
+import ContentDialog from "../content-dialog";
 
 export default function DocumentList({ data }: { data: DocumentType[] }) {
     const [edit, setEdit] = useState(false);
@@ -207,16 +210,34 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
     return (
         
         <div className="flex flex-col justify-start gap-y-2 px-2 w-full ">
-            <Button className={`w-fit ml-auto mr-6 ${edit? 'bg-accent': ''}`} variant='outline' 
-                id={documentListEditId} onClick={(e: any) => {
-                e.preventDefault();
-                setEdit(prev => !prev);
-            }}>Edit</Button>
+            <div className="flex gap-x-1 justify-end items-center w-full">
+                <Dialog className="">
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Plus /> <span>เพิ่มคำสั่งศาล</span>
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-full">
+                        <DialogHeader>
+                            <DialogTitle>เพิ่มคำสั่งศาล</DialogTitle>
+                        </DialogHeader>
+                         <ScrollArea className="rounded-md border">
+                            <ContentDialog />
+                         </ScrollArea>
+                    </DialogContent>
+                </Dialog>
+                <Button className={`${edit? 'bg-accent': ''}`} variant='outline' 
+                    id={documentListEditId} onClick={(e: any) => {
+                    e.preventDefault();
+                    setEdit(prev => !prev);
+                }}>Edit</Button>
+            </div>
             <Card className="flex flex-row w-full px-8 border-0 shadow-none py-0"  id='document-list-header'>
                 <div className="flex-[1] cursor-pointer">ลำดับที่</div>
+                <div className="flex-[4] cursor-pointer">ค้นหาคำสั่งศาล<span className="inline-block"><ArrowUpDown size={12} /></span></div>
                 <div className="flex-[2] cursor-pointer">วันที่<span className="inline-block"><ArrowUpDown size={12} /></span></div>
-                <div className="flex-[4] cursor-pointer">ชื่อ<span className="inline-block"><ArrowUpDown size={12} /></span></div>
-                <div className="flex-[2] ml-auto text-right cursor-pointer">จำนวนคำสั่งสาร<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[4] cursor-pointer">หมายเลขคดีดำ<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[4] cursor-pointer">หมายเลขคดีแดง<span className="inline-block"><ArrowUpDown size={12} /></span></div>
             </Card>
             <div className="h-fit w-full overflow-hidden">
                 <div className={`h-full rounded-md overflow-y-clip overflow-x-hidden w-full flex flex-col gap-y-4 
@@ -241,14 +262,11 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
                                                 router.push(`/document-view/${e.id}/`);
                                             }}
                                             >
-                                            <div className="flex-[1]">{idx}</div>
-                                            <div className="flex-[2]">{(new Date(e.createdAt)).toLocaleString("en-GB", {
-                                                    year: "numeric",
-                                                    day: "2-digit",
-                                                    month: "2-digit"
-                                                })}</div>
-                                            <div className="flex-[4]">{e.title}</div>
-                                            <div className="flex-[2] ml-auto text-right">0</div>
+                                            <div className="flex-[1]">{idx + 1}</div>
+                                            <div className="flex-[4]">{e.orderNo}</div>
+                                            <div className="flex-[2]">{Text2Thai(Date2Thai(e?.orderDate))}</div>
+                                            <div className="flex-[4]">{e?.orderblackNo?? '-'}</div>
+                                            <div className="flex-[4]">{e?.orderredNo?? '-'}</div>
                                         </Card>
                                     </DraggableItem>
                                 </div>

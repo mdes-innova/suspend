@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Fragment, useEffect, useRef, useState } from "react"
-import { User } from "@/lib/types"
+import { type Isp, type User } from "@/lib/types"
 import { X } from "lucide-react"
 import { useAppSelector } from "../store/hooks"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
@@ -24,6 +24,8 @@ import { ScrollArea } from "../ui/scroll-area"
 import { Label } from "../ui/label"
 import { Separator } from "../ui/separator"
 import DatePicker from "../date-picker"
+import { getUsers } from "../actions/user"
+import { getIsps } from "../actions/isp"
 
 const tempUsers = [
     "user1", 'arnon songmoolnak', 'arnon', 'pok', 'arnonsongmoolnak arnonsongmoolnak'
@@ -40,16 +42,14 @@ const formSchema = z.object({
 
 export function GroupForm({
   children,
-  ispUsers
+  isps
 }: Readonly<{
-  children: React.ReactNode,
-  ispUsers: User[]
+  children?: React.ReactNode,
+  isps: Isp[]
 }>) {
     const user = useAppSelector(state => state.userAuth.user);
     const [availableUsers, setAvailableUsers] = useState<string[]>([]);
-    const [selectedUsers, setSelectedUsers] = useState<string[]>(
-        ispUsers.map((user: User) => user.username)
-    );
+    const [selectedUsers, setSelectedUsers] = useState<Isp[]>([]);
     const [usersOpen, setUsersOpen] = useState(false);
     const [userRows, setUserRows] = useState(1);
     const toUsersRef = useRef(null);
@@ -61,8 +61,21 @@ export function GroupForm({
   })
 
   useEffect(() => {
-    const userNames = ispUsers.map((e: User) => e.username);
-    setAvailableUsers(userNames.filter((user: string) => !selectedUsers.includes(user)));
+    const setSelectedUsersData = async() => {
+      try {
+        const ispsUsers = await getIsps();
+        setSelectedUsers(ispsUsers);
+      } catch (error) {
+        setSelectedUsers([]);
+      }
+    }
+
+    setSelectedUsersData();
+  }, []);
+
+  useEffect(() => {
+    // const userNames = ispUsers?.map((e: User) => e.username);
+    // setAvailableUsers(userNames?.filter((user: string) => !selectedUsers.includes(user)));
   }, [selectedUsers]);
   
     function onSubmit(values: z.infer<typeof formSchema>) {
@@ -94,12 +107,12 @@ export function GroupForm({
             </FormLabel>
             <DatePicker />
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(0,_300px))] justify-center gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,_minmax(0,_400px))] justify-center gap-4 bg-background border border-black px-4 py-4 rounded-sm">
                 {
                     selectedUsers.map((ee: any, idxx: number) => {
                         return (
-                            <div className="bg-gray-200 h-fit py-1 px-4 rounded-full relative flex justify-center" key={`to-usrs-${idxx}`}>
-                                <div className="text-center">{ee}</div>
+                            <div className="bg-background h-fit py-1 px-4 rounded-md border relative flex justify-center" key={`to-usrs-${idxx}`}>
+                                <div className="text-center">{ee?.name}</div>
                                 <div className="w-fit min-h-full flex flex-col justify-center absolute top-0 right-4">
                                     <X className="cursor-pointer" size={16} onClick={(e: any) => {
                                         e.preventDefault();
@@ -116,26 +129,34 @@ export function GroupForm({
                 setUsersOpen(open);
             }}>
                 <DialogTrigger asChild>
-                    <div className="inline-flex items-center cursor-pointer">
+                    <div className="inline-flex items-center cursor-pointer w-full ">
                     <Button type="button" variant="secondary" onClick={(e: any) => {
                         e.preventDefault();
                         setUsersOpen(true);
                     }}>Add</Button>
                     <span className="px-2">เพิ่มชื่อผู้รับ</span>
+                      <Button type="button" className="ml-auto" variant="outline" onClick={e => {
+                        e.preventDefault();
+                        setSelectedUsers(isps);
+                      }}>เพิ่มทั้งหมด</Button>
                     </div>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <ScrollArea className="h-72">
                         <ol className="list-outside pl-6 p-4">
-                        {availableUsers.map((username) => (
-                            <Fragment key={username}>
+                        {isps?.map((isp: Isp, idx: number) => (
+                            <Fragment key={`isp-${idx}`}>
                             <li className="text-sm cursor-pointer" 
                                 onClick={(e: any) => {
                                     e.preventDefault();
-                                    setSelectedUsers(prev => [...prev, username]);
+                                    const selectedUserIds = selectedUsers.length?
+                                      selectedUsers?.map(su => su.ispId): [];
+                                    
+                                    if (!selectedUserIds.includes(isp.ispId))
+                                      setSelectedUsers(prev => [...prev, isp]);
                                     setUsersOpen(false);
                                 }}
-                            >{username}</li>
+                            >{isp?.name}</li>
                             <Separator className="my-2" />
                             </Fragment>
                         ))}
@@ -148,9 +169,7 @@ export function GroupForm({
             <Button type="button" variant='destructive'>Draft</Button>
             <Button type="submit">Submit</Button>
         </div>
-        <div className="bg-gray-100 p-4 rounded">
-            <p className="text-sm text-gray-600">Please enter your username below:</p>
-        </div>
+
       </form>
     </Form>
   )

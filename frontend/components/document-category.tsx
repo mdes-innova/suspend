@@ -18,10 +18,10 @@ import { type Group, type Document, type User } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "./store/hooks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { getGroup } from "./actions/group";
+import { getGroup, getGroupFromDocument, removeDocumentFromGroup } from "./actions/group";
 
-export default function CategoryGroup({ doc }:
-    { doc: Document }) {
+export default function CategoryGroup({ doc, group }:
+    { doc: Document, group: Group }) {
 
     const bgColors = [
         '#F87171', // red-400
@@ -45,7 +45,6 @@ export default function CategoryGroup({ doc }:
         '#67E8F9', // cyan-300
         '#FDBA74', // orange-300
     ];
-
     const [groupData, setGroupData] = useState<Group | null>(null);
     const user = useAppSelector(state => state.userAuth.user);
     const isOwner = user && groupData && user.id === groupData.user.id;
@@ -54,18 +53,18 @@ export default function CategoryGroup({ doc }:
 
     const label = doc.kindName?? 'ไม่มีหมวดหมู่';
 
-    // useEffect(() => {
-    //     const getGroupData = async() => {
-    //         try {
-    //             const group = await getGroup(doc.groupId);
-    //             setGroupData(group);
-    //         } catch (error) {
-    //             setGroupData(null);
-    //         }
-    //     }
+    useEffect(() => {
+        const getGroupData = async() => {
+            try {
+                const fetchGroup = await getGroupFromDocument(doc.id);
+                setGroupData(fetchGroup);
+            } catch (error) {
+                setGroupData(null);
+            }
+        }
 
-    //     getGroupData();
-    // }, []);
+        getGroupData();
+    }, []);
 
     return (
         <>
@@ -73,7 +72,7 @@ export default function CategoryGroup({ doc }:
                 {label}
             </Button>
             {
-                doc.groupName &&
+                groupData &&
                 <div className="px-2 flex justify-center items-center">
                     {
                         isOwner &&
@@ -82,7 +81,7 @@ export default function CategoryGroup({ doc }:
                             if (!isOwner) return;
                             router.push(`/document-groups/${groupData?.id}/`);
                         }}>
-                            {doc.groupName}
+                            {groupData.name}
                         </div>
                     }
                     {
@@ -94,7 +93,7 @@ export default function CategoryGroup({ doc }:
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Belong to {groupData.user.username}</p>
+                                <p>Belong to {groupData?.user?.username}</p>
                             </TooltipContent>
                         </Tooltip>
                     }
@@ -114,17 +113,15 @@ export default function CategoryGroup({ doc }:
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction onClick={async(e: any) => {
                                     e.preventDefault();
-                                    await fetch(`/api/playlist/${group?.id}/`,
-                                    {
-                                        method: 'PATCH',
-                                        credentials: 'include',
-                                        body: JSON.stringify({
-                                        documentIds: [doc?.id],
-                                        mode: 'remove' 
-                                        })
+                                    try {
+                                        await removeDocumentFromGroup({
+                                            docIds: [doc.id],
+                                            groupId: group.id
+                                        });
+                                        setGroupData(null);
+                                    } catch (error) {
+                                        
                                     }
-                                    );
-                                    setGroupData(null);
                                 }}>Continue</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>

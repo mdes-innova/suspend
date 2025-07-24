@@ -1,5 +1,10 @@
+import { getGroup } from "@/components/actions/group";
+import { getIsps } from "@/components/actions/isp";
+import { getProfile, getUsers } from "@/components/actions/user";
+import { getCurrentDate } from "@/components/actions/utils";
 import Activity from "@/components/activity";
 import DocumentView from "@/components/document-view";
+import { AuthError } from "@/components/exceptions/auth";
 import GroupView from "@/components/group-view";
 import { type User } from "@/lib/types";
 import { fetchWithAccessApp } from "@/lib/utils";
@@ -9,55 +14,27 @@ import { Suspense } from "react";
 
 async function Components({ params, searchParams }: { params: any, searchParams: any }) {
   const { id } = (await params);
-  const { ap } = (await searchParams);
-  const cookieStore = await cookies();
-  const refresh = cookieStore?.get("refresh")?.value;
-  let access = cookieStore?.get("access")?.value;
-  const groupUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/${id}/`;
-  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-group/${id}/?ap=${ap?? 0}`;
-  const ispUserUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/`;
 
   try {
-    const groupData = await fetchWithAccessApp({
-      access, refresh, url: groupUrl, method: 'GET'
-    });
-    const userData = await fetchWithAccessApp({
-      access, refresh, url: ispUserUrl, method: 'GET'
-    });
-
-    // const logData = await fetchWithAccessApp({
-    //   access, refresh, url: logUrl, method: 'GET'
-    // });
+    const currentDate = await getCurrentDate();
+    const user = await getProfile();
+    const groupData = id != '-1'? await getGroup(id): {
+      id: -1,
+      createdAt: currentDate,
+      name: 'Untitled',
+      documents: [],
+      user
+    };
+    const isps = await getIsps();
     return (
-      <GroupView groupData={groupData} logData={
-        {
-            count: 0,
-            data: [],
-            downloads: {
-                pdf: 0,
-                xlsx: 0
-            }
-        }
-      } ap={parseInt(ap)?? 0}
-        ispUsers={userData.filter((x: User) => x.isp != null)}
-      />
+      <GroupView groupData={groupData} isps={isps}/>
     );
   } catch (error) {
-    let access = cookieStore?.get("access")?.value;
-    if (access) {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/me/`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${access}` },
-      });
-      if (!res.ok && res.status === 401) {
-        redirect(`/login?path=/document-view/${id}/`)
-      } else {
-        return <></>;
-      }
-    } else {
+    if (error instanceof AuthError) {
       redirect(`/login?path=/document-view/${id}/`)
+    } else {
+      return <></>;
     }
-    return <></>;
   }
 }
 

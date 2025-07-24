@@ -12,7 +12,7 @@ async function getData() {
   try {
     await clearSelections();
     const data = await getContent();
-    console.log(data.slice(0, 20))
+    // console.log(data.slice(0, 20))
     return data;
   } catch (error) {
     if (error instanceof AuthError) redirect('/login') ;

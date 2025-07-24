@@ -8,7 +8,7 @@ export async function getKinds() {
 
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND}/api/kind/kinds/`,
+      `${process.env.NEXT_PUBLIC_BACKEND}/kind/kinds/`,
       {
         headers: {
           Authorization: `Bearer ${access}`
@@ -33,7 +33,7 @@ export async function getLastKind() {
   const access = await getAccess();
   try {
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND}/api/kind/kinds/last/`,
+        `${process.env.NEXT_PUBLIC_BACKEND}/kind/kinds/last/`,
       {
         headers: {
           Authorization: `Bearer ${access}`

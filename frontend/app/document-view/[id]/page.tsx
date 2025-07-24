@@ -1,15 +1,17 @@
 import { getDocument } from "@/components/actions/document";
+import { getGroupFromDocument } from "@/components/actions/group";
 import DocumentView from "@/components/document-view";
 import { AuthError } from "@/components/exceptions/auth";
 import { redirect, notFound } from "next/navigation";
 import { Suspense } from "react";
 
 async function Components({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const docData = await getDocument(parseInt(id));
-    return <DocumentView docData={docData} />;
+    const groupData = await getGroupFromDocument(parseInt(id));
+    return <DocumentView docData={docData} groupData={groupData} />;
   } catch (error) {
     if (error instanceof AuthError) {
       redirect(`/login?path=/document-view/${id}/`);

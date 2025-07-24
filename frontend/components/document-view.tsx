@@ -62,14 +62,14 @@ type LogactivityType = {
 }
 
 export default function DocumentView(
-  { docData }: { docData: Document }) {
+  { docData, groupData }: { docData: Document, groupData: Group }) {
   return (
     <div className="h-full w-full flex flex-col justify-start items-center p-4">
       <div className="flex w-full justify-between h-[500px]">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
             <div className="flex">
-              <CategoryGroup category={docData.kindName?? null} group={docData.groupName?? null} doc={docData} />
+              <CategoryGroup group={groupData?? null} doc={docData} />
             </div>
             <div className="w-full text-start text-2xl font-bold mt-2">{docData.orderNo}</div>
             <div className="w-full text-start text-md">{Text2Thai(Date2Thai(docData.orderDate))}</div>

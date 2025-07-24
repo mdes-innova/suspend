@@ -19,7 +19,8 @@ import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Plus } from "lucide-react";
-import { getGroups } from "../actions/group";
+import { addToGroup, getGroups } from "../actions/group";
+import { getDocumentList } from "../actions/document";
 
 type Playlist = {
   id: number,
@@ -44,30 +45,24 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
             <div key={`playlist-${elem.id}`} className="text-sm cursor-pointer" 
             onClick={async(e: any) => {
               e.preventDefault();
-              if (docIds && docIds.length)
+              if (docIds && docIds.length){
                 try {
-                  const addRes = await fetch(`api/playlist/${elem.id}`,
-                    {
-                      method: 'PATCH',
-                      credentials: 'include',
-                      body: JSON.stringify({
-                        documentIds: docIds,
-                        mode: 'append' 
-                      })
-                    }
-                  );
-                  const addResJson = await addRes.json();
-                  if (!addRes.ok) dispatch(closeModal({ui: PLAYLISTUI.list, info: [addResJson.error], err: true }));
-                  else {
-                    const newPlaylist = addResJson.data.name;
-                    const docs = addResJson.data.documents.filter((x: any) =>
-                      docIds.includes(x.id)).map((doc: any) => doc.title).slice(0, 3);
-                    dispatch(closeModal({ui: PLAYLISTUI.list, info: [newPlaylist, ...docs] }));
-                  }
-                } catch (error1) {
-                  dispatch(closeModal({ui: PLAYLISTUI.new, info: [error1 as string], err: true }));
+                  const addResJson = await addToGroup({
+                    groupId: elem.id,
+                    docIds,
+                    mode: 'append'
+                  });
+                  
+                  const newPlaylist = addResJson.name;
+                  const documentList = await getDocumentList(docIds);
+                  console.log(documentList)
+                  dispatch(closeModal({ui: PLAYLISTUI.list,
+                    info: [newPlaylist, ...documentList.map(ee => ee.orderNo)] }));
+                } catch (error) {
+                  dispatch(closeModal({ui: PLAYLISTUI.new,
+                    info: [error1 as string], err: true }));
                 }
-                // dispatch(closeModal({ui: PLAYLISTUI.list, info: [elem.name]}));
+              }
             }}>
               {elem.name}
             </div>

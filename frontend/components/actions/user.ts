@@ -9,7 +9,29 @@ export async function getProfile() {
     const access = await getAccess();
 
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/api/user/users/me/`, {
+        const res = await fetch(`${process.env.BACKEND_URL}/user/users/me/`, {
+        headers: {
+          Authorization: `Bearer ${access}`
+        },
+      });
+        
+        if (!res.ok) {
+            if (res.status === 401)
+                throw new AuthError('Authentication fail.')
+        }
+
+        const profile = await res.json();
+        return profile;
+    } catch (error) {
+       throw error; 
+    }
+}
+
+export async function getUsers() {
+    const access = await getAccess();
+
+    try {
+        const res = await fetch(`${process.env.BACKEND_URL}/user/users/`, {
         headers: {
           Authorization: `Bearer ${access}`
         },
@@ -30,7 +52,7 @@ export async function getProfile() {
 export async function registerUser(userRegisterParams: UserRegister) {
    const access = await getAccess(); 
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/api/user/users/`, {
+        const res = await fetch(`${process.env.BACKEND_URL}/user/users/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${access}`,
@@ -64,7 +86,7 @@ export async function loginUser({
         const headersList = await headers();
         const forwardedFor = headersList.get('x-forwarded-for') || '';
         const ip = forwardedFor.split(',')[0];
-        const res = await fetch(`${process.env.BACKEND_URL}/api/token/`, {
+        const res = await fetch(`${process.env.BACKEND_URL}/token/`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json"

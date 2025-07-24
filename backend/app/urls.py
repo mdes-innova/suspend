@@ -28,31 +28,32 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from two_factor.urls import urlpatterns as tf_urls
-from core.views import CustomTokenObtainPairView
+from core.views import CustomTokenObtainPairView, current_time_view
 
 admin.site.__class__ = AdminSiteOTPRequired
 
 urlpatterns = [
+    path('current-time/', current_time_view, name='current_time'),
     path('', include(tf_urls)),  # replaces the login view with a 2FA flow
     path('admin/', admin.site.urls),
-    path('api/token/', CustomTokenObtainPairView.as_view(),
+    path('token/', CustomTokenObtainPairView.as_view(),
          name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(),
+    path('token/refresh/', TokenRefreshView.as_view(),
          name='token_refresh'),
 
-    path('api/user/', include('user.urls')),
-    path('api/document/', include('document.urls')),
-    path('api/tag/', include('tag.urls')),
-    path('api/url/', include('url.urls')),
-    path('api/category/', include('category.urls')),
-    path('api/isp/', include('isp.urls')),
-    path('api/group/', include('group.urls')),
-    path('api/activity/', include('activity.urls')),
-    path('api/mail/', include('mail.urls')),
+    path('user/', include('user.urls')),
+    path('document/', include('document.urls')),
+    path('tag/', include('tag.urls')),
+    path('url/', include('url.urls')),
+    path('category/', include('category.urls')),
+    path('isp/', include('isp.urls')),
+    path('group/', include('group.urls')),
+    path('activity/', include('activity.urls')),
+    path('mail/', include('mail.urls')),
 
-    path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
+    path('schema/', SpectacularAPIView.as_view(), name='api-schema'),
     path(
-        'api/docs/',
+        'docs/',
         SpectacularSwaggerView.as_view(url_name='api-schema'),
         name='api-docs',
     )

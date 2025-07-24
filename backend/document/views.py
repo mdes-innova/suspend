@@ -2,7 +2,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 import fitz
-from core.models import Document, Activity, GroupDocument, DocumentFile
+from core.models import Document, Group, GroupDocument, DocumentFile
 from .serializer import (
     DocumentSerializer,
     FileSerializer
@@ -49,6 +49,17 @@ class DocumentView(viewsets.ModelViewSet):
         combined_sorted = sorted(combined, key=lambda x: x['id'])
 
         return Response(combined_sorted)
+
+    @action(
+        detail=False,
+        methods=['POST'],
+        url_path='document-list'
+    )
+    def document_list(self, request):
+        ids_param = request.data.get('ids', [])
+        documents = Document.objects.filter(id__in=ids_param)
+
+        return Response(DocumentSerializer(documents, many=True).data)
 
     @action(detail=True, methods=['get'])
     def tags(self, request, pk=None):
@@ -159,13 +170,14 @@ class DocumentView(viewsets.ModelViewSet):
             documents = self.queryset
             data = DocumentSerializer(documents, many=True).data
             for d in data:
-                try:
-                    group = GroupDocument.objects.get(document=Document.objects.get(pk=d['id']))
+                document = Document.objects.get(pk=d['id'])
+                if hasattr(document, 'groupdocument'):
+                    group = document.groupdocument.group  # type: ignore
                     group_data = GroupSerializer(group).data
                     d['active'] = False
                     d['group_id'] = group_data['id']
                     d['group_name'] = group_data['name']
-                except GroupDocument.DoesNotExist:
+                else:
                     d['active'] = True
                     d['group_id'] = None
                     d['group_name'] = None

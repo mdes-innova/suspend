@@ -14,7 +14,7 @@ export async function getAccess() {
       const refresh = cookieStore.get('refresh')?.value;
       try {
         const res = await fetch(
-          `${process.env.BACKEND_URL}/api/token/refresh/`,
+          `${process.env.BACKEND_URL}/token/refresh/`,
           {
             method: 'POST',
             headers: {

@@ -27,7 +27,7 @@ export type Group = {
     id: number,
     createdAt: string,
     name: string,
-    documents: any[]
+    documents: any[],
     user: User
 }
 

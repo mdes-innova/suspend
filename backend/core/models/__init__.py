@@ -5,7 +5,7 @@ from .tag import Tag
 from .category import Category
 from .url import Url
 from .isp import ISP
-from .group import Group, KindType, GroupDocument
+from .group import Group, GroupDocument
 from .activity import Activity, ActivityType
 from .mail import Mail, FromUser
 from .kind import Kind

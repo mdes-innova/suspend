@@ -4,6 +4,7 @@ import userMenuUiReducer from './features/user-menu-ui-slice';
 import userAuthReducer from './features/user-auth-slice';
 import playlistDialogReducer from './features/playlist-diaolog-ui-slice';
 import contentListUiReducer from './features/content-list-ui-slice';
+import dialogListUiReducer from './features/dialog-list-ui-slice';
 import mailboxListUiReducer from './features/mailbox-list-ui-slice';
 import documentListUiReducer from './features/document-list-ui-slice';
 
@@ -14,6 +15,7 @@ export const store = configureStore({
     userAuth: userAuthReducer,
     playlistDialogUi: playlistDialogReducer,
     contentListUi: contentListUiReducer,
+    dialogListUi: dialogListUiReducer,
     mailboxListUi: mailboxListUiReducer,
     documentListUi: documentListUiReducer
   },
