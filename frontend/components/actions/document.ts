@@ -74,7 +74,7 @@ export async function getDocument(docId: number) {
   }
 }
 
-export async function getDocumentList(ids) {
+export async function getDocumentList(ids: number[]) {
   const access = await getAccess(); 
 
   try {

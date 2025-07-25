@@ -62,7 +62,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="#">
+                  <a href="/document-groups">
                     <Home />
                     <span>สร้างเอกสาร</span>
                   </a>
@@ -75,7 +75,7 @@ export function AppSidebar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="right" align="start">
                     <DropdownMenuItem>
-                      <Link href="#">แบบเร่งด่วน</Link>
+                      <Link href="/document-groups/-1">แบบเร่งด่วน</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Link href="/document-groups">แบบ Playlist</Link>

@@ -12,6 +12,7 @@ import { type User } from "@/lib/types";
 import { CustomTrigger } from "@/components/sidebar-trigger";
 import { getAccess } from "@/components/actions/auth";
 import { getProfile } from "@/components/actions/user";
+import DialogLoading from "@/components/loading/dialog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,6 +73,7 @@ export default async function RootLayout({
                     <div className="absolute top-0 left-0 w-24 h-24">
                       <CustomTrigger />
                     </div>
+                    <DialogLoading />
                     {children}
                   </DefaultBar>
                 </SidebarProvider>

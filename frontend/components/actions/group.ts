@@ -53,7 +53,6 @@ export async function getGroup(groupId: number) {
 
 export async function postGroup(name: string) {
   const access = await getAccess();
-  console.log(name)
 
   try {
     const res = await fetch(`${process.env.BACKEND_URL}/group/groups/`, {
@@ -159,6 +158,29 @@ export async function getGroupFromDocument(docId: number) {
       throw new Error('Get a group from a document fail.');
       }
 
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function getUntilted() {
+  const access = await getAccess();
+
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/by-name/Untitled/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get Untitled group fail.');
+      }
       const content = await res.json();
       return content;
   } catch (error) {

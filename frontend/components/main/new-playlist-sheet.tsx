@@ -17,6 +17,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { closeModal, PLAYLISTUI, toggleModal } from '../store/features/playlist-diaolog-ui-slice';
 import { useRef, useState } from 'react';
+import {useRouter} from 'next/navigation';
 import { X } from 'lucide-react';
 import {
   Select,
@@ -44,12 +45,13 @@ type KindOption = {
 };
 
 
-export function NewPlaylistSheet() {
+export function NewPlaylistSheet({main}: {main?: boolean}) {
     const dispatch = useAppDispatch();
     const uiOpen = useAppSelector(state=>state.playlistDialogUi.newOpen);
     const docIds = useAppSelector(state=>state.playlistDialogUi.docIds);
     const rowsSelect = useAppSelector(state=>state.contentListUi.rowSelection);
     const inputNameRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
 
     const [kind, setKind] = useState<string>(Kinds[0].value);
 
@@ -100,10 +102,17 @@ export function NewPlaylistSheet() {
                         docIds,
                         mode: 'append'
                       });
-                      console.log(newDocsGroup)
                       const newPlaylist = newDocsGroup.data.name;
                       const docs = newDocsGroup.data.documents.map((doc: any) => doc.title).slice(0, 3);
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
+                    } catch (error) {
+                      dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
+                    }
+                  } else {
+                    try {
+                      const newGroup = await postGroup(inputNameRef.current.value);
+                      dispatch(closeModal({ui: PLAYLISTUI.new, info: [newGroup.name] }));
+                      if (main) router.push(`/document-groups/${newGroup.id}`);
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
                     }

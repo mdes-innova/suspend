@@ -57,7 +57,7 @@ export default function CategoryGroup({ doc, group }:
         const getGroupData = async() => {
             try {
                 const fetchGroup = await getGroupFromDocument(doc.id);
-                setGroupData(fetchGroup);
+                setGroupData(Object.keys(fetchGroup).length === 0? null: fetchGroup);
             } catch (error) {
                 setGroupData(null);
             }

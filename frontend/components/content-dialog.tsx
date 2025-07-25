@@ -15,7 +15,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
-import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting, setPagination} 
+import { setColumnFilters, setRowSelection, setColumnVisibility,
+  setSorting, setPagination, setDocIds} 
   from "./store/features/dialog-list-ui-slice";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,7 +37,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { setDocIds } from "./store/features/playlist-diaolog-ui-slice";
+import { type Document } from "@/lib/types";
 
 import {
   type Updater,
@@ -95,6 +96,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
   {
     id: "select",
     header: ({ table }) => (
+      <div className="ml-2">
       <Checkbox
         checked={
           table.getIsAllPageRowsSelected() ||
@@ -103,17 +105,20 @@ export const columns: ColumnDef<DocumentType | any>[] = [
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
       />
+      </div>
     ),
     cell: ({ row }) => {
       const { active } = row.original;
         if (active)
           return (
-            <Checkbox 
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
-              disabled={!active}
-            />
+            <div className="ml-2">
+              <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+                disabled={!active}
+              />
+            </div>
           );
     },
     enableSorting: false,
@@ -124,7 +129,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     accessorKey: "orderNo",
     header: ({ column }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
+        <div className='flex gap-x-2 text-left justify-start p-0 m-0'
         >
           คำสั่งศาล
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
@@ -139,6 +144,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
       const { orderNo, id } = row.original;
       return (<Link
         href={`/document-view/${id}`}
+        target="_blank" rel="noopener noreferrer"
         className="text-left underline cursor-pointer hover:text-blue-400">{orderNo}</Link>);
     }
   },
@@ -152,7 +158,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     },
     header: ({ column }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
+        <div className='flex gap-x-2 text-left justify-start -ml-1'
         >
           วันที่
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
@@ -182,7 +188,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     accessorKey: "orderblackNo",
     header: ({ column }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
+        <div className='inline-flex gap-x-2 w-full -ml-2'
         >
           หมายเลขคดีดำ
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
@@ -206,7 +212,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     accessorKey: "orderredNo",
     header: ({ column }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
+        <div className='inline-flex gap-x-2 w-full -ml-3'
         >
           หมายเลขคดีแดง
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
@@ -228,9 +234,8 @@ export const columns: ColumnDef<DocumentType | any>[] = [
   }, 
 ]
 
-export default function ContentDialog() {
+export default function ContentDialog({data}: {data: Document}) {
   const dispatch = useAppDispatch();
-  const [tableData, setTableData] = React.useState<Document[]>([]);
   const sorting = useAppSelector((state) => state.dialogListUi.sorting);
   const columnFilters = useAppSelector((state) => state.dialogListUi.columnFilters);
   const columnVisibility = useAppSelector((state) => state.dialogListUi.columnVisibility);
@@ -238,7 +243,7 @@ export default function ContentDialog() {
   const pagination = useAppSelector(state=>state.dialogListUi.pagination); 
 
   const table = useReactTable({
-    data: tableData,
+    data,
     columns,
     onSortingChange: (updater) =>
       dispatch(setSorting(resolveUpdater(updater, sorting))),
@@ -264,38 +269,18 @@ export default function ContentDialog() {
     enableMultiSort: true
   });
 
-  React.useEffect(()=>{
-    const getData = async() => {
-      try {
-        const data = await getContent();
-        setTableData(data);
-      } catch (error) {
-        setTableData([]);
-      }
-    };
-
-    getData();
-  }, []);
-
-    React.useEffect(()=>{
-     if (table) {
-      table.resetRowSelection(true);
-     }
-    }, [tableData]);
-
 
   React.useEffect(() => {
     if (table)
     {
       const selectedIds = table.getSelectedRowModel().rows.map(row => row.original.id);
       dispatch(setDocIds(selectedIds));
-      // table.toggleAllPageRowsSelected(false);
     }
   }, [rowSelection]);
 
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4">
+    <div className="block w-full">
+      <div className="flex items-center py-4 w-full">
         <Input
           placeholder="ค้นหาคำสั่งศาล..."
           value={(table.getColumn("คำสั่งศาล")?.getFilterValue() as string) ?? ""}
@@ -304,7 +289,7 @@ export default function ContentDialog() {
           }
           className="max-w-sm"
         />
-        <div className="ml-auto flex items-center gap-x-2">
+        <div className="ml-auto flex items-center gap-x-2 w-full">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
@@ -333,14 +318,14 @@ export default function ContentDialog() {
           </DropdownMenu>
         </div>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border w-full">
         <Table>
-          <TableHeader>
+          <TableHeader className="block w-full">
             {table.getHeaderGroups().map((headerGroup, idx: number) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+              <TableRow key={headerGroup.id} className="flex items-center justify-between w-full">
+                {headerGroup.headers.map((header, idx2) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className={`flex flex-col justify-center  p-0 m-0 ${idx2 === 0? "flex-[1]": "flex-[2]"}`}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -353,7 +338,7 @@ export default function ContentDialog() {
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="block max-h-[50vh] overflow-auto w-full">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
                 const { selected, active } = row.original;
@@ -361,10 +346,10 @@ export default function ContentDialog() {
                 <TableRow
                   key={row.id}
                   data-state={active? row.getIsSelected() && "selected": ""}
-                  className={`${active? selected? "bg-muted": "": "bg-gray-100 text-gray-400"}`}
+                  className={`flex items-center justify-between w-full ${active? selected? "bg-muted": "": "bg-gray-100 text-gray-400"}`}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                  {row.getVisibleCells().map((cell, idx2) => (
+                    <TableCell key={cell.id} className={`flex flex-col justify-center px-0 mx-0  ${idx2 === 0? "flex-[1]": "flex-[2]"}`}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

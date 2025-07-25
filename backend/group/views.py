@@ -16,7 +16,7 @@ class GroupView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get group object data."""
-        data = self.queryset.filter(user=self.request.user).order_by('-id')
+        data = self.queryset.filter(user=self.request.user).exclude(name='Untitled').order_by('-id')
         return data
 
     def get_permissions(self):
@@ -40,5 +40,22 @@ class GroupView(viewsets.ModelViewSet):
             return Response({'detail': 'Document not found.'},
                             status.HTTP_404_NOT_FOUND)
         except Group.DoesNotExist:
-            return Response({'detail': 'Group not found.'},
+            return Response({})
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-name/(?P<name>[^/]+)',
+    )
+    def by_name(self, request, name=None):
+        try:
+            if not name:
+                raise Group.DoesNotExist
+            group = Group.objects.get(name=name)
+            return Response(GroupSerializer(group).data)
+        except Document.DoesNotExist:
+            return Response({'detail': 'Document not found.'},
+                            status.HTTP_404_NOT_FOUND)
+        except Group.DoesNotExist:
+            return Response({'detail': 'Document not found.'},
                             status.HTTP_404_NOT_FOUND)

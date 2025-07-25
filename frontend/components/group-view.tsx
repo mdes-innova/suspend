@@ -46,7 +46,7 @@ import { GroupForm } from "./mail/group-form";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
 
 export default function GroupView(
-  { groupData, isps}: { groupData: Group, isps: Isp[] }) {
+  { groupData, isps}: { groupData: Group | null, isps: Isp[] }) {
   return (
     <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
       <div className="flex w-full justify-between">
@@ -56,7 +56,7 @@ export default function GroupView(
             <div className="w-full text-start text-md">{Text2Thai(Date2Thai(groupData.createdAt))}</div>
           </div>
         <GroupForm isps={isps}>
-          <DocumentList data={groupData.documents} />
+          <DocumentList data={groupData?.documents} groupId={groupData?.id}/>
         </GroupForm>
         {/* <DragDrop /> */}
           {/* <div className="mt-auto">

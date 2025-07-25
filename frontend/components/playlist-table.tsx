@@ -13,13 +13,16 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical, Plus } from "lucide-react"
 import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import {useState} from 'react';
 import Link from 'next/link';
+import { NewPlaylistSheet } from "./main/new-playlist-sheet";
+import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
+import { useAppDispatch, useAppSelector } from './store/hooks';
 
 const columns: ColumnDef<(Group | any)[]> = [
   {
@@ -114,6 +117,7 @@ const columns: ColumnDef<(Group | any)[]> = [
 
 export default function PlaylistTable({data}: {data: Group[]}) {
     const [sorting, setSorting] = useState<SortingState>([])
+    const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     )
@@ -149,7 +153,13 @@ export default function PlaylistTable({data}: {data: Group[]}) {
           }
           className="max-w-sm"
         />
-        <div className="ml-auto flex items-center gap-x-2">
+        <Button variant="secondary" className="ml-1">สร้างแบบเร่งด่วน</Button>
+        <div className="ml-auto flex items-center gap-x-1">
+          <Button variant="outline" onClick={(e: any) => {
+            e.preventDefault();
+            dispatch(openModal({ ui: PLAYLISTUI.new }));
+          }}><Plus /></Button>
+          <NewPlaylistSheet main={true}/>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">

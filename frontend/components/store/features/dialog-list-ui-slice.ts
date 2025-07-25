@@ -16,6 +16,7 @@ interface DialogListUiState {
     pageIndex: number;
     pageSize: number;
   };
+  docIds: null | number[];
 }
 
 // Initial state with type annotation
@@ -24,6 +25,7 @@ const initialState: DialogListUiState = {
   columnFilters: [],
   columnVisibility: {},
   rowSelection: {},
+  docIds: null,
   pagination: {
     pageIndex: 0,
     pageSize: 20,
@@ -50,6 +52,9 @@ const dialogListUiSlice = createSlice({
     setPagination(state, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
       state.pagination = action.payload;
     },
+    setDocIds(state, action: PayloadAction<number[] | null>) {
+      state.docIds = action.payload? action.payload: null;
+    },
   },
 });
 
@@ -60,6 +65,7 @@ export const {
   setColumnVisibility,
   setRowSelection,
   setPagination,
+  setDocIds
 } = dialogListUiSlice.actions;
 
 export default dialogListUiSlice.reducer;

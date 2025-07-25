@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
 
   
   if (!access && refresh) {
-    const tokenRes = await fetch(`${process.env.BACKEND_URL}/api/token/refresh/`, {
+    const tokenRes = await fetch(`${process.env.BACKEND_URL}/token/refresh/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

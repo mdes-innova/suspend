@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpDown, Plus } from "lucide-react";
+import { ArrowUpDown, Plus, CircleX } from "lucide-react";
 import { Card } from "../ui/card";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
@@ -17,8 +17,18 @@ import { setDragging } from "../store/features/document-list-ui-slice";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/playlist-dialog";
 import ContentDialog from "../content-dialog";
+import { DialogClose, DialogFooter } from "../ui/dialog";
+import {
+  RowSelectionState,
+} from '@tanstack/react-table';
+import { setDocIds, setRowSelection} 
+  from "../store/features/dialog-list-ui-slice";
+import {closeModal, LOADINGUI, openModal} from '../store/features/loading-ui-slice';
+import { getContent, getDocumentList } from "../actions/document";
+import { type Document } from "@/lib/types";
+import { addToGroup } from "../actions/group";
 
-export default function DocumentList({ data }: { data: DocumentType[] }) {
+export default function DocumentList({ data, groupId }: { data: DocumentType[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
     const [docData, setDocData] = useState(data && data.length? [...data]: []);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -27,13 +37,23 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
     const documentListEditId = 'document-list-edit';
     const editAreaId = 'edit-area';
     const dispatch = useAppDispatch();
+    const [openContent, setOpenContent] = useState(false);
+    const [contentData, setContentData] = useState<Document[] | null>(null);
 
     const isDragging = useAppSelector(state => state.documentListUi.isDragging);
     const draggingId = useAppSelector(state => state.documentListUi.dragId);
 
+    const docIds = useAppSelector(state => state.dialogListUi.docIds);
+    
     useEffect(() => {
         setColumns(docData);
     }, [docData]);
+
+    useEffect(() => {
+        if (contentData) {
+            setOpenContent(true)
+        }
+    }, [contentData]);
 
 
     const [columns, setColumns] = useState(
@@ -211,19 +231,60 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
         
         <div className="flex flex-col justify-start gap-y-2 px-2 w-full ">
             <div className="flex gap-x-1 justify-end items-center w-full">
-                <Dialog className="">
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus /> <span>เพิ่มคำสั่งศาล</span>
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-full">
+                <Button onClick={async(evt) => {
+                    evt.preventDefault();
+                    dispatch(openModal({ui: LOADINGUI.dialog}));
+                    try {
+                        setContentData(null);
+                        dispatch(setRowSelection({}));
+                        const cData = await getContent();
+                        setContentData(cData);
+                    } catch (error) {
+                        setContentData([]);
+                    }
+
+                }}>
+                    <Plus /> <span>เพิ่มคำสั่งศาล</span>
+                </Button>
+                <Dialog open={contentData === null? false: openContent} onOpenChange={(open) => {
+                    if (!open) {
+                        setContentData(null);
+                        dispatch(closeModal({ui: LOADINGUI.dialog}));
+                    } else {
+                        dispatch(closeModal({ui: LOADINGUI.dialog}));
+                    }
+                    setOpenContent(open);
+                }}>
+                    <DialogContent className="max-w-none min-w-[800px]">
                         <DialogHeader>
                             <DialogTitle>เพิ่มคำสั่งศาล</DialogTitle>
                         </DialogHeader>
-                         <ScrollArea className="rounded-md border">
-                            <ContentDialog />
-                         </ScrollArea>
+                            <ContentDialog data={contentData}/>
+                    <DialogFooter>
+                        <div className="flex gap-x-2">
+                            <Button onClick={async(e: any) => {
+                                e.preventDefault();
+                                try {
+                                    const addedGroup = await addToGroup({
+                                        groupId,
+                                        docIds,
+                                        mode: 'append'
+                                    });
+                                    const docs = await getDocumentList(docIds);
+                                    setDocData([...columns, ...docs]);
+                                } catch (error) {
+                                    console.error(error);
+                                }
+                                setOpenContent(false);
+                                dispatch(closeModal({ui: LOADINGUI.dialog}));
+                            }}>เพิ่ม</Button>
+                            <Button variant='destructive' onClick={(e) => {
+                                e.preventDefault();
+                                setOpenContent(false);
+                                dispatch(closeModal({ui: LOADINGUI.dialog}));
+                            }}>ยกเลิก</Button>
+                        </div>
+                    </DialogFooter>
                     </DialogContent>
                 </Dialog>
                 <Button className={`${edit? 'bg-accent': ''}`} variant='outline' 
@@ -233,11 +294,12 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
                 }}>Edit</Button>
             </div>
             <Card className="flex flex-row w-full px-8 border-0 shadow-none py-0"  id='document-list-header'>
-                <div className="flex-[1] cursor-pointer">ลำดับที่</div>
-                <div className="flex-[4] cursor-pointer">ค้นหาคำสั่งศาล<span className="inline-block"><ArrowUpDown size={12} /></span></div>
-                <div className="flex-[2] cursor-pointer">วันที่<span className="inline-block"><ArrowUpDown size={12} /></span></div>
-                <div className="flex-[4] cursor-pointer">หมายเลขคดีดำ<span className="inline-block"><ArrowUpDown size={12} /></span></div>
-                <div className="flex-[4] cursor-pointer">หมายเลขคดีแดง<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[2] cursor-pointer">ลำดับที่</div>
+                <div className="flex-[6] cursor-pointer">ค้นหาคำสั่งศาล<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[6] cursor-pointer">วันที่<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[6] cursor-pointer">หมายเลขคดีดำ<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[6] cursor-pointer">หมายเลขคดีแดง<span className="inline-block"><ArrowUpDown size={12} /></span></div>
+                <div className="flex-[1]"></div>
             </Card>
             <div className="h-fit w-full overflow-hidden">
                 <div className={`h-full rounded-md overflow-y-clip overflow-x-hidden w-full flex flex-col gap-y-4 
@@ -262,11 +324,24 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
                                                 router.push(`/document-view/${e.id}/`);
                                             }}
                                             >
-                                            <div className="flex-[1]">{idx + 1}</div>
-                                            <div className="flex-[4]">{e.orderNo}</div>
-                                            <div className="flex-[2]">{Text2Thai(Date2Thai(e?.orderDate))}</div>
-                                            <div className="flex-[4]">{e?.orderblackNo?? '-'}</div>
-                                            <div className="flex-[4]">{e?.orderredNo?? '-'}</div>
+                                            <div className="flex-[2]">{idx + 1}</div>
+                                            <div className="flex-[6]">{e.orderNo}</div>
+                                            <div className="flex-[6]">{Text2Thai(Date2Thai(e?.orderDate))}</div>
+                                            <div className="flex-[6]">{e?.orderblackNo?? '-'}</div>
+                                            <div className="flex-[6]">{e?.orderredNo?? '-'}</div>
+                                            <div className="flex-[1]">
+                                                <CircleX className="cursor-pointer" onClick={async(evt: any) => {
+                                                    evt.stopPropagation();
+                                                    await addToGroup({
+                                                        groupId,
+                                                        docIds: [e.id],
+                                                        mode: 'remove'
+                                                    });
+                                                    setDocData(
+                                                        columns.filter((ee) => ee.id != e.id)
+                                                    );
+                                                }}/>
+                                            </div>
                                         </Card>
                                     </DraggableItem>
                                 </div>
@@ -276,89 +351,8 @@ export default function DocumentList({ data }: { data: DocumentType[] }) {
                                 </DroppableArea>
                         </div>
                     </DragDrop>
-                    {/* { data && data.length &&
-                        [...data, ...data].map((e: any, idx: number) => {
-                            return (
-                                <div key={`drag-drop-wrap-${idx}`}>
-                                    <DroppableArea id={`drop-${idx}`}>
-                                        <div className="h-4 w-full"></div>
-                                    </DroppableArea>
-                                    <DragDrop
-                                        onDragEnd={(event) => {
-                                            console.log("Dragged:", event.active.id, "to", event.over?.id);
-                                        }}
-                                        >
-                                            <DraggableItem id={`drag-item-${idx}`}>
-                                                    <Card key={`group-${idx}`}
-                                                        className="flex flex-row px-4 hover:shadow-md w-full"
-                                                        onClick={(evt: any) => {
-                                                            evt.preventDefault();
-                                                            router.push(`/document-groups/${e.id}/`);
-                                                        }}
-                                                        >
-                                                        <div className="flex-[1]">{idx}</div>
-                                                        <div className="flex-[2]">{(new Date(e.createdAt)).toLocaleString("en-GB", {
-                                                                year: "numeric",
-                                                                day: "2-digit",
-                                                                month: "2-digit"
-                                                            })}</div>
-                                                        <div className="flex-[4]">{e.title}</div>
-                                                        <div className="flex-[2] ml-auto text-right">0</div>
-                                                    </Card>
-                                            </DraggableItem>
-                                    </DragDrop>
-                                </div>
-                            );
-                        })
-                    } */}
-                {/* </div> */}
-                    {/* <div className="p-4">
-                        <h4 className="mb-4 text-sm leading-none font-medium">Tags</h4>
-                        {tags.map((tag) => (
-                        <React.Fragment key={tag}>
-                            <div className="text-sm">{tag}</div>
-                            <Separator className="my-2" />
-                        </React.Fragment>
-                        ))}
-                    </div> */}
                 </div>
             </div>
-            {/* <div className={`flex flex-col p-4 gap-y-2 ${edit? 'border-2 border-gray-200 rounded-lg bg-gray-100': ''}`}
-                id={editAreaId}
-            >
-                { data && data.length &&
-                    data.map((e: any, idx: number) => {
-                        return (
-                            <DragDrop
-                                onDragEnd={(event) => {
-                                    console.log("Dragged:", event.active.id, "to", event.over?.id);
-                                }}
-                                >
-                                <div className="flex flex-wrap gap-4">
-                                    <DraggableItem id={`drag-item-${idx}`}>
-                                            <Card key={`group-${idx}`}
-                                                className="flex flex-row px-4 hover:shadow-md w-full"
-                                                onClick={(evt: any) => {
-                                                    evt.preventDefault();
-                                                    router.push(`/document-groups/${e.id}/`);
-                                                }}
-                                                >
-                                                <div className="flex-[1]">{idx}</div>
-                                                <div className="flex-[2]">{(new Date(e.createdAt)).toLocaleString("en-GB", {
-                                                        year: "numeric",
-                                                        day: "2-digit",
-                                                        month: "2-digit"
-                                                    })}</div>
-                                                <div className="flex-[4]">{e.title}</div>
-                                                <div className="flex-[2] ml-auto text-right">0</div>
-                                            </Card>
-                                    </DraggableItem>
-                                </div>
-                            </DragDrop>
-                        );
-                    })
-                }
-            </div> */}
         </div>
     );
 }

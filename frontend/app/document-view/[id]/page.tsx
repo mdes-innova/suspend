@@ -11,7 +11,7 @@ async function Components({ params }: { params: { id: string } }) {
   try {
     const docData = await getDocument(parseInt(id));
     const groupData = await getGroupFromDocument(parseInt(id));
-    return <DocumentView docData={docData} groupData={groupData} />;
+    return <DocumentView docData={docData} groupData={Object.keys(groupData).length === 0? null: groupData} />;
   } catch (error) {
     if (error instanceof AuthError) {
       redirect(`/login?path=/document-view/${id}/`);

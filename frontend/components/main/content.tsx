@@ -322,18 +322,6 @@ export default function DataTable({ data }: { data: Document[] }) {
      }
     }, [tableData]);
 
-  // const [sorting, setSorting] = React.useState<SortingState>([])
-  // const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-  //   []
-  // )
-  // const [columnVisibility, setColumnVisibility] =
-  //   React.useState<VisibilityState>({})
-  // const [rowSelection, setRowSelection] = React.useState({})
-  // const [pagination, setPagination] = React.useState({
-  //   pageIndex: 0,
-  //   pageSize: 10, // 👈 max rows per page
-  // });
-
 
   React.useEffect(() => {
     if (table)
