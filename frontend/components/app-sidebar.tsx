@@ -12,9 +12,13 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { usePathname } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { useAppSelector } from "./store/hooks";
 import Link from 'next/link';
 
 const HIDDEN_ROUTES = ['/login', '/secret', '/no-navbar'];
@@ -28,13 +32,8 @@ const items = [
   },
   {
     title: "กล่องข้อความ",
-    url: "#",
+    url: "/mail",
     icon: Inbox,
-  },
-  {
-    title: "อัพโหลดคำสั่งสาร",
-    url: "/court-order",
-    icon: Calendar,
   },
   {
     title: "ค้นหา",
@@ -50,6 +49,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const user = useAppSelector(state => state.userAuth.user);
   if (HIDDEN_ROUTES.includes(pathname)) {
       return null;
   }
@@ -83,16 +83,40 @@ export function AppSidebar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </SidebarMenuItem> 
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item, idx: number) => {
+                if (idx == 1 && user && user.isStaff)
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link href={item.url}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      <SidebarMenuSub>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton href="/mail/draft">
+                              ฉบับบร่าง
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton href="/mail/isp">
+                              ส่ง ISP
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </SidebarMenuItem>);
+                else
+                  return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>);
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

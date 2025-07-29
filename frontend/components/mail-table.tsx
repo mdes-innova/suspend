@@ -1,6 +1,6 @@
 'use client';
 
-import { type Group } from "@/lib/types";
+import { type Mail, type Group } from "@/lib/types";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -25,6 +25,7 @@ import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slic
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect} from 'react';
 import { getGroups } from "./actions/group";
+import { getMails } from "./actions/mail";
 
 const columns: ColumnDef<(Group | any)[]> = [
   {
@@ -63,7 +64,7 @@ const columns: ColumnDef<(Group | any)[]> = [
   },
   {
     id: 'ชื่อ',
-    accessorKey: "name",
+    accessorKey: "subject",
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -77,27 +78,22 @@ const columns: ColumnDef<(Group | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { name } = row.original;
+      const { subject } = row.original;
       return (
         <div>
-          {name?? '-'}
+          {subject?? '-'}
           </div>
       );
     },
   },
   {
-    id: 'จำนวนคำสั่งศาล',
-    accessorKey: "documents",
-    sortingFn: (rowA, rowB, columnId) => {
-      const lenA = rowA.getValue(columnId).length;
-      const lenB = rowB.getValue(columnId).length;
-      return lenA - lenB; // ascending
-    },
+    id: 'ชนิด',
+    accessorKey: "isDraft",
     header: ({ column }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
+        <div className='inline-flex gap-x-2 w-full justify-end'
         >
-            จำนวนคำสั่งศาล
+            ชนิด
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -106,31 +102,32 @@ const columns: ColumnDef<(Group | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { documents } = row.original;
+      const { isDraft } = row.original;
 
       return (
-        <div>
-          {documents?.length?? '-'}
+        <div className={`text-right ${isDraft? 'text-green-900': 'text-amber-800'}`}>
+          {isDraft? 'ฉบับบร่าง': 'ส่ง ISP'}
           </div>
       );
     },
   }
 ]
 
-export default function PlaylistTable({data}: {data: Group[]}) {
+export default function MailTable({data, isp}: {data: Mail[], isp?: boolean}) {
     const [sorting, setSorting] = useState<SortingState>([])
     const [tableData, setTableData] = useState(data);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
+    const user = useAppSelector(state => state.userAuth.user);
     const dataChanged = useAppSelector(state=>state.groupListUi.dataChanged);
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({})
     const table = useReactTable({
         data: tableData,
-        columns,
+        columns: (user?.isp || isp !== undefined)? columns.slice(0, 2): columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
@@ -150,7 +147,7 @@ export default function PlaylistTable({data}: {data: Group[]}) {
   useEffect(() => {
     const getData = async() => {
       try {
-        const data = await getGroups(); 
+        const data = await getMails(isp); 
         setTableData(data);
       } catch (error) {
         setTableData([]);
@@ -164,21 +161,14 @@ export default function PlaylistTable({data}: {data: Group[]}) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="ค้นหา Playlist..."
+          placeholder="ค้นหา กล่องข้อความ..."
           value={(table.getColumn("ชื่อ")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("ชื่อ")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
-        <Link href="document-groups/-1">
-          <Button variant="secondary" className="ml-1">สร้างแบบเร่งด่วน</Button>
-        </Link>
         <div className="ml-auto flex items-center gap-x-1">
-          <Button variant="outline" onClick={(e: any) => {
-            e.preventDefault();
-            dispatch(openModal({ ui: PLAYLISTUI.new }));
-          }}><Plus /></Button>
           <NewPlaylistSheet main={true}/>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

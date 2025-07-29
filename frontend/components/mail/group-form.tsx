@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import {z } from "zod"
 
 import { Button } from "@/components/ui/button"
+import { Textarea } from "../ui/textarea"
 import {
   Form,
   FormControl,
@@ -23,34 +24,36 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { ScrollArea } from "../ui/scroll-area"
 import { Label } from "../ui/label"
 import { Separator } from "../ui/separator"
-import DatePicker from "../date-picker"
+import {ThaiDatePicker} from "../date-picker"
 import { getUsers } from "../actions/user"
 import { getIsps } from "../actions/isp"
+import { postMail } from "../actions/mail"
 
 const tempUsers = [
     "user1", 'arnon songmoolnak', 'arnon', 'pok', 'arnonsongmoolnak arnonsongmoolnak'
 ]
 
 const formSchema = z.object({
-  subject: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
+  subject: z.string().min(1, {
+    message: "กรุณาใส่ชื่อเรื่อง",
   }),
-  toUsers: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
+  description: z.string().optional(), // or .min(1) if you want it required
 })
 
 export function GroupForm({
   children,
-  isps
+  isps,
+  groupId
 }: Readonly<{
   children?: React.ReactNode,
-  isps: Isp[]
+  isps: Isp[],
+  groupId?: number
 }>) {
     const user = useAppSelector(state => state.userAuth.user);
     const [availableUsers, setAvailableUsers] = useState<string[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<Isp[]>([]);
     const [usersOpen, setUsersOpen] = useState(false);
+    const [date, setDate] = useState<Date>();
     const [userRows, setUserRows] = useState(1);
     const toUsersRef = useRef(null);
     const form = useForm<z.infer<typeof formSchema>>({
@@ -78,8 +81,26 @@ export function GroupForm({
     // setAvailableUsers(userNames?.filter((user: string) => !selectedUsers.includes(user)));
   }, [selectedUsers]);
   
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>, event: any) {
+      const action = event.nativeEvent.submitter.value; 
+      if (!date) alert("Plese select date.");
+
+      try {
+        const allUsers = await getUsers();
+        const selectedIspNames = selectedUsers.map((isp: Isp) => isp.name);
+        const ispUserIds = allUsers.filter((user: User) =>
+          selectedIspNames.includes(user?.isp?.name)).map((user: User) => user.id);
         console.log(values)
+        await postMail({
+          subject: values.subject,
+          description: values?.description?? '',
+          date,
+          toUserIds: ispUserIds,
+          groupId: groupId as number
+        });
+      } catch (error) {
+        
+      }
     }
 
   return (
@@ -92,11 +113,29 @@ export function GroupForm({
             <FormItem>
               <FormLabel>ชื่อเรื่อง</FormLabel>
               <FormControl>
-                <Input placeholder="ใช่ชื่อเรื่อง" {...field} className="w-[1000px]" />
+                <Input
+                  placeholder="ใส่ชื่อเรื่อง"
+                  {...field}
+                  className="w-[1000px]"
+                />
               </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>คำอธิบาย</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="เพิ่มคำอธิบาย"
+                  {...field}
+                  className="w-[1000px]"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -105,7 +144,7 @@ export function GroupForm({
             <FormLabel className="inline-flex items-center gap-0.5">
                 วันที่<span className="text-red-400">*</span>
             </FormLabel>
-            <DatePicker />
+            <ThaiDatePicker date={date} setDate={setDate} />
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,_minmax(0,_400px))] justify-center gap-4 bg-background border border-black px-4 py-4 rounded-sm">
                 {
@@ -166,8 +205,8 @@ export function GroupForm({
             </Dialog>
         { children }
         <div className="flex justify-center gap-x-4 w-full">
-            <Button type="button" variant='destructive'>Draft</Button>
-            <Button type="submit">Submit</Button>
+            <Button type="submit" variant='destructive' value='0'>Draft</Button>
+            <Button type="submit" value='1'>Submit</Button>
         </div>
 
       </form>

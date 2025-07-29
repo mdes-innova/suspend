@@ -25,8 +25,8 @@ import { setDocIds, setRowSelection}
   from "../store/features/dialog-list-ui-slice";
 import {closeModal, LOADINGUI, openModal} from '../store/features/loading-ui-slice';
 import { getContent, getDocumentList } from "../actions/document";
-import { type Document } from "@/lib/types";
-import { addToGroup } from "../actions/group";
+import { Group, type Document } from "@/lib/types";
+import { addToGroup, getGroup } from "../actions/group";
 
 export default function DocumentList({ data, groupId }: { data: DocumentType[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -42,7 +42,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
 
     const isDragging = useAppSelector(state => state.documentListUi.isDragging);
     const draggingId = useAppSelector(state => state.documentListUi.dragId);
-
+    const dataChanged = useAppDispatch(state => state.documentListUi.dataChanged);
     const docIds = useAppSelector(state => state.dialogListUi.docIds);
     
     useEffect(() => {
@@ -55,6 +55,22 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
         }
     }, [contentData]);
 
+    useEffect(() => {
+        const getData = async() => {
+            try {
+                const data: Group = await getGroup(groupId as number);
+                const newDocuments = data.documents;
+                const newDocumentIds = newDocuments.map((doc: Document) => doc.id);
+                setColumns((prev: Document[]) => prev.filter((doc: Document) => 
+                    newDocumentIds.includes(doc.id)
+                ));
+            } catch (error) {
+                
+            }
+        }
+
+        getData();
+    }, [dataChanged]);
 
     const [columns, setColumns] = useState(
         docData.map((e: DocumentType) => e)

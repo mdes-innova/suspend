@@ -70,7 +70,7 @@ class DocumentFile(models.Model):
     file = models.FileField(
         upload_to=document_file_path,
         validators=[
-            FileExtensionValidator(allowed_extensions=['pdf', 'docx', 'txt', 'xlsx', 'xls'])
+            FileExtensionValidator(allowed_extensions=['pdf'])
         ],
         blank=True,
         null=True

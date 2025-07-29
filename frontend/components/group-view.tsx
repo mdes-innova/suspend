@@ -55,7 +55,7 @@ export default function GroupView(
             <div className="w-full text-start text-2xl font-bold">{groupData.name}</div>
             <div className="w-full text-start text-md">{Text2Thai(Date2Thai(groupData.createdAt))}</div>
           </div>
-        <GroupForm isps={isps}>
+        <GroupForm isps={isps} groupId={groupData?.id}>
           <DocumentList data={groupData?.documents} groupId={groupData?.id}/>
         </GroupForm>
         {/* <DragDrop /> */}

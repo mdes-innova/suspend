@@ -5,7 +5,8 @@ interface DocumentListUiState {
   data: DocumentType[]
   yPos: number
   dragId: string,
-  isDragging: boolean
+  isDragging: boolean,
+  dataChanged: boolean
 }
 
 interface IsDraggingState {
@@ -18,7 +19,8 @@ const initialState: DocumentListUiState = {
   data: [],
   yPos: 0,
   dragId: "",
-  isDragging: false
+  isDragging: false,
+  dataChanged: false
 };
 
 // Create the slice
@@ -33,13 +35,17 @@ const documentListUiSlice = createSlice({
       state.isDragging = action.payload.isDragging;
       state.yPos = action.payload.yPos;
       state.dragId= action.payload.dragId;
+    },
+    toggleDataChanged(state: DocumentListUiState) {
+      state.dataChanged = !state.dataChanged;
     }
+
   },
 });
 
 // Export actions and reducer
 export const {
-  setData, setDragging 
+  setData, setDragging, toggleDataChanged
 } = documentListUiSlice.actions;
 
 export default documentListUiSlice.reducer;

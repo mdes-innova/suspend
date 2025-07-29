@@ -19,9 +19,16 @@ import { useEffect, useState } from "react";
 import { useAppSelector } from "./store/hooks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { getGroup, getGroupFromDocument, removeDocumentFromGroup } from "./actions/group";
+import { getContent } from "./actions/document";
+import { toggleData } from "./store/features/content-list-ui-slice";
+import { useAppDispatch } from "./store/hooks";
+import { toggleDataChanged as toggleDataChangedDocumentList} from "./store/features/document-list-ui-slice";
+import { toggleDataChanged as toggleDataChangedGroupList } from "./store/features/group-list-ui-slice";
 
 export default function CategoryGroup({ doc, group }:
     { doc: Document, group: Group }) {
+    
+    const dispatch = useAppDispatch();
 
     const bgColors = [
         '#F87171', // red-400
@@ -65,6 +72,12 @@ export default function CategoryGroup({ doc, group }:
 
         getGroupData();
     }, []);
+
+    useEffect(() => {
+        dispatch(toggleData());
+        dispatch(toggleDataChangedDocumentList());
+        dispatch(toggleDataChangedGroupList());
+    }, [groupData]);
 
     return (
         <>
@@ -122,6 +135,7 @@ export default function CategoryGroup({ doc, group }:
                                     } catch (error) {
                                         
                                     }
+                                   
                                 }}>Continue</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>

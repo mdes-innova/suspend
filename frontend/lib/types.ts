@@ -27,7 +27,7 @@ export type Group = {
     id: number,
     createdAt: string,
     name: string,
-    documents: any[],
+    documents: Document[],
     user: User
 }
 
@@ -36,7 +36,7 @@ export type User = {
   username: string,
   isStaff: boolean,
   isActive: boolean,
-  isp?: string
+  isp?: Isp 
 };
 
 export type File = {
@@ -63,4 +63,24 @@ export type UserRegister = {
   password: string,
   isStaff: boolean,
   ispId?: number
+}
+
+export type IspFile = {
+  id: number,
+  user: User,
+  file: Blob,
+  createdAt: string
+}
+
+export type Mail = {
+  id: number,
+  subject: string,
+  date: string,
+  user: User,
+  toUsers?: User[],
+  group?: Group,
+  description?: string,
+  isDraft: boolean,
+  ispFiles?: IspFile[],
+  createdAt: string,
 }

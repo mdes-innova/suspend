@@ -8,6 +8,7 @@ import dialogListUiReducer from './features/dialog-list-ui-slice';
 import mailboxListUiReducer from './features/mailbox-list-ui-slice';
 import documentListUiReducer from './features/document-list-ui-slice';
 import loadingUiReducer from './features/loading-ui-slice';
+import groupListUiReducer from './features/group-list-ui-slice';
 
 export const store = configureStore({
   reducer: {
@@ -19,7 +20,8 @@ export const store = configureStore({
     dialogListUi: dialogListUiReducer,
     mailboxListUi: mailboxListUiReducer,
     documentListUi: documentListUiReducer,
-    loadingUi: loadingUiReducer
+    loadingUi: loadingUiReducer,
+    groupListUi: groupListUiReducer
   },
 });
 

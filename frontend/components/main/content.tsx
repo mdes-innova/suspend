@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import ActionDropdown from "../action-dropdown";
-import { useEffectExceptOnMount } from "@/hooks/useEffectExceptOnMount";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
 
@@ -274,7 +273,8 @@ export default function DataTable({ data }: { data: Document[] }) {
   const pagination = useAppSelector(state=>state.contentListUi.pagination); 
   const playlistUi = useAppSelector(state=>state.playlistDialogUi.listOpen);
   const playlistNewUi = useAppSelector(state=>state.playlistDialogUi.newOpen);
-  const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged); 
+  const dataChaged = useAppSelector(state=>state.playlistDialogUi.dataChanged);
+  const toggleDataState = useAppSelector(state=>state.contentListUi.toggleDataState);
 
   const table = useReactTable({
     data: tableData,
@@ -315,6 +315,20 @@ export default function DataTable({ data }: { data: Document[] }) {
 
     if (!playlistNewUi && !playlistUi && dataChaged) getData();
   }, [playlistUi, playlistNewUi]);
+
+  React.useEffect(()=>{
+    const getData = async() => {
+      try {
+        const data = await getContent();
+        setTableData(data);
+      } catch (error) {
+        setTableData([]);
+      }
+    };
+
+    getData();
+
+  }, [toggleDataState]);
 
     React.useEffect(()=>{
      if (table) {

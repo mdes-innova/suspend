@@ -7,12 +7,13 @@ import PlaylistDialog from '@/components/main/playlist-dialog';
 import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
 import { clearSelections, getContent } from '@/components/actions/document';
 import { AuthError } from '@/components/exceptions/auth';
+import { getGroups } from '@/components/actions/group';
+import MailTable from '@/components/mail-table';
+import { getMails } from '@/components/actions/mail';
 
-async function getData() {
+async function getData(isp?: boolean) {
   try {
-    // await clearSelections();
-    const data = await getContent();
-    // console.log(data.slice(0, 20))
+    const data = await getMails(isp);
     return data;
   } catch (error) {
     if (error instanceof AuthError) redirect('/login') ;
@@ -20,21 +21,22 @@ async function getData() {
   }
 }
 
-async function Content() {
-  const data = await getData();
+async function MailContent({params}: {params: any}) {
+    const {id} = (await params);
+    const isp = (id === 'draft' || id === 'isp')? id === 'isp':
+        undefined;
+  const data = await getData(isp);
   return (
     <div className='w-full h-full flex flex-col px-2'>
-      <DataTable data={data}/>
+      <MailTable data={data} isp={isp}/>
     </div>
   );
 }
 
-export default function Home() {
+export default function Page({params}: {params: {id: string}}) {
   return (
       <Suspense fallback={<ContentLoading />}>
-        <Content />
-        <NewPlaylistSheet />
-        <PlaylistDialog />
+        <MailContent params={params}/>
       </Suspense>
   );
 }

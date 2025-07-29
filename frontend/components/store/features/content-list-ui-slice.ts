@@ -1,3 +1,4 @@
+import { type Document } from '@/lib/types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   SortingState,
@@ -16,6 +17,8 @@ interface ContentListUiState {
     pageIndex: number;
     pageSize: number;
   };
+  tableData: Document[];
+  toggleDataState: boolean;
 }
 
 // Initial state with type annotation
@@ -28,6 +31,8 @@ const initialState: ContentListUiState = {
     pageIndex: 0,
     pageSize: 20,
   },
+  tableData: [],
+  toggleDataState: false
 };
 
 // Create the slice
@@ -35,21 +40,24 @@ const contenListUiSlice = createSlice({
   name: 'table',
   initialState,
   reducers: {
-    setSorting(state, action: PayloadAction<SortingState>) {
+    setSorting(state: ContentListUiState, action: PayloadAction<SortingState>) {
       state.sorting = action.payload;
     },
-    setColumnFilters(state, action: PayloadAction<ColumnFiltersState>) {
+    setColumnFilters(state: ContentListUiState, action: PayloadAction<ColumnFiltersState>) {
       state.columnFilters = action.payload;
     },
-    setColumnVisibility(state, action: PayloadAction<VisibilityState>) {
+    setColumnVisibility(state: ContentListUiState, action: PayloadAction<VisibilityState>) {
       state.columnVisibility = action.payload;
     },
-    setRowSelection(state, action: PayloadAction<RowSelectionState>) {
+    setRowSelection(state: ContentListUiState, action: PayloadAction<RowSelectionState>) {
       state.rowSelection = action.payload;
     },
-    setPagination(state, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
+    setPagination(state: ContentListUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
       state.pagination = action.payload;
     },
+    toggleData(state: ContentListUiState) {
+      state.toggleDataState = !state.toggleDataState
+    }
   },
 });
 
@@ -60,6 +68,7 @@ export const {
   setColumnVisibility,
   setRowSelection,
   setPagination,
+  toggleData
 } = contenListUiSlice.actions;
 
 export default contenListUiSlice.reducer;

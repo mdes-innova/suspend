@@ -15,19 +15,31 @@ class FromUser(models.Model):
 class Mail(models.Model):
     subject = models.CharField(max_length=512)
     date = models.DateField(null=True)
-    from_user = models.ForeignKey(
-            "FromUser",
-            on_delete=models.CASCADE
+    user = models.ForeignKey(
+            "User",
+            on_delete=models.SET_NULL,
+            null=True
         )
-    to_users = models.ManyToManyField(
-        'User',
-    )
     group = models.OneToOneField(
         'Group',
-        on_delete=models.CASCADE,
-        null=True
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="mails"
     )
+    to_users = models.ManyToManyField("User", related_name="received_mails",
+                                      blank=True)
+    description = models.TextField(blank=True, null=True)
     is_draft = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+
+class IspFile(models.Model):
+    user = models.ForeignKey('User', on_delete=models.SET_NULL,
+                             null=True, default=None)
+    mail = models.ForeignKey('Mail', on_delete=models.SET_NULL,
+                             null=True, default=None,
+                             related_name='isp_files')
     file = models.FileField(
         upload_to=mail_file_path,
         validators=[
