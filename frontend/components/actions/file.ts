@@ -7,7 +7,7 @@ export async function deleteUploadedFile(fid: number) {
   const access = await getAccess();
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND}/document/documents/file-delete/${fid}/`,
+      `${process.env.BACKEND_URL}/document/documents/file-delete/${fid}/`,
       {
         method: 'DELETE',
         headers: {
@@ -30,7 +30,7 @@ export async function deleteUploadedFile(fid: number) {
 export async function downloadPdf(fid: number) {
   const access = await getAccess();
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/document/documents/pdf-download/${fid}/`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/document/documents/pdf-download/${fid}/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${access}`
@@ -53,7 +53,7 @@ export async function uploadFile({formData, kind = 'pdf'}: {formData: FormData, 
   console.log(access)
   
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/document/documents/${kind}-upload/`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/document/documents/${kind}-upload/`, {
       method: "POST",
       body: formData,
       headers: {
@@ -77,7 +77,7 @@ export async function getFileUrls(fid: number) {
   const access = await getAccess();
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND}/document/documents/file-urls/${fid}/`,
+      `${process.env.BACKEND_URL}/document/documents/file-urls/${fid}/`,
       {
         headers: {
           Authorization: `Bearer ${access}`

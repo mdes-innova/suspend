@@ -14,3 +14,10 @@ def mail_file_path(instance, filename):
     ext = os.path.splitext(filename)[1]
     filename = '{}{}'.format(uuid.uuid4(), ext)
     return os.path.join('uploads', 'mail', filename)
+
+
+def group_file_path(instance, filename):
+    """Generate file path for new recipe file."""
+    ext = os.path.splitext(filename)[1]
+    filename = '{}{}'.format(uuid.uuid4(), ext)
+    return os.path.join('uploads', 'group', filename)

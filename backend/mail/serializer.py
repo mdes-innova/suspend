@@ -1,6 +1,6 @@
 """Mail serializer module."""
 from rest_framework import serializers
-from core.models import Mail, Group, IspFile
+from core.models import Mail, IspFile, Document, MailDocument
 from user.serializer import UserSerializer
 from document.serializer import DocumentSerializer
 from group.serializer import GroupSerializer
@@ -32,12 +32,6 @@ class MailSerializer(serializers.ModelSerializer):
 class MailDetailSerializer(serializers.ModelSerializer):
     """Serializer class"""
     isp_files = IspFileSerailizer(read_only=True, many=True)
-    group = GroupSerializer(read_only=True)
-    group_id = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(),
-        write_only=True,
-        required=True
-    )
     to_users = UserSerializer(read_only=True, many=True)
     to_user_ids = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all(),
@@ -45,6 +39,13 @@ class MailDetailSerializer(serializers.ModelSerializer):
         many=True,
         required=True
     )
+    document_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Document.objects.all(),
+        many=True,
+        write_only=True,
+        required=False
+    )
+    documents = DocumentSerializer(many=True, read_only=True)
 
     class Meta(MailSerializer.Meta):
         fields = MailSerializer.Meta.fields + ['group_id', 'group', 'to_users',
@@ -54,18 +55,14 @@ class MailDetailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         date = validated_data.pop('date', None)
-        group = validated_data.pop('group_id', None)
-        to_users = validated_data.pop("to_user_ids", [])
+        documents = validated_data.pop('document_ids', [])
 
-        if not group:
-            raise serializers.ValidationError({
-                        'error': 'Bad Request - Group not found'
-                    })
-        # documents = DocumentSerializer(group.documents, many=True).data
-        mail = Mail.objects.create(user=user, group=group,
+        mail = Mail.objects.create(user=user,
                                    date=date,
                                    **validated_data)
-        mail.to_users.set(to_users)
+        for doc in documents:
+            MailDocument.objects.create(mail=mail, document=doc,
+                                        user=user)
         # if len(documents):
         #     pdf_file_path = generate_file(
         #             validated_data['subject'],

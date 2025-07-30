@@ -1,6 +1,8 @@
 """Mail model class for category app."""
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator
+import os
 
 from core.utils import mail_file_path
 
@@ -12,6 +14,23 @@ class FromUser(models.Model):
         )
 
 
+class MailDocument(models.Model):
+    mail = models.ForeignKey('Mail', on_delete=models.CASCADE)
+    document = models.OneToOneField('Document', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        default=None,
+        null=True
+        )
+
+    def save(self, *args, **kwargs):
+        if not self.user:
+            self.user = self.mail.user
+
+        super().save(*args, **kwargs)
+
+
 class Mail(models.Model):
     subject = models.CharField(max_length=512)
     date = models.DateField(null=True)
@@ -20,14 +39,11 @@ class Mail(models.Model):
             on_delete=models.SET_NULL,
             null=True
         )
-    group = models.OneToOneField(
-        'Group',
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="mails"
+    documents = models.ManyToManyField(
+        'Document',
+        through='MailDocument',
+        related_name='mails'
     )
-    to_users = models.ManyToManyField("User", related_name="received_mails",
-                                      blank=True)
     description = models.TextField(blank=True, null=True)
     is_draft = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -48,5 +64,17 @@ class IspFile(models.Model):
         blank=True,
         null=True
     )
+
+    original_filename = models.CharField(
+        max_length=512,
+        blank=True,
+        null=True
+    )
+
+    def save(self, *args, **kwargs):
+        # Only set original_filename if a new file is uploaded
+        if self.file and not self.original_filename:
+            self.original_filename = os.path.basename(self.file.name)
+        super().save(*args, **kwargs)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

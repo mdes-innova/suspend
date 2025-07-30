@@ -2,9 +2,15 @@
 from rest_framework import serializers
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
-from core.models import Group, Document, GroupDocument
+from core.models import Group, Document, GroupDocument, GroupFile
 from document.serializer import DocumentSerializer
 from user.serializer import UserSerializer
+
+
+class GroupFileSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupFile
+        fields = '__all__'
 
 
 class GroupSerializer(serializers.ModelSerializer):

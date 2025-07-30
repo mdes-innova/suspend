@@ -113,6 +113,54 @@ class DocumentView(viewsets.ModelViewSet):
             serializer.save(document=document)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='pdf-upload'
+    )
+    def pdf_upload(self, request, pk=None):
+        file_obj = request.FILES.get("file")
+        try:
+            document_file = DocumentFile.objects.create(
+                original_name=file_obj.name,
+                file=file_obj
+            )
+            serializer_data = FileSerializer(document_file).data
+            return Response({
+                'id': serializer_data['id'],
+                'name': serializer_data['original_name'],
+                },
+                            status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": "Cannot upload file."}, status=400)
+    
+    @action(
+        detail=False,
+        methods=['get'],
+        name='document-pdf-download',
+        url_path='pdf-download/(?P<fid>[^/]+)'
+    )
+    def pdf_download(self, request, fid=None):
+        try:
+            f = DocumentFile.objects.get(pk=fid)
+        except DocumentFile.DoesNotExist:
+            return Response({'detail': "File not available"},
+                            status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'detail': "File not available"},
+                            status.HTTP_404_NOT_FOUND)
+        else:
+            if f:
+                return FileResponse(
+                    f.file.open('rb'),
+                    as_attachment=True,
+                    filename=str(f.original_name),
+                    content_type='application/pdf'
+                )
+            else:
+                return Response({'detail': "File not available"},
+                                status.HTTP_404_NOT_FOUND)
 
     @action(
         detail=False,
