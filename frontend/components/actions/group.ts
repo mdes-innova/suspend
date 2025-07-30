@@ -27,6 +27,30 @@ export async function getGroups() {
   }
 }
 
+export async function getGroupList() {
+  const access = await getAccess();
+
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/group-list/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get group list fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
 export async function getGroup(groupId: number) {
   const access = await getAccess();
 
@@ -182,6 +206,7 @@ export async function getUntilted() {
       throw new Error('Get Untitled group fail.');
       }
       const content = await res.json();
+      console.log(content)
       return content;
   } catch (error) {
       throw error; 

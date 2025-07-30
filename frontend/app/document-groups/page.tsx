@@ -8,11 +8,11 @@ import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
 import { clearSelections, getContent } from '@/components/actions/document';
 import { AuthError } from '@/components/exceptions/auth';
 import PlaylistTable from '@/components/playlist-table';
-import { getGroups } from '@/components/actions/group';
+import { getGroupList, getGroups } from '@/components/actions/group';
 
 async function getData() {
   try {
-    const data = await getGroups();
+    const data = await getGroupList();
     return data;
   } catch (error) {
     if (error instanceof AuthError) redirect('/login') ;

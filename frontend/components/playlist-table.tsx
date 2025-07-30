@@ -24,7 +24,7 @@ import { NewPlaylistSheet } from "./main/new-playlist-sheet";
 import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect} from 'react';
-import { getGroups } from "./actions/group";
+import { getGroupList, getGroups } from "./actions/group";
 
 const columns: ColumnDef<(Group | any)[]> = [
   {
@@ -150,7 +150,7 @@ export default function PlaylistTable({data}: {data: Group[]}) {
   useEffect(() => {
     const getData = async() => {
       try {
-        const data = await getGroups(); 
+        const data = await getGroupList(); 
         setTableData(data);
       } catch (error) {
         setTableData([]);

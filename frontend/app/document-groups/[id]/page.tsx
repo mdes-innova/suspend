@@ -30,6 +30,7 @@ async function Components({ params, searchParams }: { params: any, searchParams:
           try {
             const gettedUntitled = await getUntilted();
             gettedUntitled.createdAt = currentDate;
+            console.log(gettedUntitled)
             groupData = gettedUntitled;
           } catch (err2) {
             if (err1 instanceof AuthError) throw err1;

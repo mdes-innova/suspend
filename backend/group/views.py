@@ -11,20 +11,30 @@ from rest_framework.permissions import IsAuthenticated
 
 class GroupView(viewsets.ModelViewSet):
     """Group view."""
-    queryset = Group.objects.all().order_by('id')
+    queryset = Group.objects.all().order_by('-id')
     serializer_class = GroupSerializer
 
     def get_queryset(self):
         """Get group object data."""
-        data = self.queryset.filter(user=self.request.user).exclude(name='Untitled').order_by('-id')
+        data = self.queryset.filter(user=self.request.user)
         return data
+    
+    @action(
+        detail=False,
+        url_path='group-list',
+        methods=['GET']
+    )
+    def group_list(self, request):
+        query_set = self.queryset.exclude(name='Untitled')
+        data = GroupSerializer(query_set, many=True).data
+        return Response(data)
 
-    def get_permissions(self):
-        match self.request.method:
-            case 'GET':
-                return [IsAuthenticated()]
-            case _:
-                return super().get_permissions()
+    # def get_permissions(self):
+    #     match self.request.method:
+    #         case 'GET':
+    #             return [IsAuthenticated()]
+    #         case _:
+    #             return super().get_permissions()
 
     @action(
         detail=False,
