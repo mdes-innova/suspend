@@ -27,6 +27,7 @@ import {closeModal, LOADINGUI, openModal} from '../store/features/loading-ui-sli
 import { getContent, getDocumentList } from "../actions/document";
 import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
+import { setDocuments } from "../store/features/group-ui-slice";
 
 export default function DocumentList({ data, groupId }: { data: DocumentType[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -43,11 +44,16 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
     const isDragging = useAppSelector(state => state.documentListUi.isDragging);
     const draggingId = useAppSelector(state => state.documentListUi.dragId);
     const dataChanged = useAppDispatch(state => state.documentListUi.dataChanged);
-    const docIds = useAppSelector(state => state.dialogListUi.docIds);
+    const docIds = useAppSelector(state => state.dialogListUi.docIds)
+    const [columns, setColumns] = useState([]);
     
     useEffect(() => {
         setColumns(docData);
     }, [docData]);
+
+    useEffect(() => {
+        dispatch(setDocuments(columns));
+    }, [columns]);
 
     useEffect(() => {
         if (contentData) {
@@ -72,9 +78,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
         getData();
     }, [dataChanged]);
 
-    const [columns, setColumns] = useState(
-        docData.map((e: DocumentType) => e)
-    );
+
 
     const handleDragEnd = (event: any) => {
         const { active, over } = event;

@@ -116,7 +116,7 @@ const columns: ColumnDef<(Group | any)[]> = [
 
 export default function PlaylistTable({data}: {data: Group[]}) {
     const [sorting, setSorting] = useState<SortingState>([])
-    const [tableData, setTableData] = useState(data);
+    const [tableData, setTableData] = useState([]);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []

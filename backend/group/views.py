@@ -2,12 +2,15 @@ from rest_framework import (
     viewsets, status
 )
 from django.http import FileResponse
-from core.models import Group, Document, GroupFile
+from core.models import Group, Document, GroupFile, ISP
 from .serializer import GroupSerializer, GroupFileSerializer 
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from core.permissions import IsActiveUser, IsAdminOrStaff
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
+import hashlib, base64
 
 
 class GroupView(viewsets.ModelViewSet):
@@ -71,61 +74,62 @@ class GroupView(viewsets.ModelViewSet):
             return Response({'detail': 'Document not found.'},
                             status.HTTP_404_NOT_FOUND)
 
+    # @action(
+    #     detail=True,
+    #     methods=['post'],
+    #     url_path='group-file'
+    # )
+    # def group_file(self, request, pk=None):
+    #     original_filename = request.data.get('original_filename', None)
+    #     if not pk or not original_filename:
+    #         return Response({"error": "Cannot create a group file."}, status=400)
+
+    #     try:
+    #         group = Group.objects.get(pk=pk)
+    #         group_file = GroupFile.objects.create(
+    #             user=request.user,
+    #             group=group,
+    #             original_filename=original_filename,
+    #         )
+
+    #         serlializer_data = GroupFileSerializer(group_file).data
+    #         return Response(serlializer_data)
+    #     except Exception as e:
+    #         return Response({"error": "Cannot create a group file."}, status=400)
+
+
+class GroupFileView(viewsets.ModelViewSet):
+    """Group file view."""
+    queryset = GroupFile.objects.all().order_by('id')
+    serializer_class = GroupFileSerializer
+
+    def delete(self, *args, **kwargs):
+        if self.file:
+            self.file.delete(save=False)
+        super().delete(*args, **kwargs)
+
     @action(
-        detail=True,
-        methods=['post'],
-        url_path='group-file'
+       detail=False,
+       url_path='by-group/(?P<gid>[^/]+)',
+       methods=['GET']
     )
-    def group_file(self, request, pk=None):
-        original_filename = request.data.get('original_filename', None)
-        if not pk or not original_filename:
-            return Response({"error": "Cannot create a group file."}, status=400)
-
-        try:
-            group = Group.objects.get(pk=pk)
-            group_file = GroupFile.objects.create(
-                user=request.user,
-                group=group,
-                original_filename=original_filename,
-            )
-
-            serlializer_data = GroupFileSerializer(group_file).data
-            return Response(serlializer_data)
-        except Exception as e:
-            return Response({"error": "Cannot create a group file."}, status=400)
-
-    @action(
-        detail=False,
-        methods=['post'],
-        url_path='upload/(?P<gfid>[^/]+)'
-    )
-    def upload(self, request, gfid=None):
-        file_obj = request.FILES.get("file")
-
-        if not gfid:
-            return Response({"error": "Cannot upload group file."}, status=400)
-
-        try:
-            group_file = GroupFile.objects.get(pk=gfid)
-            group_file.file = file_obj
-            group_file.save
-            serializer_data = GroupFileSerializer(group_file).data
-            return Response(serializer_data)
-        except Exception as e:
-            return Response({"error": "Cannot upload file."}, status=400)
+    def by_group(self, request, gid=None):
+        group = Group.objects.get(pk=gid)
+        queryset = self.queryset.filter(group=group)
+        return Response(GroupFileSerializer(queryset, many=True).data)
 
     @action(
         detail=False,
         methods=['get'],
-        url_path='download/(?P<gfid>[^/]+)'
+        url_path='download/(?P<fid>[^/]+)'
     )
-    def download(self, request, gfid=None):
+    def download(self, request, fid=None):
 
-        if not gfid:
+        if not fid:
             return Response({"error": "Cannot download group file."}, status=400)
 
         try:
-            group_file = GroupFile.objects.get(pk=gfid)
+            group_file = GroupFile.objects.get(pk=fid)
         except GroupFile.DoesNotExist:
             return Response({'detail': "File not available"},
                             status.HTTP_404_NOT_FOUND)
@@ -143,3 +147,81 @@ class GroupView(viewsets.ModelViewSet):
             else:
                 return Response({'detail': "File not available"},
                                 status.HTTP_404_NOT_FOUND)
+
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='upload'
+    )
+    def upload(self, request):
+        try:
+            file_obj = request.FILES.get("file")
+            isp = request.POST.get("isp")
+            group_id = request.POST.get("group")
+
+            group = Group.objects.get(pk=int(group_id))
+            isp = ISP.objects.get(pk=int(isp))
+            group_file = GroupFile.objects.create(
+                isp=isp,
+                group=group,
+                original_filename=file_obj.name,
+                file=file_obj,
+            )
+            h = hashlib.sha256((str(group_file.id)).encode()).digest()
+            group_file.confirmed_hash = base64.urlsafe_b64encode(h).decode()
+            group_file.save(update_fields=["confirmed_hash"])
+            serializer_data = GroupFileSerializer(group_file).data
+            return Response(serializer_data)
+        except Exception as e:
+            return Response({"error": f"Cannot upload file. {e}"}, status=400)
+
+    @action(
+        detail=True,
+        methods=['PATCH'],
+        url_path='edit'
+    )
+    def edit(self, request, pk=None):
+        try:
+            file_obj = request.FILES.get('file', None)
+            isp_id = request.POST.get('isp', None)
+            group_file = self.queryset.get(pk=pk)
+
+            if isp_id:
+                isp = ISP.objects.get(pk=int(isp_id))
+                group_file.isp = isp
+
+            if file_obj:
+                group_file.file.delete(save=False)
+                group_file.file = file_obj
+                group_file.original_filename = file_obj.name
+
+            group_file.save()
+
+            return Response(GroupFileSerializer(group_file).data)
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            })
+
+    @action(
+        detail=False,
+        methods=['GET'],
+        url_path='confirm/(?P<hcode>[^/]+)'
+    )
+    def confirm(self, request, hcode=None):
+        if not hcode:
+            Response({'error': 'No hash code found.'})
+
+        try:
+            group_file = GroupFile.objects.get(confirmed_hash=hcode)
+            group_file.confirmed = True
+            group_file.save(update_fields=['confirmed'])
+            return Response(GroupFileSerializer(group_file).data)
+        except Exception as e:
+            return Response({'error': 'No group file found.'})
+
+    def get_permissions(self):
+        if self.action == 'confirm':
+            return [AllowAny()]
+        else:
+            return super().get_permissions()

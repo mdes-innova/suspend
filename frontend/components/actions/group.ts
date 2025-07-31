@@ -134,6 +134,36 @@ export async function addToGroup({ docIds, mode, groupId }: {
   }
 }
 
+export async function RenameGroup({ name, groupId }: {
+    name: string, groupId: number
+}) {
+  const access = await getAccess();
+
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name
+      }),
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Rename a group fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
 export async function removeDocumentFromGroup({ docIds, groupId }: {
     docIds: number[], groupId: number
 }) {

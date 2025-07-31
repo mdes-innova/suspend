@@ -1,4 +1,5 @@
 import { getGroup, getUntilted, postGroup } from "@/components/actions/group";
+import { GetFilesFromGroup } from "@/components/actions/group-file";
 import { getIsps } from "@/components/actions/isp";
 import { getProfile, getUsers } from "@/components/actions/user";
 import { getCurrentDate } from "@/components/actions/utils";
@@ -45,9 +46,10 @@ async function Components({ params, searchParams }: { params: any, searchParams:
     }
 
     const isps = await getIsps();
+    const fileData = await GetFilesFromGroup((groupData as Group).id);
 
     return (
-      <GroupView groupData={groupData} isps={isps}/>
+      <GroupView groupData={groupData} isps={isps} fileData={fileData}/>
     );
 
   } catch (error) {

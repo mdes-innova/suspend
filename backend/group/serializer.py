@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
-from core.models import Group, Document, GroupDocument, GroupFile
+from core.models import Group, Document, GroupDocument, GroupFile, ISP
 from document.serializer import DocumentSerializer
 from user.serializer import UserSerializer
 

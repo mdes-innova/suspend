@@ -9,7 +9,7 @@ import { clearSelections, getContent } from '@/components/actions/document';
 import { AuthError } from '@/components/exceptions/auth';
 import { getGroups } from '@/components/actions/group';
 import MailTable from '@/components/mail-table';
-import { getMails } from '@/components/actions/mail';
+import { getMails } from '@/components/actions/group-file';
 
 async function getData(isp?: boolean) {
   try {

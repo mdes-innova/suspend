@@ -25,7 +25,7 @@ import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slic
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect} from 'react';
 import { getGroups } from "./actions/group";
-import { getMails } from "./actions/mail";
+import { getMails } from "./actions/group-file";
 
 const columns: ColumnDef<(Group | any)[]> = [
   {

@@ -9,6 +9,7 @@ import mailboxListUiReducer from './features/mailbox-list-ui-slice';
 import documentListUiReducer from './features/document-list-ui-slice';
 import loadingUiReducer from './features/loading-ui-slice';
 import groupListUiReducer from './features/group-list-ui-slice';
+import groupUiReducer from './features/group-ui-slice';
 
 export const store = configureStore({
   reducer: {
@@ -21,7 +22,8 @@ export const store = configureStore({
     mailboxListUi: mailboxListUiReducer,
     documentListUi: documentListUiReducer,
     loadingUi: loadingUiReducer,
-    groupListUi: groupListUiReducer
+    groupListUi: groupListUiReducer,
+    groupUi: groupUiReducer
   },
 });
 

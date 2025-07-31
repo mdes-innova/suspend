@@ -87,7 +87,7 @@ export type Mail = {
 
 export type GroupFile = {
   id?: number,
-  user?: User,
+  isp?: Isp,
   group?: Group,
   file?: Blob,
   originalFilename?: string

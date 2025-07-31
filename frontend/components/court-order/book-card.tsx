@@ -44,8 +44,10 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
-import { type Isp } from "@/lib/types";
-import { downloadPdf, uploadFile } from "../actions/file";
+import { GroupFile, type Isp } from "@/lib/types";
+import { useAppDispatch } from "../store/hooks";
+import { setGroupFiles } from "../store/features/group-ui-slice";
+import { downloadFile, Edit, GetFilesFromGroup, uploadFile } from "../actions/group-file";
 
 type TableDataType = {
   fileId: number,
@@ -53,46 +55,22 @@ type TableDataType = {
   isp: string,
 }
 
-export function BookCard({ispData, data}: {ispData: Isp[], data?: TableDataType}) {
+export function BookCard({ispData, fileData, groupId}:
+  {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const [ispSelected, setIspSelected] = useState('');
   const [selectedIsps, setSelectedIsps] = useState<string[]>([]);
-  const [tableData, setTableData] = useState(data?? []);
+  const [tableData, setTableData] = useState<TableDataType[]>(
+    fileData.length != 0? fileData.map((e: GroupFile) => {
+      return ({
+        fileId: e.id,
+        filename: e.originalFilename,
+        isp: `${e.isp}`
+      });
+    }): []
+  );
   const [openNew, setOpenNew] = useState<number | null>(null);
   const [filename, setFilename] = useState<string | null>(null);
-
-  // const handleFileChange = async (e: ChangeEvent<HTMLInputElement>, idx: number) => {
-  //   const files = e.target.files;
-  //   const file = (files && files.length > 0)? files[0]: null ;
-  //   if (!file) return;
-
-  //   if (file.type !== "application/pdf") {
-  //       alert("Please select a PDF file.");
-  //       return;
-  //   }
-
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-
-  //   try {
-  //     const data = await uploadFile({
-  //       formData,
-  //       kind: 'pdf'
-  //     });
-  //     setTableData((prev: TableDataType[]) => {
-  //       const updated = [...prev];
-  //       updated.push({
-  //         fileId: data.id,
-  //         filename: data.name,
-  //         isp: currentSelectedRef.current.value
-  //       });
-  //       return updated;
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //     alert(error);
-  //   }
-  // }
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
@@ -116,6 +94,7 @@ export function BookCard({ispData, data}: {ispData: Isp[], data?: TableDataType}
   useEffect(() => {
     const ispList = tableData?.map((e: TableDataType) => e.isp);
     setSelectedIsps(ispList?? []);
+
   }, [tableData]);
 
   return (
@@ -125,7 +104,7 @@ export function BookCard({ispData, data}: {ispData: Isp[], data?: TableDataType}
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full items-start justify-center gap-4">
-          <EditDialog filename={filename} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
+          <EditDialog groupId={groupId} filename={filename} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
             selectedIsps={selectedIsps} setFilename={setFilename} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
             tableData={tableData} uploadRef={uploadRef}/>
@@ -175,7 +154,7 @@ function TableData({tableData, setTableData, ispData, setOpenNew, setIspSelected
     <>
       {
         tableData.map((e: any, idx: number) => {
-          const isp = (ispData.filter((isp: Isp) => isp.ispId === parseInt(e.isp)))[0]
+          const isp = (ispData.filter((isp: Isp) => isp.id === parseInt(e.isp)))[0]
           return <TableRow key={`table-cell-${idx}`}>
             <TableCell className='w-[20px]'>{idx + 1}</TableCell>
             <TableCell className='max-w-[400px]'>
@@ -185,7 +164,7 @@ function TableData({tableData, setTableData, ispData, setOpenNew, setIspSelected
                 const fileName = (e as TableDataType).filename;
                 const fileId = (e as TableDataType).fileId;
                 try {
-                  const blob = await downloadPdf(fileId);
+                  const blob = await downloadFile(fileId);
                   const url = window.URL.createObjectURL(blob);
                   const link = document.createElement("a");
                   link.href = url;
@@ -213,7 +192,7 @@ function TableData({tableData, setTableData, ispData, setOpenNew, setIspSelected
 
               </div>
             </TableCell>
-            <TableCell className='w-[200px]'>{isp.name}</TableCell>
+            <TableCell className='w-[200px]'>{isp?.name?? '-'}</TableCell>
             <TableCell className='text-right  flex justify-end w-full px-0'>
               <div className="flex gap-x-1">
                 <FilePenLine size={24} className='cursor-pointer' onClick={(evt: any) => {
@@ -235,9 +214,10 @@ function TableData({tableData, setTableData, ispData, setOpenNew, setIspSelected
   );
 }
 
-function EditDialog({idx, openNew, setOpenNew, ispSelected, setIspSelected,
+function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelected,
   ispData, selectedIsps, filename, setFilename, uploadRef, tableData, setTableData}:
   {
+    groupId: number,
     idx?: number,
     openNew: number | null,
     setOpenNew: React.Dispatch<React.SetStateAction<number | null>>,
@@ -271,7 +251,6 @@ function EditDialog({idx, openNew, setOpenNew, ispSelected, setIspSelected,
                       required
                       value={ispSelected}
                       onValueChange={(value: string) => {
-                        // console.log(ispSelected)
                         setIspSelected(value);
                       }}
                     >
@@ -283,10 +262,10 @@ function EditDialog({idx, openNew, setOpenNew, ispSelected, setIspSelected,
                           <SelectLabel>ISP</SelectLabel>
                           <>
                             {ispData.map((e: Isp, idx: number) => {
-                              const isSelected = selectedIsps.includes(`${e.ispId}`);
+                              const isSelected = selectedIsps.includes(`${e.id}`);
                               return (<SelectItem disabled={isSelected? true: false}
                               className={isSelected? 'flex items-center justify-start': ''}
-                               key={`isp-${idx}`} value={`${e.ispId}`}>
+                               key={`isp-${idx}`} value={`${e.id}`}>
                               <span>{e.name}</span>
                               {isSelected && (
                                   <Check className="h-4 w-4 text-green-500" />
@@ -364,16 +343,19 @@ function EditDialog({idx, openNew, setOpenNew, ispSelected, setIspSelected,
 
                       const formData = new FormData();
                       formData.append("file", files[0]);
-                      const data = await uploadFile({formData, kind: 'pdf'});
-                      setTableData((prev: TableDataType[]) => {
-                        const updated = [...prev];
-                        updated.push({
-                          fileId: data.id,
-                          filename: data.name,
-                          isp: ispSelected
-                        });
-                        return updated;
+                      formData.append("isp", ispSelected);
+                      formData.append("group", `${groupId}`);
+                      const data = await uploadFile({
+                        formData
                       });
+                      const newData = await GetFilesFromGroup(data.group);
+                      setTableData(newData.map((e: GroupFile) => {
+                        return ({
+                          fileId: e.id,
+                          filename: e.originalFilename,
+                          isp: `${e.isp}`
+                        });
+                      }));
                       setOpenNew(null);
 
                     }}>เพิ่ม</Button>
@@ -385,29 +367,41 @@ function EditDialog({idx, openNew, setOpenNew, ispSelected, setIspSelected,
                       if (!filename || !ispSelected) return;
                       const files = uploadRef?.current?.files;
                       if (!files || !(files.length)) {
-                        setTableData((prev: TableDataType[]) => {
-                          const updated = [...prev];
-                          updated[openNew] = {
-                            fileId: updated[openNew].fileId,
-                            filename: updated[openNew].filename,
+                        if (ispSelected != tableData[openNew].isp) {
+                          await Edit({
+                            fid: tableData[openNew].fileId,
                             isp: ispSelected
-                          };
-                          return updated;
-                        });
+                          });
+                        }
                       } else {
-                        const formData = new FormData();
-                        formData.append("file", files[0]);
-                        const data = await uploadFile({formData, kind: 'pdf'});
-                        setTableData((prev: TableDataType[]) => {
-                          const updated = [...prev];
-                          updated[openNew] = {
-                            fileId: data.id,
-                            filename: data.name,
-                            isp: ispSelected
-                          };
-                          return updated;
+                        await Edit({
+                          fid: tableData[openNew].fileId,
+                          isp: ispSelected != tableData[openNew].isp? ispSelected: undefined,
+                          file: files[0]
                         });
+                        // formData.append("file", files[0]);
+                        // const data = await uploadFile({
+                        //   formData,
+                        //   gfid: groupId
+                        // });
+                        // setTableData((prev: TableDataType[]) => {
+                        //   const updated = [...prev];
+                        //   updated[openNew] = {
+                        //     fileId: data.id,
+                        //     filename: data.name,
+                        //     isp: ispSelected
+                        //   };
+                        //   return updated;
+                        // });
                       }
+                      const newData = await GetFilesFromGroup(groupId);
+                      setTableData(newData.map((e: GroupFile) => {
+                        return ({
+                          fileId: e.id,
+                          filename: e.originalFilename,
+                          isp: `${e.isp}`
+                        });
+                      }));
                       setOpenNew(null);
                     }}>แก้ไข</Button>
                   }

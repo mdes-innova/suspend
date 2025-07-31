@@ -42,8 +42,8 @@ class Group(models.Model):
 
 
 class GroupFile(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL,
-                             null=True, default=None)
+    isp = models.ForeignKey('ISP', on_delete=models.SET_NULL,
+                            null=True, default=None)
     group = models.ForeignKey('Group', on_delete=models.SET_NULL,
                               null=True, default=None,
                               related_name='group_files')
@@ -61,11 +61,16 @@ class GroupFile(models.Model):
         blank=True,
         null=True
     )
+    confirmed = models.BooleanField(default=False)
+    confirmed_hash = models.CharField(max_length=64, null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        # Only set original_filename if a new file is uploaded
-        if self.file and not self.original_filename:
-            self.original_filename = os.path.basename(self.file.name)
-        super().save(*args, **kwargs)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['group', 'isp'],
+                name='unique_isp_per_group'
+            )
+        ]
+
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Fragment, useEffect, useRef, useState } from "react"
-import { type Isp, type User } from "@/lib/types"
+import { GroupFile, type Isp, type User } from "@/lib/types"
 import { X } from "lucide-react"
-import { useAppSelector } from "../store/hooks"
+import { useAppDispatch, useAppSelector } from "../store/hooks"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import { ScrollArea } from "../ui/scroll-area"
 import { Label } from "../ui/label"
@@ -27,7 +27,7 @@ import { Separator } from "../ui/separator"
 import {ThaiDatePicker} from "../date-picker"
 import { getUsers } from "../actions/user"
 import { getIsps } from "../actions/isp"
-import { postMail } from "../actions/mail"
+import { postMail, SaveDraft } from "../actions/group-file"
 import { BookCard } from "../court-order/book-card"
 
 const tempUsers = [
@@ -44,26 +44,19 @@ const formSchema = z.object({
 export function GroupForm({
   children,
   isps,
-  groupId
+  groupId,
+  fileData
 }: Readonly<{
   children?: React.ReactNode,
   isps: Isp[],
-  groupId?: number
+  groupId: number,
+  fileData: GroupFile[]
 }>) {
-    const user = useAppSelector(state => state.userAuth.user);
-    const [availableUsers, setAvailableUsers] = useState<string[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<Isp[]>([]);
-    const [usersOpen, setUsersOpen] = useState(false);
-    const [openSave, setOpenSave] = useState(false);
     const [date, setDate] = useState<Date>();
-    const [userRows, setUserRows] = useState(1);
-    const toUsersRef = useRef(null);
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-        subject: "",
-        },
-  })
+    const dispatch = useAppDispatch();
+    const documents = useAppSelector(state => state.groupUi.documents);
+    const groupFiles = useAppSelector(state => state.groupUi.groupFiles);
 
   useEffect(() => {
     const setSelectedUsersData = async() => {
@@ -78,41 +71,15 @@ export function GroupForm({
     setSelectedUsersData();
   }, []);
 
-  useEffect(() => {
-    // const userNames = ispUsers?.map((e: User) => e.username);
-    // setAvailableUsers(userNames?.filter((user: string) => !selectedUsers.includes(user)));
-  }, [selectedUsers]);
-  
-    async function onSubmit(values: z.infer<typeof formSchema>, event: any) {
-      const action = event.nativeEvent.submitter.value; 
-      if (!date) alert("Plese select date.");
-
-      try {
-        const allUsers = await getUsers();
-        const selectedIspNames = selectedUsers.map((isp: Isp) => isp.name);
-        const ispUserIds = allUsers.filter((user: User) =>
-          selectedIspNames.includes(user?.isp?.name)).map((user: User) => user.id);
-        console.log(values)
-        await postMail({
-          subject: values.subject,
-          description: values?.description?? '',
-          date,
-          toUserIds: ispUserIds,
-          groupId: groupId as number
-        });
-      } catch (error) {
-        
-      }
-    }
 
   return (
     <>
-      <BookCard ispData={isps}/>
+      <BookCard ispData={isps} groupId={groupId} fileData={fileData}/>
       { children }
       <div className='w-full flex justify-center items-center gap-x-4'>
-        <Button variant='outline' onClick={(evt) => {
+        <Button variant='outline' onClick={async(evt: any) => {
           evt.preventDefault();
-          setOpenSave(true);
+
         }}>
           บันทึกฉบับร่าง
         </Button>
@@ -120,30 +87,6 @@ export function GroupForm({
           ส่ง ISP 
         </Button>
       </div>
-      <Dialog open={openSave} onOpenChange={(open) => {
-        setOpenSave(open);
-      }}>
-      <form>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>บันทึกฉบับร่าง</DialogTitle>
-            <DialogDescription>
-              ตั้งชื่อฉบับบร่าง 
-            </DialogDescription>
-          </DialogHeader>
-            <div className="grid gap-3">
-              <Label htmlFor="name-1">ชื่อ</Label>
-              <Input id="name-1" name="name" />
-            </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">ยกเลิก</Button>
-            </DialogClose>
-            <Button type="submit">บันทึก</Button>
-          </DialogFooter>
-        </DialogContent>
-      </form>
-    </Dialog>
     </>
   );
 }

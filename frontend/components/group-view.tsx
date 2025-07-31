@@ -38,7 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { number } from "zod";
 import { MyPagination, type Paginor } from "./my-pagination";
-import { type Isp, User, type Group } from "@/lib/types";
+import { type Isp, User, type Group, type GroupFile } from "@/lib/types";
 import DocumentList from "./document-list/document-list";
 import DragDrop from "./document-list/drag-drop";
 import { GroupForm } from "./mail/group-form";
@@ -46,7 +46,7 @@ import { Date2Thai, Text2Thai } from "@/lib/utils";
 import {useState, useRef, useEffect} from 'react';
 
 export default function GroupView(
-  { groupData, isps}: { groupData: Group | null, isps: Isp[] }) {
+  { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
     const [title, setTitle] = useState(groupData?.name?? 'ไม่มีชื่อ');
     const [onTitleChange, setOnTitleChange] = useState(false);
     const titleRef = useRef<HTMLDivElement>(null);
@@ -55,8 +55,8 @@ export default function GroupView(
       if (titleRef?.current) {
         titleRef?.current?.focus();
         titleRef?.current?.select();
-      }
-    }, [onTitleChange]);
+    }}, [onTitleChange]);
+
   return (
     <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
       <div className="flex w-full justify-between">
@@ -85,7 +85,7 @@ export default function GroupView(
             }
             <div className="w-full text-start text-md">{Text2Thai(Date2Thai(groupData.createdAt))}</div>
           </div>
-        <GroupForm isps={isps} groupId={groupData?.id}>
+        <GroupForm isps={isps} groupId={(groupData as Group).id} fileData={fileData}>
           <DocumentList data={groupData?.documents} groupId={groupData?.id}/>
         </GroupForm>
         {/* <DragDrop /> */}
