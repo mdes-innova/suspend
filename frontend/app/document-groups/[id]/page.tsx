@@ -21,7 +21,7 @@ async function Components({ params, searchParams }: { params: any, searchParams:
 
     if (id === '-1') {
       try {
-        const createdUntitled = await postGroup('Untitled');
+        const createdUntitled = await postGroup('ไม่มีชื่อ');
         createdUntitled.createdAt = currentDate;
         groupData = createdUntitled;
       } catch (err1) {

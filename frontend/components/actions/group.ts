@@ -104,7 +104,7 @@ export async function postGroup(name: string) {
 }
 
 export async function addToGroup({ docIds, mode, groupId }: {
-    docIds: number[], mode: string, groupId: number
+    docIds: number[], mode?: string, groupId: number
 }) {
   const access = await getAccess();
 
@@ -193,7 +193,7 @@ export async function getUntilted() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/by-name/Untitled/`, {
+    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/by-name/ไม่มีชื่อ/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`

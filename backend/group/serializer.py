@@ -7,7 +7,7 @@ from document.serializer import DocumentSerializer
 from user.serializer import UserSerializer
 
 
-class GroupFileSerailizer(serializers.ModelSerializer):
+class GroupFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupFile
         fields = '__all__'

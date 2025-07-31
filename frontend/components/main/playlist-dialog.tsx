@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Plus } from "lucide-react";
 import { addToGroup, getGroups } from "../actions/group";
 import { getDocumentList } from "../actions/document";
+import { Datetime2Thai } from "@/lib/utils";
 
 type Playlist = {
   id: number,
@@ -42,7 +43,7 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
       <div className="p-4">
         {data.map((elem) => (
           <>
-            <div key={`playlist-${elem.id}`} className="text-sm cursor-pointer" 
+            <div key={`playlist-${elem.id}`} className="text-sm cursor-pointer w-full flex justify-between" 
             onClick={async(e: any) => {
               e.preventDefault();
               if (docIds && docIds.length){
@@ -64,7 +65,12 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
                 }
               }
             }}>
-              {elem.name}
+              <div>
+                {elem.name}
+              </div>
+              <div>
+                {Datetime2Thai(elem.createdAt)}
+              </div>
             </div>
             <Separator className="my-2" />
           </>
@@ -100,7 +106,7 @@ export default function PlaylistDialog() {
                 if (!open) dispatch(closeModal({ui: PLAYLISTUI.list}));
             }}
         >
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] min-w-[800px]">
                 <DialogHeader>
                 <DialogTitle>Select a playlist</DialogTitle>
                 </DialogHeader>

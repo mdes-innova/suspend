@@ -40,12 +40,6 @@ class Group(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'name'],
-                                    name='unique_group_per_user')
-        ]
-
 
 class GroupFile(models.Model):
     user = models.ForeignKey('User', on_delete=models.SET_NULL,

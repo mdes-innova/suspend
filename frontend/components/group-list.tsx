@@ -4,6 +4,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Card } from "./ui/card";
 import { useRouter } from "next/navigation";
 import { type Group } from "@/lib/types";
+import { Datetime2Thai } from "@/lib/utils";
 
 export default function GroupList({ data }: { data: Group[] }) {
     const router = useRouter();
@@ -27,11 +28,7 @@ export default function GroupList({ data }: { data: Group[] }) {
                             }}
                             >
                             <div className="flex-[1]">{idx}</div>
-                            <div className="flex-[2]">{(new Date(e.createdAt)).toLocaleString("en-GB", {
-                                    year: "numeric",
-                                    day: "2-digit",
-                                    month: "2-digit"
-                                })}</div>
+                            <div className="flex-[2]">{Datetime2Thai(e.createdAt)}</div>
                             <div className="flex-[4]">{e.name}</div>
                             <div className="flex-[2] ml-auto text-right">{e.documents.length}</div>
                             {/* <div className="w-10">{idx + 1}</div> */}

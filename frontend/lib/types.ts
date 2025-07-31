@@ -84,3 +84,11 @@ export type Mail = {
   ispFiles?: IspFile[],
   createdAt: string,
 }
+
+export type GroupFile = {
+  id?: number,
+  user?: User,
+  group?: Group,
+  file?: Blob,
+  originalFilename?: string
+}

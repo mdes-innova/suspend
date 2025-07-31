@@ -25,6 +25,7 @@ import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slic
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect} from 'react';
 import { getGroupList, getGroups } from "./actions/group";
+import { Datetime2Thai } from "@/lib/utils";
 
 const columns: ColumnDef<(Group | any)[]> = [
   {
@@ -52,11 +53,7 @@ const columns: ColumnDef<(Group | any)[]> = [
 
       return (
         <div>
-          {(new Date(createdAt)).toLocaleString("en-GB", {
-            year: "numeric",
-            day: "2-digit",
-            month: "2-digit"
-          })}
+          {Datetime2Thai(createdAt)}
           </div>
       );
     },
