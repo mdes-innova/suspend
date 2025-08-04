@@ -30,6 +30,7 @@ import { getIsps } from "../actions/isp"
 import { postMail, SaveDraft } from "../actions/group-file"
 import { BookCard } from "../court-order/book-card"
 import { SendMails } from "../actions/mail"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
 
 const tempUsers = [
     "user1", 'arnon songmoolnak', 'arnon', 'pok', 'arnonsongmoolnak arnonsongmoolnak'
@@ -53,12 +54,8 @@ export function GroupForm({
   groupId: number,
   fileData: GroupFile[]
 }>) {
-    const [selectedUsers, setSelectedUsers] = useState<Isp[]>([]);
-    const [date, setDate] = useState<Date>();
-    const dispatch = useAppDispatch();
-    const documents = useAppSelector(state => state.groupUi.documents);
-    const groupFiles = useAppSelector(state => state.groupUi.groupFiles);
-
+    const [speed, setSpeed] = useState('');
+    const [secret, setSecret] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
       defaultValues: {
@@ -129,42 +126,58 @@ export function GroupForm({
                 </FormItem>
                 )}
             />
-            <FormField
-                control={form.control}
-                name="speed"
-                render={({ field }) => (
-                <FormItem>                    
-                    <FormLabel className="inline-flex items-center gap-0.5">
-                        ชั้นความเร็ว<span className="text-red-400">*</span>
-                    </FormLabel>
-                    <FormControl>
-                    <Input {...field} onChange={(e) => {
-                        setErrorMessage('')
-                        field.onChange(e)
-                    }} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="secret"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel className="inline-flex items-center gap-0.5">
-                        ชั้นความลับ<span className="text-red-400">*</span>
-                    </FormLabel>
-                    <FormControl>
-                    <Input {...field} onChange={(e) => {
-                        setErrorMessage('')
-                        field.onChange(e)
-                    }} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
+            <div className="flex flex-col">
+              <br />
+                <Select
+                  name="speed"
+                  required
+                  value={speed}
+                  onValueChange={(value: string) => {
+                    setSpeed(value);
+                  }}
+                >
+                <SelectTrigger className="w-full" >
+                  <SelectValue placeholder="เลือก ชั้นความเร็ว" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    <SelectLabel>ชั้นความเร็ว</SelectLabel>
+                    <>
+                      {['ปกติ', 'ด่วน', 'ด่วนมาก', 'ด่วนที่สุด'].map((speed: string, idx: number) => (<SelectItem  
+                          key={`speed-${idx}`} value={`${idx}`}> {speed}
+                          </SelectItem>)
+                      )}
+                    </>
+                    </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col">
+              <br />
+                <Select
+                  name="secret"
+                  required
+                  value={secret}
+                  onValueChange={(value: string) => {
+                    setSecret(value);
+                  }}
+                >
+                <SelectTrigger className="w-full" >
+                  <SelectValue placeholder="เลือก ชั้นความลับ" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    <SelectLabel>ชั้นความลับ</SelectLabel>
+                    <>
+                      {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'].map((secret: string, idx: number) => (<SelectItem  
+                          key={`speed-${idx}`} value={`${idx}`}> {secret}
+                          </SelectItem>)
+                      )}
+                    </>
+                    </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
         </form>
     </Form>
       <BookCard ispData={isps} groupId={groupId} fileData={fileData}/>
