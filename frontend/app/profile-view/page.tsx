@@ -10,8 +10,8 @@ async function Components({ searchParams }: { searchParams: any }) {
   const cookieStore = await cookies();
   const refresh = cookieStore?.get("refresh")?.value;
   let access = cookieStore?.get("access")?.value;
-  const userUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/me/`;
-  const logUrl = `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/?ap=${ap?? 0}`;
+  const userUrl = `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/user/users/me/`;
+  const logUrl = `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/activity/activities/by-activity/?ap=${ap?? 0}`;
 
   try {
     const userData = await fetchWithAccessApp({

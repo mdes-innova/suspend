@@ -12,7 +12,7 @@ export async function PATCH(
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/${id}/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/group/groups/${id}/`,
             access,
             refresh,
             method: 'PATCH',

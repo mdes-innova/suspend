@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 
 export async function middleware(request: NextRequest) {
 
@@ -23,7 +22,9 @@ export async function middleware(request: NextRequest) {
 
   
   if (!access && refresh) {
-    const tokenRes = await fetch(`${process.env.BACKEND_URL}/token/refresh/`, {
+    const url = process.env.NODE_ENV === "development"?
+        process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+    const tokenRes = await fetch(`${url}/token/refresh/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

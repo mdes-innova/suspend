@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/group/groups/`,
             access,
             refresh,
             method: 'GET',
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/group/groups/`,
             access,
             refresh,
             method: 'POST',
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/group/groups/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/group/groups/`,
             access,
             refresh,
             method: 'PATCH',

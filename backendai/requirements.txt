@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-SQLAlchemy>=1.4
-asyncpg
-pydantic
-alembic  # if you're doing migrations
-python-dotenv  # if using .env for config (optional)
-python-jose

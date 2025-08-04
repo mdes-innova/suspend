@@ -2,7 +2,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.core.validators import FileExtensionValidator
+from django.core.validators import (
+    FileExtensionValidator, MinValueValidator, MaxValueValidator)
 import os
 from core.utils import group_file_path
 
@@ -26,15 +27,32 @@ class GroupDocument(models.Model):
 
 class Group(models.Model):
     name = models.CharField(max_length=200)
+    document_no = models.CharField(max_length=32, blank=True)
+    document_date = models.DateTimeField(null=True)
+    title = models.CharField(max_length=256, blank=True)
+    speed = models.IntegerField(
+         validators=[
+            MinValueValidator(0),
+            MaxValueValidator(3)
+            ],
+         null=True
+    )
+    secret = models.IntegerField(
+         validators=[
+            MinValueValidator(0),
+            MaxValueValidator(3)
+            ],
+         null=True
+    )
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
-        related_name='group_documents'
+        related_name='user_groups'
     )
     documents = models.ManyToManyField(
         'Document',
         through='GroupDocument',
-        related_name='groups'
+        related_name='document_groups'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,8 +79,6 @@ class GroupFile(models.Model):
         blank=True,
         null=True
     )
-    confirmed = models.BooleanField(default=False)
-    confirmed_hash = models.CharField(max_length=64, null=True, blank=True)
 
     class Meta:
         constraints = [

@@ -10,19 +10,18 @@ from rest_framework.permissions import AllowAny
 from core.permissions import IsActiveUser, IsAdminOrStaff
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-import hashlib, base64
 
 
 class GroupView(viewsets.ModelViewSet):
     """Group view."""
-    queryset = Group.objects.all().order_by('-id')
+    queryset = Group.objects.all().order_by('-modified_at')
     serializer_class = GroupSerializer
 
     def get_queryset(self):
         """Get group object data."""
         data = self.queryset.filter(user=self.request.user)
         return data
-    
+
     @action(
         detail=False,
         url_path='group-list',
@@ -167,9 +166,6 @@ class GroupFileView(viewsets.ModelViewSet):
                 original_filename=file_obj.name,
                 file=file_obj,
             )
-            h = hashlib.sha256((str(group_file.id)).encode()).digest()
-            group_file.confirmed_hash = base64.urlsafe_b64encode(h).decode()
-            group_file.save(update_fields=["confirmed_hash"])
             serializer_data = GroupFileSerializer(group_file).data
             return Response(serializer_data)
         except Exception as e:
@@ -202,23 +198,6 @@ class GroupFileView(viewsets.ModelViewSet):
             return Response({
                 'error': str(e)
             })
-
-    @action(
-        detail=False,
-        methods=['GET'],
-        url_path='confirm/(?P<hcode>[^/]+)'
-    )
-    def confirm(self, request, hcode=None):
-        if not hcode:
-            Response({'error': 'No hash code found.'})
-
-        try:
-            group_file = GroupFile.objects.get(confirmed_hash=hcode)
-            group_file.confirmed = True
-            group_file.save(update_fields=['confirmed'])
-            return Response(GroupFileSerializer(group_file).data)
-        except Exception as e:
-            return Response({'error': 'No group file found.'})
 
     def get_permissions(self):
         if self.action == 'confirm':

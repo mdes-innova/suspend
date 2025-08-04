@@ -1,0 +1,402 @@
+'use client';
+
+import { type Group } from "@/lib/types";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash2, FolderPen, Plus } from "lucide-react"
+import { Input } from "./ui/input";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import {useState} from 'react';
+import Link from 'next/link';
+import { NewPlaylistSheet } from "./main/new-playlist-sheet";
+import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import {useEffect, useRef} from 'react';
+import { getGroupList, getGroups, RemoveGroup, RenameGroup } from "./actions/group";
+import { Datetime2Thai } from "@/lib/utils";
+import {useRouter} from 'next/navigation';
+import { setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Label } from "./ui/label";
+
+const columns: ColumnDef<(Group | any)[]> = [
+  {
+    id: 'วันที่',
+    accessorKey: "modifiedAt",
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId));
+      const dateB = new Date(rowB.getValue(columnId));
+      return dateA.getTime() - dateB.getTime(); // ascending
+    },
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          วันที่
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { modifiedAt } = row.original;
+
+      return (
+        <div>
+          {Datetime2Thai(modifiedAt)}
+          </div>
+      );
+    },
+  },
+  {
+    id: 'ชื่อฉบับร่าง',
+    accessorKey: "name",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            ชื่อ
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { name } = row.original;
+      return (
+        <div>
+          {name?? '-'}
+          </div>
+      );
+    },
+  },
+  {
+    id: 'จำนวนคำสั่งศาล',
+    accessorKey: "documents",
+    sortingFn: (rowA, rowB, columnId) => {
+      const lenA = rowA.getValue(columnId).length;
+      const lenB = rowB.getValue(columnId).length;
+      return lenA - lenB; // ascending
+    },
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            จำนวนคำสั่งศาล
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { documents } = row.original;
+
+      return (
+        <div>
+          {documents?.length?? '-'}
+          </div>
+      );
+    },
+  }, {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const {id, name} = row.original;
+      return (
+        <GroupActions id={id} name={name}/>
+      );
+    },
+  },
+]
+
+function GroupActions({
+  id, name
+}: {
+  id: number,
+  name: string
+}) {
+  const dispatch = useAppDispatch();
+ const [uiOpen, setUiOpen] = useState(false);
+ const rename = useAppSelector(state => state.groupListUi.rename);
+ const nameRef = useRef(null);
+
+  return (
+    <div className="w-full text-right flex justify-end">
+      <DropdownMenu open={uiOpen} onOpenChange={setUiOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              setUiOpen(true);
+            }}
+          >
+            <MoreHorizontal size={24} />
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              dispatch(setRename(id));
+              dispatch(toggleDataChanged());
+              setUiOpen(false);
+            }}
+          >
+            <FolderPen /><span>เปลี่ยนชื่อ</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              await RemoveGroup(id);
+              dispatch(toggleDataChanged())
+              setUiOpen(false)
+            }}
+          >
+            <Trash2 /><span>ลบฉบับร่าง</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+        <Sheet open={rename != -1} onOpenChange={(open) => {
+            if (!open) dispatch(setRename(-1));
+        }}>
+            <SheetContent>
+                <SheetTitle>เปลี่ยนชื่อฉบับร่าง</SheetTitle>
+                <div className="grid flex-1 auto-rows-min gap-6 px-4">
+                    <div className="grid gap-3">
+                        <Label htmlFor="sheet-demo-name">ชื่อ</Label>
+                        <Input id="sheet-demo-name" defaultValue={name} ref={nameRef}/>
+                    </div>
+                </div>
+                <SheetFooter>
+                    <SheetClose asChild onClick={async(e: any) => {
+                        e.preventDefault();
+                        await RenameGroup({name: nameRef?.current?.value, groupId: rename});
+                        dispatch(toggleDataChanged());
+                        dispatch(setRename(-1));
+                    }}>
+                        <Button>บันทึก</Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                        <Button variant='destructive'>ยกเลิก</Button>
+                    </SheetClose>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+    </div>
+  );
+}
+
+export default function GroupTable() {
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [tableData, setTableData] = useState([]);
+    const dispatch = useAppDispatch();
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+        []
+    );
+    const [changeNameId, setChangeNameId] = useState(-1);
+    const dataChanged = useAppSelector(state=>state.groupListUi.dataChanged);
+    const [columnVisibility, setColumnVisibility] =
+        useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = useState({}) 
+    const table = useReactTable({
+        data: tableData,
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        state: {
+        sorting,
+        columnFilters,
+        columnVisibility,
+        rowSelection,
+        },
+  })
+
+  useEffect(() => {
+    const getData = async() => {
+      try {
+        const data = await getGroupList(); 
+        setTableData(data);
+      } catch (error) {
+        setTableData([]);
+      }
+    }
+
+    getData();
+  }, [dataChanged]);
+
+    return (
+    <div className="w-full">
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="ค้นหา ฉบับร่าง..."
+          value={(table.getColumn("ชื่อฉบับร่าง")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("ชื่อฉบับร่าง")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+        <Link href="document-groups/-1">
+          <Button variant="secondary" className="ml-1">สร้างแบบเร่งด่วน</Button>
+        </Link>
+        <div className="ml-auto flex items-center gap-x-1">
+          <Button variant="outline" onClick={(e: any) => {
+            e.preventDefault();
+            dispatch(openModal({ ui: PLAYLISTUI.new }));
+          }}><Plus /></Button>
+          <NewPlaylistSheet main={true}/>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                คอลัมน์ <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup, idx: number) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => {
+                return (
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                >
+                  {row.getVisibleCells().map((cell, idx) => (
+                    <TableCell key={cell.id}>
+                        {idx != row.getVisibleCells().length - 1? <Link href={`/document-groups/${row.original.id}`}>
+                            {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                            )}
+                            </Link>:
+                            <div>
+                              {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                              )}
+                            </div>
+                          }
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+    );
+}

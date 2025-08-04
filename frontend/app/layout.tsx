@@ -33,13 +33,13 @@ const notoThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Suspense",
+  title: "Suspend",
   description: "ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์",
   openGraph: {
     title: "Suspense",
     description: "Open Graph description",
     url: `${process.env.NEXT_PUBLIC_FRONTEND}`,
-    siteName: "Suspense",
+    siteName: "Suspend",
     images: [
       {
         url: "/og-image.png",

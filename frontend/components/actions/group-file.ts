@@ -8,7 +8,7 @@ import { addToGroup, RenameGroup } from "./group";
 export async function GetFilesFromGroup(gid: number) {
   const access = await getAccess();
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/group/files/by-group/${gid}/`, {
+    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/files/by-group/${gid}/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${access}`
@@ -35,7 +35,7 @@ export async function uploadFile({
   const access = await getAccess();
   
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/group/files/upload/`, {
+    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/files/upload/`, {
       method: "POST",
       body: formData,
       headers: {
@@ -58,7 +58,7 @@ export async function uploadFile({
 export async function downloadFile(fid: number) {
   const access = await getAccess();
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/group/files/download/${fid}/`, {
+    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/files/download/${fid}/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${access}`
@@ -80,7 +80,7 @@ export async function RemoveFile(fid: number) {
   const access = await getAccess();
   try {
     const res = await fetch(
-      `${process.env.BACKEND_URL}/group/files/${fid}/`,
+      `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/files/${fid}/`,
       {
         method: 'DELETE',
         headers: {
@@ -138,7 +138,7 @@ export async function Edit({
 
   try {
     const res = await fetch(
-      `${process.env.BACKEND_URL}/group/files/${fid}/edit/`,
+      `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/files/${fid}/edit/`,
       {
         method: 'PATCH',
         headers: {

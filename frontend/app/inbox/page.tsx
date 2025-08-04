@@ -11,7 +11,7 @@ async function getData() {
   const cookieStore = await cookies();
   const refresh = cookieStore?.get("refresh")?.value;
   const access = cookieStore?.get("access")?.value;
-  const url = `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/content/`;
+  const url = `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/document/documents/content/`;
 
   try {
     const data = await fetchWithAccessApp({

@@ -59,7 +59,7 @@ function handleFailure(res: Response, returnRes: ReturnRes) {
 
 export async function getAccessFromRefreshApi(refresh: string) {
   try {
-    const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+    const refreshRes = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/token/refresh/`, {
           method: 'POST',
           body: JSON.stringify(
               {
@@ -182,7 +182,7 @@ export async function fetchWithAccessApp({ access, refresh, url, method, params:
 
     if (!res.ok) {
       if (res.status === 401 && refresh) {
-        const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+        const refreshRes = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/token/refresh/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh }),

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     {
       method: 'POST',
       req,
-      url: `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/logout/`,
+      url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/activity/activities/by-activity/logout/`,
       access,
       refresh,
       params: {

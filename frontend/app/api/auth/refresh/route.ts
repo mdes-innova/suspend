@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
     try {
         const params = await req.json();
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`,{
+        const response = await axios.post(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/token/refresh/`,{
             refresh: params?.refresh
         });
         const { access } = response.data;

@@ -38,7 +38,7 @@ async function getData() {
         //                     <a className="w-6 h-6" href="#" onClick={
         //                         (event: React.MouseEvent<HTMLAnchorElement>) => {
         //                         event.preventDefault();
-        //                         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/` + 
+        //                         const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/` + 
         //                             `document/documents/${e.id}/file_download/`, {
         //                             method: 'GET',
         //                             credentials: 'include', // Required if using cookies for auth

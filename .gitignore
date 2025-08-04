@@ -1,9 +1,3 @@
-# === ai (FastAPI) ===
-ai/__pycache__/
-ai/*.pyc
-ai/*.pyo
-ai/*.log
-
 # === Python (Django - backend/) ===
 backend/__pycache__/
 backend/*.pyc
@@ -48,6 +42,7 @@ Dockerfile.dev
 docker-compose-dev.yml
 volumes/
 postgres_data/
+Dockerfile
 
 # === VS Code ===
 .vscode/

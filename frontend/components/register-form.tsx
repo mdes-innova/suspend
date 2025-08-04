@@ -37,13 +37,20 @@ import { registerUser } from "./actions/user";
 import { type UserRegister, type Isp } from "@/lib/types";
 
 const FormSchema = z.object({
-  // username: z.string().min(2, {
-  //   message: "Username must be at least 2 characters.",
-  // }),
-  username: z.string(),
-  password: z.string(),
-  confirmPassword: z.string()
-})
+  username: z.string().min(2, {
+    message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+  }),
+  password: z.string().min(6, {
+    message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+  }),
+  confirmPassword: z.string(),
+  email: z.string().email({
+    message: "กรุณากรอกอีเมลที่ถูกต้อง",
+  }),
+}).refine((data: any) => data.password === data.confirmPassword, {
+  path: ["confirmPassword"],
+  message: "รหัสผ่านไม่ตรงกัน",
+});
 
 export default function RegisterForm({ ispData }: { ispData: Isp }) {
 
@@ -58,7 +65,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
     defaultValues: {
       username: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      email: ""
     },
   })
 
@@ -77,6 +85,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
     const extendedValues: UserRegister = {
       username: values.username,
       password: values.password,
+      email: values.email,
       isStaff: userType === 'user'? false: true
     };
 
@@ -115,9 +124,6 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
                     field.onChange(e);
                   }}/>
                 </FormControl>
-                {/* <FormDescription>
-                  This is your public display name.
-                </FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
@@ -162,10 +168,12 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
               </FormItem>
             )}
           /> 
-            <RadioGroup value={userType} onValueChange={(value) => setUserType(value)}>
+            <RadioGroup value={userType} onValueChange={(value) => {
+                setUserType(value);
+              }}>
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="user" id="r1" />
-                    <Label htmlFor="r1">User</Label>
+                    <Label htmlFor="r1">User (ISP)</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="staff" id="r2" />
@@ -176,34 +184,58 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
                     <Label htmlFor="r3">Admin</Label>
                 </div>
             </RadioGroup>
-            <div>
-                <label htmlFor="isp" className="block text-sm font-medium text-foreground">
-                    ISP
-                </label>
-                <Select
-                name="isp-user"
-                required
-                value={isp}
-                onValueChange={(value: string) => {
-                  setIsp(value);
-                }}
-              >
-                <SelectTrigger className="w-full" >
-                  <SelectValue placeholder="เลือก ISP" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                    <SelectLabel>ISP</SelectLabel>
-                    <>
-                      {ispData.map((isp: Isp, idx: number) => (<SelectItem  
-                          key={`isp-${idx}`} value={`${isp.id}`}> {isp.name}
-                          </SelectItem>)
-                      )}
-                    </>
-                    </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+            {
+              userType === "user" &&
+              <div>
+                  <label htmlFor="isp" className="block text-sm font-medium text-foreground">
+                      ISP
+                  </label>
+                  <Select
+                  name="isp-user"
+                  required
+                  value={isp}
+                  onValueChange={(value: string) => {
+                    setIsp(value);
+                  }}
+                >
+                  <SelectTrigger className="w-full" >
+                    <SelectValue placeholder="เลือก ISP" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectGroup>
+                      <SelectLabel>ISP</SelectLabel>
+                      <>
+                        {ispData.map((isp: Isp, idx: number) => (<SelectItem  
+                            key={`isp-${idx}`} value={`${isp.id}`}> {isp.name}
+                            </SelectItem>)
+                        )}
+                      </>
+                      </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            }
+             {
+              userType === "user" &&
+              <div>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="isp@example.com" {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setErrorMessage('');
+                          field.onChange(e);
+                        }}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            }
           <Button type="submit">Register</Button>
         </form>
       </Form>

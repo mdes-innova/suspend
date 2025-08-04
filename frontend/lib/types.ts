@@ -26,6 +26,7 @@ export type Document = {
 export type Group = {
     id: number,
     createdAt: string,
+    modifiedAt: string,
     name: string,
     documents: Document[],
     user: User
@@ -61,6 +62,7 @@ export type Isp = {
 export type UserRegister = {
   username: string,
   password: string,
+  email?: string,
   isStaff: boolean,
   ispId?: number
 }

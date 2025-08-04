@@ -7,7 +7,7 @@ export async function getGroups() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -31,7 +31,7 @@ export async function getGroupList() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/group-list/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/group-list/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -55,7 +55,7 @@ export async function getGroup(groupId: number) {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/${groupId}/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -79,7 +79,7 @@ export async function postGroup(name: string) {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'POST',
       body: JSON.stringify({
         name
@@ -103,13 +103,36 @@ export async function postGroup(name: string) {
   }
 }
 
+export async function RemoveGroup(groupId: number) {
+  const access = await getAccess();
+
+  try {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
+      method: 'DELETE',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Remove a group fail.');
+      }
+
+      return {data: 'Deleted.'};
+  } catch (error) {
+      throw error; 
+  }
+}
+
 export async function addToGroup({ docIds, mode, groupId }: {
     docIds: number[], mode?: string, groupId: number
 }) {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/${groupId}/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
         documentIds: docIds,
@@ -140,7 +163,7 @@ export async function RenameGroup({ name, groupId }: {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/${groupId}/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
         name
@@ -170,7 +193,7 @@ export async function removeDocumentFromGroup({ docIds, groupId }: {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/${groupId}/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
         documentIds: docIds,
@@ -199,7 +222,7 @@ export async function getGroupFromDocument(docId: number) {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/by-document/${docId}/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/by-document/${docId}/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -223,7 +246,7 @@ export async function getUntilted() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/group/groups/by-name/ไม่มีชื่อ/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/groups/by-name/ไม่มีชื่อ/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`

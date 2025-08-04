@@ -2,7 +2,7 @@ import { getAccessFromRefreshApi } from "@/lib/utils";
 
 import { NextRequest, NextResponse } from "next/server";
 
-const getDownloadUrl = (docId: number) => `${process.env.NEXT_PUBLIC_BACKEND}` + 
+const getDownloadUrl = (docId: number) => `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}` + 
     `/api/document/documents/${docId}/file_download/`;
 
 export async function POST(req: NextRequest) {

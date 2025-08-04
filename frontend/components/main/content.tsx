@@ -254,7 +254,7 @@ export const columns: ColumnDef<DocumentType | any>[] = [
     cell: ({ row }) => {
       const { id, active } = row.original;
       return (
-        <ActionDropdown docId={ id } active={active}>
+        <ActionDropdown docId={ id } active={active} className="flex text-right w-full justify-end bg-red-400">
           <MoreHorizontal />
         </ActionDropdown>
       )

@@ -2,79 +2,68 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator
+from django.utils import timezone
 import os
 
 from core.utils import mail_file_path
 
 
-class FromUser(models.Model):
-    user = models.OneToOneField(
-            "User",
-            on_delete=models.CASCADE
-        )
-
-
-class MailDocument(models.Model):
-    mail = models.ForeignKey('Mail', on_delete=models.CASCADE)
-    document = models.OneToOneField('Document', on_delete=models.CASCADE)
-    user = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.CASCADE,
-        default=None,
-        null=True
-        )
-
-    def save(self, *args, **kwargs):
-        if not self.user:
-            self.user = self.mail.user
-
-        super().save(*args, **kwargs)
+class MailStatus(models.TextChoices):
+    SUCCESSFUL = "successful", "Successful"
+    FAIL = "fail", "Fail"
+    IDLE = "idle", "Idle"
 
 
 class Mail(models.Model):
     subject = models.CharField(max_length=512)
-    date = models.DateField(null=True)
-    user = models.ForeignKey(
-            "User",
-            on_delete=models.SET_NULL,
-            null=True
-        )
-    documents = models.ManyToManyField(
-        'Document',
-        through='MailDocument',
+    datetime = models.DateTimeField(default=timezone.now)
+
+    group = models.ForeignKey(
+        "Group",
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='mails'
     )
-    description = models.TextField(blank=True, null=True)
-    is_draft = models.BooleanField(default=True)
+    sender = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='sent_mails'
+    )
+    receiver = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='received_mails'
+    )
+    group_file = models.ForeignKey(
+        "GroupFile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='mails'
+    )
+    documents = models.ManyToManyField(
+        "Document",
+        related_name='mails'
+    )
+
+    confirmed = models.BooleanField(default=False)
+    confirmed_hash = models.CharField(
+        max_length=64,
+        db_index=True,
+        unique=True,
+        null=True,
+        blank=True
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=MailStatus.choices,
+        default=MailStatus.IDLE
+    )
+    description = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
-
-class IspFile(models.Model):
-    user = models.ForeignKey('User', on_delete=models.SET_NULL,
-                             null=True, default=None)
-    mail = models.ForeignKey('Mail', on_delete=models.SET_NULL,
-                             null=True, default=None,
-                             related_name='isp_files')
-    file = models.FileField(
-        upload_to=mail_file_path,
-        validators=[
-            FileExtensionValidator(allowed_extensions=['pdf'])
-        ],
-        blank=True,
-        null=True
-    )
-
-    original_filename = models.CharField(
-        max_length=512,
-        blank=True,
-        null=True
-    )
-
-    def save(self, *args, **kwargs):
-        # Only set original_filename if a new file is uploaded
-        if self.file and not self.original_filename:
-            self.original_filename = os.path.basename(self.file.name)
-        super().save(*args, **kwargs)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return f"{self.subject} ({self.date})"

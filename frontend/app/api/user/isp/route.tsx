@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
 
     const userData = await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/user/users/`,
             access,
             refresh,
             method: 'GET',

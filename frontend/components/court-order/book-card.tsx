@@ -46,53 +46,39 @@ import {
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
 import { GroupFile, type Isp } from "@/lib/types";
 import { useAppDispatch } from "../store/hooks";
-import { setGroupFiles } from "../store/features/group-ui-slice";
-import { downloadFile, Edit, GetFilesFromGroup, uploadFile } from "../actions/group-file";
-
-type TableDataType = {
-  fileId: number,
-  filename: string,
-  isp: string,
-}
+import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
 
 export function BookCard({ispData, fileData, groupId}:
   {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
-  const [ispSelected, setIspSelected] = useState('');
-  const [selectedIsps, setSelectedIsps] = useState<string[]>([]);
-  const [tableData, setTableData] = useState<TableDataType[]>(
-    fileData.length != 0? fileData.map((e: GroupFile) => {
-      return ({
-        fileId: e.id,
-        filename: e.originalFilename,
-        isp: `${e.isp}`
-      });
-    }): []
-  );
+  const [ispSelected, setIspSelected] = useState<Isp | null>(null);
+  const [selectedIsps, setSelectedIsps] = useState<Isp[]>([]);
+  const [tableData, setTableData] = useState<GroupFile[]>(fileData);
   const [openNew, setOpenNew] = useState<number | null>(null);
   const [filename, setFilename] = useState<string | null>(null);
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
       setFilename(null);
-      setIspSelected('');
-      const ispList = tableData?.map((e: TableDataType) => e.isp);
+      setIspSelected(null);
+      const ispList = tableData?.map((e: GroupFile) => e.isp);
       setSelectedIsps(ispList?? []);
     } else {
-      const currentIsp = (tableData as TableDataType[])[openNew].isp;
-      const currentFile = (tableData as TableDataType[])[openNew].filename;
-      // const currentIsp = `${ispData[currentIspIndex].ispId}`
+      const currentRow = tableData?.[openNew];
+      if (!currentRow) return;
+      const currentIsp: Isp = currentRow.isp;
+      console.log(currentRow)
+      const currentFile: string = currentRow.originalFilename;
       setIspSelected(currentIsp);
-      setSelectedIsps((prev: string[]) => {
-        const updated = [...prev];
-        return updated.filter((isp: string) => isp != currentIsp);
+      setSelectedIsps((prev: Isp[]) => {
+        return prev.filter((isp) => isp.id !== currentIsp.id);
       });
       setFilename(currentFile);
     }
   }, [openNew])
 
   useEffect(() => {
-    const ispList = tableData?.map((e: TableDataType) => e.isp);
+    const ispList = tableData?.map((e: GroupFile) => e.isp);
     setSelectedIsps(ispList?? []);
 
   }, [tableData]);
@@ -127,7 +113,7 @@ export function BookCard({ispData, fileData, groupId}:
             <TableBody>
                 {tableData.length > 0 ? (
                   <TableData tableData={tableData} ispData={ispData} setTableData={setTableData} setOpenNew={setOpenNew} 
-                    setIspSelected={setIspSelected} setSelectedIsps={setSelectedIsps}
+                    setIspSelected={setIspSelected} setSelectedIsps={setSelectedIsps} groupId={groupId}
                   />
                 ) : (
                   <TableRow>
@@ -144,27 +130,27 @@ export function BookCard({ispData, fileData, groupId}:
   )
 }
 
-function TableData({tableData, setTableData, ispData, setOpenNew, setIspSelected, setSelectedIsps}:
-  {tableData: any[], setTableData: React.Dispatch<React.SetStateAction<TableDataType[]>>,
+function TableData({groupId, tableData, setTableData, ispData, setOpenNew, setIspSelected, setSelectedIsps}:
+  {
+    tableData: any[], setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>,
     ispData: Isp[], setOpenNew: React.Dispatch<React.SetStateAction<number | null>>, 
-    setIspSelected: React.Dispatch<React.SetStateAction<string>>,
+    setIspSelected: React.Dispatch<React.SetStateAction<string>>, groupId: number,
     setSelectedIsps: React.Dispatch<React.SetStateAction<string[]>>,
   }) {
   return (
     <>
       {
-        tableData.map((e: any, idx: number) => {
-          const isp = (ispData.filter((isp: Isp) => isp.id === parseInt(e.isp)))[0]
+        tableData.map((e: GroupFile, idx: number) => {
           return <TableRow key={`table-cell-${idx}`}>
             <TableCell className='w-[20px]'>{idx + 1}</TableCell>
             <TableCell className='max-w-[400px]'>
               <div className='w-full h-full flex'>
               <ArrowDownToLine size={16} className='cursor-pointer' onClick={async(evt: any) => {
                 evt.preventDefault();
-                const fileName = (e as TableDataType).filename;
-                const fileId = (e as TableDataType).fileId;
+                const fileName = e.originalFilename;
+                const fileId = e.id;
                 try {
-                  const blob = await downloadFile(fileId);
+                  const blob = await downloadFile(fileId as number);
                   const url = window.URL.createObjectURL(blob);
                   const link = document.createElement("a");
                   link.href = url;
@@ -176,35 +162,34 @@ function TableData({tableData, setTableData, ispData, setOpenNew, setIspSelected
                 } catch (error) {
                  console.error(error) 
                 }
-                // const x = await downloadPdf(fileId);
-                // if (!response.ok) throw new Error("Download failed");
               }}/>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <p className='w-full truncate'>
-                    {e.filename}
+                    {e.originalFilename}
                   </p>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{e.filename}</p>
+                  <p>{e.originalFilename}</p>
                 </TooltipContent>
               </Tooltip>
 
               </div>
             </TableCell>
-            <TableCell className='w-[200px]'>{isp?.name?? '-'}</TableCell>
+            <TableCell className='w-[200px]'>{e.isp.name?? '-'}</TableCell>
             <TableCell className='text-right  flex justify-end w-full px-0'>
               <div className="flex gap-x-1">
                 <FilePenLine size={24} className='cursor-pointer' onClick={(evt: any) => {
                   evt.preventDefault();
                   setOpenNew(idx);
                 }}/>
-                <CircleX className='hover:text-red-400' size={24} onClick={(e: any) => {
-                  e.preventDefault();
-                  setTableData((prev: TableDataType[]) => 
-                    prev.filter((_, tableIdx) => tableIdx !== idx)
-                  );
-                }}/>
+                <CircleX className='hover:text-red-400' size={24} onClick={async(evt: any) => {
+                  evt.preventDefault();
+                  await RemoveFile(e.id as number);
+                  const newData = await GetFilesFromGroup(groupId);
+                  setTableData(newData);
+                }}
+                />
               </div>
             </TableCell>
           </TableRow>
@@ -221,16 +206,16 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
     idx?: number,
     openNew: number | null,
     setOpenNew: React.Dispatch<React.SetStateAction<number | null>>,
-    ispSelected: string,
-    setIspSelected: React.Dispatch<React.SetStateAction<string>>,
+    ispSelected: Isp,
+    setIspSelected: React.Dispatch<React.SetStateAction<Isp>>,
     ispData: Isp[],
-    selectedIsps: string[],
-    setSelectedIsps: React.Dispatch<React.SetStateAction<string[]>>,
+    selectedIsps: Isp[],
+    setSelectedIsps: React.Dispatch<React.SetStateAction<Isp[]>>,
     filename: string,
     setFilename: React.Dispatch<React.SetStateAction<string>>,
     uploadRef: React.RefObject<HTMLInputElement>,
-    tableData: TableDataType[],
-    setTableData: React.Dispatch<React.SetStateAction<TableDataType[]>>
+    tableData: GroupFile[],
+    setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>
   }) {
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
@@ -249,9 +234,9 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                      <Select
                       name="isp-user"
                       required
-                      value={ispSelected}
+                      value={ispSelected != null? `${ispSelected.id}`: ''}
                       onValueChange={(value: string) => {
-                        setIspSelected(value);
+                        setIspSelected(ispData.find((e: Isp) => e.id === parseInt(value)));
                       }}
                     >
                       <SelectTrigger className="w-full" >
@@ -262,7 +247,7 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                           <SelectLabel>ISP</SelectLabel>
                           <>
                             {ispData.map((e: Isp, idx: number) => {
-                              const isSelected = selectedIsps.includes(`${e.id}`);
+                              const isSelected = selectedIsps.map((ee: Isp) => `${ee.id}`).includes(`${e.id}`);
                               return (<SelectItem disabled={isSelected? true: false}
                               className={isSelected? 'flex items-center justify-start': ''}
                                key={`isp-${idx}`} value={`${e.id}`}>
@@ -343,19 +328,13 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
 
                       const formData = new FormData();
                       formData.append("file", files[0]);
-                      formData.append("isp", ispSelected);
+                      formData.append("isp", `${ispSelected.id}`);
                       formData.append("group", `${groupId}`);
-                      const data = await uploadFile({
+                      await uploadFile({
                         formData
                       });
-                      const newData = await GetFilesFromGroup(data.group);
-                      setTableData(newData.map((e: GroupFile) => {
-                        return ({
-                          fileId: e.id,
-                          filename: e.originalFilename,
-                          isp: `${e.isp}`
-                        });
-                      }));
+                      const newData = await GetFilesFromGroup(groupId);
+                      setTableData(newData);
                       setOpenNew(null);
 
                     }}>เพิ่ม</Button>
@@ -370,13 +349,13 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                         if (ispSelected != tableData[openNew].isp) {
                           await Edit({
                             fid: tableData[openNew].fileId,
-                            isp: ispSelected
+                            isp: `${ispSelected.id}`
                           });
                         }
                       } else {
                         await Edit({
-                          fid: tableData[openNew].fileId,
-                          isp: ispSelected != tableData[openNew].isp? ispSelected: undefined,
+                          fid: tableData[openNew]?.id,
+                          isp: ispSelected.id != tableData[openNew]?.isp.id? `${ispSelected.id}`: undefined,
                           file: files[0]
                         });
                         // formData.append("file", files[0]);
@@ -395,13 +374,7 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                         // });
                       }
                       const newData = await GetFilesFromGroup(groupId);
-                      setTableData(newData.map((e: GroupFile) => {
-                        return ({
-                          fileId: e.id,
-                          filename: e.originalFilename,
-                          isp: `${e.isp}`
-                        });
-                      }));
+                      setTableData(newData);
                       setOpenNew(null);
                     }}>แก้ไข</Button>
                   }

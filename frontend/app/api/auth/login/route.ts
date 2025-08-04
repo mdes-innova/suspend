@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const forwardedFor = headersList.get('x-forwarded-for') || '';
     const ip = forwardedFor.split(',')[0];
     params['ipAddress'] = ip;
-    const resData = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/`, params);
+    const resData = await axios.post(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/token/`, params);
     let { access } = resData.data;
     let { refresh } = resData.data;
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     try {
     if (access) {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/login/`,
+        `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/activity/activities/by-activity/login/`,
         {
           method: 'POST',
           headers: {
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'Cannot log before logging in.' }, {
           status: 404})
     } else if (!access && refresh) {
-        const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+        const refreshRes = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/token/refresh/`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         access = (await refreshRes.json()).access;
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/login/`,
+          `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/activity/activities/by-activity/login/`,
           {
             method: 'POST',
             headers: {

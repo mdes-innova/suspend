@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/document/documents/${id}/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/document/documents/${id}/`,
             access,
             refresh,
             method: 'GET',

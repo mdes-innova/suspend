@@ -5,7 +5,6 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.core.validators import RegexValidator
 from core.models.isp import ISP
-from django.core.cache import cache
 
 
 username_validator = RegexValidator(
@@ -22,8 +21,6 @@ class UserManager(BaseUserManager):
         user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.full_clean()
-        if user.is_staff:
-            cache.set(f'selected-documents-user-{username}', {})
         user.save(using=self._db)
         return user
 
@@ -52,6 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    email = models.EmailField(blank=True, null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

@@ -7,7 +7,7 @@ export async function getCurrentDate() {
     const access = await getAccess();
 
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/current-time/`, {
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/current-time/`, {
         headers: {
           Authorization: `Bearer ${access}`
         },

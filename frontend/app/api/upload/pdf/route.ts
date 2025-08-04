@@ -3,7 +3,7 @@ import axios from "axios";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-const getUploadUrl = (docId: number) => `${process.env.NEXT_PUBLIC_BACKEND}` + 
+const getUploadUrl = (docId: number) => `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}` + 
     `/api/document/documents/${docId}/file-upload/`;
 
 export async function POST(req: NextRequest) {

@@ -4,7 +4,7 @@ async function Component(params: any) {
    const id = await params; 
 
    const res = await fetch(
-    `${process.env.BACKEND_URL}/group/files/confirm/${id}/`
+    `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/group/files/confirm/${id}/`
    );
 
    if (!res.ok) return (

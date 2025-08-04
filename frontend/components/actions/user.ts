@@ -9,7 +9,7 @@ export async function getProfile() {
     const access = await getAccess();
 
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/user/users/me/`, {
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/user/users/me/`, {
         headers: {
           Authorization: `Bearer ${access}`
         },
@@ -31,7 +31,9 @@ export async function getUsers() {
     const access = await getAccess();
 
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/user/users/`, {
+        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+        console.log(url)
+        const res = await fetch(`${url}/user/users/`, {
         headers: {
           Authorization: `Bearer ${access}`
         },
@@ -52,7 +54,7 @@ export async function getUsers() {
 export async function registerUser(userRegisterParams: UserRegister) {
    const access = await getAccess(); 
     try {
-        const res = await fetch(`${process.env.BACKEND_URL}/user/users/`, {
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/user/users/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${access}`,
@@ -83,10 +85,13 @@ export async function loginUser({
     password: string
 }) {
     try {
+        const cookieStore = await cookies()
         const headersList = await headers();
         const forwardedFor = headersList.get('x-forwarded-for') || '';
         const ip = forwardedFor.split(',')[0];
-        const res = await fetch(`${process.env.BACKEND_URL}/token/`, {
+        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+        console.log(url)
+        const res = await fetch(`${url}/token/`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json"
@@ -105,7 +110,7 @@ export async function loginUser({
         const {access} = data;
         const {refresh } = data;
 
-        cookies().set({
+        cookieStore.set({
             name: 'access',
             value: access,
             httpOnly: true,
@@ -115,7 +120,7 @@ export async function loginUser({
             maxAge: 60 * 5,  // 5 minutes
         });
 
-        cookies().set({
+        cookieStore.set({
             name: 'refresh',
             value: refresh,
             httpOnly: true,

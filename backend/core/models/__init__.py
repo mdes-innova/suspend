@@ -7,6 +7,6 @@ from .url import Url
 from .isp import ISP
 from .group import Group, GroupDocument, GroupFile
 from .activity import Activity, ActivityType
-from .mail import Mail, IspFile, MailDocument
+from .mail import Mail
 from .kind import Kind
 from .request_log import RequestLog

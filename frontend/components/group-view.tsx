@@ -44,18 +44,34 @@ import DragDrop from "./document-list/drag-drop";
 import { GroupForm } from "./mail/group-form";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
 import {useState, useRef, useEffect} from 'react';
+import { RenameGroup } from "./actions/group";
+import { useAppDispatch } from "./store/hooks";
+import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 
 export default function GroupView(
   { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
     const [title, setTitle] = useState(groupData?.name?? 'ไม่มีชื่อ');
     const [onTitleChange, setOnTitleChange] = useState(false);
     const titleRef = useRef<HTMLDivElement>(null);
+    const dispatch = useAppDispatch();
 
     useEffect(() => {
       if (titleRef?.current) {
         titleRef?.current?.focus();
         titleRef?.current?.select();
     }}, [onTitleChange]);
+
+    useEffect(() => {
+      const updateName = async(name: string) => {
+        await RenameGroup({
+          groupId: groupData?.id as number,
+          name
+        });
+      };
+
+      updateName(title);
+      dispatch(toggleDataChanged());
+    }, [title]);
 
   return (
     <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
@@ -75,13 +91,15 @@ export default function GroupView(
                   setTitle(titleRef?.current?.value);
                   setOnTitleChange(false);
                 }}
+                onKeyDown={(evt: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (evt.key === "Enter") {
+                    setTitle(titleRef?.current?.value);
+                    setOnTitleChange(false);
+                    evt.currentTarget.blur();
+                  }
+                }
+              }
               />
-              // <div className="w-full text-start text-2xl font-bold" ref={titleRef}
-              //   onDoubleClick={(evt: any) => {
-              //     evt.preventDefault();
-              //     setOnTitleChange(true);
-              //   }}
-              // >{title}</div>
             }
             <div className="w-full text-start text-md">{Text2Thai(Date2Thai(groupData.createdAt))}</div>
           </div>

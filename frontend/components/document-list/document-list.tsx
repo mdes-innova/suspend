@@ -27,7 +27,7 @@ import {closeModal, LOADINGUI, openModal} from '../store/features/loading-ui-sli
 import { getContent, getDocumentList } from "../actions/document";
 import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
-import { setDocuments } from "../store/features/group-ui-slice";
+import { toggleDataChanged } from "../store/features/group-list-ui-slice";
 
 export default function DocumentList({ data, groupId }: { data: DocumentType[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -52,7 +52,15 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
     }, [docData]);
 
     useEffect(() => {
-        dispatch(setDocuments(columns));
+        const updateData = async() => {
+            await addToGroup({
+                docIds: columns.map((e: Document) => e.id),
+                groupId: groupId as number
+            });
+        }
+
+        updateData();
+        dispatch(toggleDataChanged());
     }, [columns]);
 
     useEffect(() => {

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     try {
     if (access) {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/activities/by-activity/register/`,
+        `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/activity/activities/by-activity/register/`,
         {
           method: 'POST',
           headers: {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'Cannot log before register new user.' }, {
           status: 404})
     } else if (!access && refresh) {
-        const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND}/api/token/refresh/`, {
+        const refreshRes = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/token/refresh/`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         access = (await refreshRes.json()).access;
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND}/api/activity/by-activity/register/activity/`,
+          `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/activity/by-activity/register/activity/`,
           {
             method: 'POST',
             headers: {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     return await fetchWithAccessApi(
         {
-            url: `${process.env.NEXT_PUBLIC_BACKEND}/api/user/users/`,
+            url: `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/api/user/users/`,
             access,
             refresh,
             method: 'POST',

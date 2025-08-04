@@ -12,7 +12,7 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - "6379:6379"  # Optional: expose Redis port if you want to connect from host
+      - "6379:6379"
     networks:
       - mdes_network
 
@@ -67,7 +67,7 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend:/app
-      - /app/node_modules # Don't override node_modules inside container
+      - /app/node_modules
     environment:
       - NODE_ENV=development
     networks:
