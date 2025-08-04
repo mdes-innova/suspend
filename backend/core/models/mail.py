@@ -1,7 +1,8 @@
 """Mail model class for category app."""
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import FileExtensionValidator
+from django.core.validators import (MinValueValidator,
+                                    MaxValueValidator)
 from django.utils import timezone
 import os
 
@@ -16,7 +17,23 @@ class MailStatus(models.TextChoices):
 
 class Mail(models.Model):
     subject = models.CharField(max_length=512)
-    datetime = models.DateTimeField(default=timezone.now)
+    datetime = models.DateTimeField(null=True)
+    document_no = models.CharField(max_length=32, blank=True)
+    document_date = models.DateTimeField(null=True)
+    speed = models.IntegerField(
+         validators=[
+            MinValueValidator(0),
+            MaxValueValidator(3)
+            ],
+         null=True
+    )
+    secret = models.IntegerField(
+         validators=[
+            MinValueValidator(0),
+            MaxValueValidator(3)
+            ],
+         null=True
+    )
 
     group = models.ForeignKey(
         "Group",
@@ -61,7 +78,6 @@ class Mail(models.Model):
         choices=MailStatus.choices,
         default=MailStatus.IDLE
     )
-    description = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 

@@ -36,10 +36,6 @@ class MailSerializer(serializers.ModelSerializer):
         read_only=True,
         many=True
     )
-    description = serializers.CharField(
-        allow_blank=True,
-        required=False
-    )
     confirmed = serializers.BooleanField(
         read_only=True
     )
@@ -49,14 +45,15 @@ class MailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mail
-        fields = ['id', 'group_id', 'group', 'sender',
+        fields = ['id', 'group_id', 'group', 'sender', 'document_no',
+                  'document_date', 'speed', 'secret',
                   'receiver_id', 'receiver', 'group_file_id', 'group_file',
-                  'documents', 'subject', 'description',
+                  'documents', 'subject', 'document_no', 'status',
                   'datetime', 'confirmed', 'confirmed_hash', 'created_at',
                   'modified_at']
         read_only_fields = ['id', 'group', 'sender', 'receiver', 'group_file',
                             'documents', 'created_at', 'modified_at', 'confirmed',
-                            'confirmed_hash']
+                            'confirmed_hash', 'status', 'datetime']
 
     def create(self, validated_data):
         user = self.context['request'].user

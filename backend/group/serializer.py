@@ -31,6 +31,11 @@ class GroupSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    document_no = serializers.CharField(allow_blank=True)
+    document_date = serializers.DateTimeField(allow_null=True)
+    title = serializers.CharField(allow_blank=True)
+    speed = serializers.IntegerField(allow_null=True)
+    secret = serializers.IntegerField(allow_null=True)
     documents = DocumentSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
 
@@ -38,6 +43,7 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = [
             'id', 'name', 'documents', 'document_ids', 'user',
+            'document_no', 'document_date', 'title', 'speed', 'secret',
             'created_at', 'modified_at'
             ]
         read_only_fields = ['documents', 'user', 'created_at', 'modified_at']
