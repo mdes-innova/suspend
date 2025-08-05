@@ -259,7 +259,175 @@ export async function getUntilted() {
       throw new Error('Get Untitled group fail.');
       }
       const content = await res.json();
-      console.log(content)
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function setDocumentNo({
+  groupId,
+  documentNo
+}: {
+  groupId: number,
+  documentNo: string
+}) {
+  const access = await getAccess();
+
+  try {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        documentNo
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update documentNo for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function setDocumentDate({
+  groupId,
+  documentDate 
+}: {
+  groupId: number,
+  documentDate: string
+}) {
+  const access = await getAccess();
+
+  try {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+       documentDate 
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update documentDate for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function setDocumentTitle({
+  groupId,
+  title
+}: {
+  groupId: number,
+  title: string
+}) {
+  const access = await getAccess();
+
+  try {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        title
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update title for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function setDocumentSpeed({
+  groupId,
+  speed
+}: {
+  groupId: number,
+  speed: number
+}) {
+  const access = await getAccess();
+
+  try {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        speed
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update speed for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+export async function setDocumentSecret({
+  groupId,
+  secret
+}: {
+  groupId: number,
+  secret: number
+}) {
+  const access = await getAccess();
+
+  try {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        secret
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update secret for a group fail.');
+      }
+      const content = await res.json();
       return content;
   } catch (error) {
       throw error; 

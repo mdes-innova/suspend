@@ -29,7 +29,12 @@ export type Group = {
     modifiedAt: string,
     name: string,
     documents: Document[],
-    user: User
+    user: User,
+    title: string,
+    documentNo: string,
+    documentDate?: string,
+    speed?: number,
+    secret?: number
 }
 
 export type User = {
@@ -77,14 +82,19 @@ export type IspFile = {
 export type Mail = {
   id: number,
   subject: string,
-  date: string,
-  user: User,
-  toUsers?: User[],
+  datetime?: string,
+  receiver: User,
+  sender: User,
   group?: Group,
-  description?: string,
-  isDraft: boolean,
-  ispFiles?: IspFile[],
+  groupFiles?: GroupFile[],
   createdAt: string,
+  confirmed?: boolean,
+  confirmedHash?: string,
+  documentNo: string,
+  documentDate?: string,
+  speed?: number,
+  secret?: number
+
 }
 
 export type GroupFile = {

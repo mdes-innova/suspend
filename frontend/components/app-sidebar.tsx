@@ -21,7 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAppSelector } from "./store/hooks";
 import Link from 'next/link';
 
-const HIDDEN_ROUTES = ['/login', '/secret', '/no-navbar'];
+const HIDDEN_ROUTES = ['login', 'secret', 'no-navbar', 'confirm'];
 
 // Menu items.
 const items = [
@@ -54,10 +54,23 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const pathId = (pathname.split('/'))[1];
   const user = useAppSelector(state => state.userAuth.user);
+
   if (HIDDEN_ROUTES.includes(pathname)) {
       return null;
   }
+  if (HIDDEN_ROUTES.map(elem => pathId.includes(elem)).some(Boolean) ||
+    pathname.includes('mail/confirm')) {
+      let dom = undefined;
+      if (document)
+        dom = document.getElementById('app-bar-trigger');
+      if (dom) dom.remove();
+    return (
+        <></>
+      );
+  }
+
   return (
         user != null || user != undefined?
         <Sidebar>

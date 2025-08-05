@@ -9,12 +9,13 @@ import { clearSelections, getContent } from '@/components/actions/document';
 import { AuthError } from '@/components/exceptions/auth';
 import { getGroups } from '@/components/actions/group';
 import MailTable from '@/components/mail-table';
-import { getMails } from '@/components/actions/group-file';
+import { getMails } from '@/components/actions/mail';
+import { type User, type Mail } from '@/lib/types';
+import { getProfile } from '@/components/actions/user';
 
 async function getData() {
   try {
-    const data = await getMails();
-    console.log(data)
+    const data: User = await getProfile();
     return data;
   } catch (error) {
     if (error instanceof AuthError) redirect('/login') ;
@@ -23,10 +24,10 @@ async function getData() {
 }
 
 async function PlaylistContent() {
-  const data = await getData();
+  const user = await getData();
   return (
     <div className='w-full h-full flex flex-col px-2'>
-      <MailTable data={data}/>
+      <MailTable user={user}/>
     </div>
   );
 }

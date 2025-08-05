@@ -1,6 +1,6 @@
 'use client';
 
-import { type Mail, type Group } from "@/lib/types";
+import { Mail, User, type Group } from "@/lib/types";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,9 +13,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical, Plus } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash2, FolderPen, Plus } from "lucide-react"
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import {useState} from 'react';
@@ -23,12 +23,26 @@ import Link from 'next/link';
 import { NewPlaylistSheet } from "./main/new-playlist-sheet";
 import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import {useEffect} from 'react';
-import { getGroups } from "./actions/group";
-import { getMails } from "./actions/group-file";
+import {useEffect, useRef} from 'react';
+import { getGroupList, getGroups, RemoveGroup, RenameGroup } from "./actions/group";
+import { Datetime2Thai } from "@/lib/utils";
+import {useRouter} from 'next/navigation';
+import { setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Label } from "./ui/label";
+import { getMails } from "./actions/mail";
 
-const columns: ColumnDef<(Group | any)[]> = [
-  {
+const staffColumns: ColumnDef<(Mail | any)[]> = [
+ {
     id: 'วันที่',
     accessorKey: "createdAt",
     sortingFn: (rowA, rowB, columnId) => {
@@ -49,21 +63,16 @@ const columns: ColumnDef<(Group | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { createdAt } = row.original;
+      const { datetime } = row.original;
 
       return (
         <div>
-          {(new Date(createdAt)).toLocaleString("en-GB", {
-            year: "numeric",
-            day: "2-digit",
-            month: "2-digit"
-          })}
+          {Datetime2Thai(datetime)}
           </div>
       );
     },
-  },
-  {
-    id: 'ชื่อ',
+  }, {
+    id: 'ชื่อเรื่อง',
     accessorKey: "subject",
     header: ({ column }) => {
       return (
@@ -85,15 +94,19 @@ const columns: ColumnDef<(Group | any)[]> = [
           </div>
       );
     },
-  },
-  {
-    id: 'ชนิด',
-    accessorKey: "isDraft",
+  }, {
+    id: 'ผู้ให้บริการ',
+    accessorKey: "receiver",
+    sortingFn: (rowA, rowB, columnId) => {
+      const ispA = rowA.getValue(columnId).isp.name;
+      const ispB = rowB.getValue(columnId).isp.name;
+      return ispA - ispB; // ascending
+    },
     header: ({ column }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full justify-end'
+        <div className='inline-flex gap-x-2 w-full '
         >
-            ชนิด
+            ผู้ให้บริการ
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -102,32 +115,241 @@ const columns: ColumnDef<(Group | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { isDraft } = row.original;
+      const { receiver } = row.original;
+      return (
+        <div>
+          {receiver?.isp?.name?? '-'}
+          </div>
+      );
+    },
+  }, {
+    id: 'จำนวนคำสั่งศาล',
+    accessorKey: "documents",
+    sortingFn: (rowA, rowB, columnId) => {
+      const lenA = rowA.getValue(columnId).length;
+      const lenB = rowB.getValue(columnId).length;
+      return lenA - lenB; // ascending
+    },
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            จำนวนคำสั่งศาล
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { documents } = row.original;
 
       return (
-        <div className={`text-right ${isDraft? 'text-green-900': 'text-amber-800'}`}>
-          {isDraft? 'ฉบับบร่าง': 'ส่ง ISP'}
+        <div>
+          {documents?.length?? '-'}
+          </div>
+      );
+    },
+  }, {
+    id: 'สถานะการส่ง',
+    accessorKey: "status",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            สถานะการส่ง
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { status} = row.original;
+
+      let sendStatus = '-';
+      let sendColor = '';
+
+      switch (status) {
+        case 'successful':
+          sendStatus = 'สำเร็จ' 
+          sendColor = 'text-green-700'
+          break;
+        case 'fail':
+          sendStatus = 'ไม่สำเร็จ' 
+          sendColor = 'text-red-700'
+          break;
+        case 'idle':
+          sendStatus = 'ยังไม่ส่ง' 
+          sendColor = 'text-orange-700'
+          break;
+      
+        default:
+          break;
+      }
+
+      return (
+        <div className={sendColor}>
+          {sendStatus}
+          </div>
+      );
+    },
+  }, {
+    id: 'ยืนยันสถานะ',
+    accessorKey: "confirmed",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            ยืนยันสถานะ
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { confirmed } = row.original;
+
+      return (
+        <div className={`${confirmed? 'text-green-700': 'text-red-700'}`}>
+          {confirmed? 'ยืนยันแล้ว': 'ยังไม่ยืนยัน'}
           </div>
       );
     },
   }
 ]
 
-export default function MailTable({data, isp}: {data: Mail[], isp?: boolean}) {
+const ispColumns: ColumnDef<(Mail | any)[]> = [
+  {
+    id: 'ส่งวันที่',
+    accessorKey: "datetime",
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId));
+      const dateB = new Date(rowB.getValue(columnId));
+      return dateA.getTime() - dateB.getTime(); // ascending
+    },
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          วันที่
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { datetime } = row.original;
+
+      return (
+        <div>
+          {Datetime2Thai(datetime)}
+          </div>
+      );
+    },
+  }, {
+    id: 'ชื่อเรื่อง',
+    accessorKey: "subject",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            ชื่อ
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { subject } = row.original;
+      return (
+        <div>
+          {subject?? '-'}
+          </div>
+      );
+    },
+  }, {
+    id: 'จำนวนคำสั่งศาล',
+    accessorKey: "documents",
+    sortingFn: (rowA, rowB, columnId) => {
+      const lenA = rowA.getValue(columnId).length;
+      const lenB = rowB.getValue(columnId).length;
+      return lenA - lenB; // ascending
+    },
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            จำนวนคำสั่งศาล
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { documents } = row.original;
+
+      return (
+        <div>
+          {documents?.length?? '-'}
+          </div>
+      );
+    },
+  }, {
+    id: 'ยืนยันสถานะ',
+    accessorKey: "confirmed",
+    header: ({ column }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+            ยืนยันสถานะ
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const { confirmed } = row.original;
+
+      return (
+        <div>
+          {confirmed? 'ยืนยันแล้ว': 'ยังไม่ยืนยัน'}
+          </div>
+      );
+    },
+  }
+]
+
+export default function MailTable({
+  user
+}: {
+  user: User
+}) {
     const [sorting, setSorting] = useState<SortingState>([])
-    const [tableData, setTableData] = useState(data);
+    const [tableData, setTableData] = useState([]);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    const user = useAppSelector(state => state.userAuth.user);
-    const dataChanged = useAppSelector(state=>state.groupListUi.dataChanged);
+    const columns = user.isp? ispColumns: staffColumns;
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = useState({})
+    const [rowSelection, setRowSelection] = useState({}) 
     const table = useReactTable({
         data: tableData,
-        columns: (user?.isp || isp !== undefined)? columns.slice(0, 2): columns,
+        columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
@@ -147,7 +369,7 @@ export default function MailTable({data, isp}: {data: Mail[], isp?: boolean}) {
   useEffect(() => {
     const getData = async() => {
       try {
-        const data = await getMails(isp); 
+        const data = await getMails(); 
         setTableData(data);
       } catch (error) {
         setTableData([]);
@@ -155,25 +377,16 @@ export default function MailTable({data, isp}: {data: Mail[], isp?: boolean}) {
     }
 
     getData();
-  }, [dataChanged]);
+  }, []);
 
     return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder="ค้นหา กล่องข้อความ..."
-          value={(table.getColumn("ชื่อ")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("ชื่อ")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
         <div className="ml-auto flex items-center gap-x-1">
-          <NewPlaylistSheet main={true}/>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown />
+                คอลัมน์ <ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -226,14 +439,21 @@ export default function MailTable({data, isp}: {data: Mail[], isp?: boolean}) {
                   key={row.id}
                   className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell, idx) => (
                     <TableCell key={cell.id}>
-                        <Link href={`/document-groups/${row.original.id}`}>
+                        {idx != row.getVisibleCells().length - 1? <Link href={`/document-groups/${row.original.id}`}>
                             {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()
                             )}
-                            </Link>
+                            </Link>:
+                            <div>
+                              {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                              )}
+                            </div>
+                          }
                     </TableCell>
                   ))}
                 </TableRow>

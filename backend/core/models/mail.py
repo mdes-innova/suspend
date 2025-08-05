@@ -7,6 +7,7 @@ from django.utils import timezone
 import os
 
 from core.utils import mail_file_path
+from uuid import uuid4
 
 
 class MailStatus(models.TextChoices):
@@ -20,19 +21,20 @@ class Mail(models.Model):
     datetime = models.DateTimeField(null=True)
     document_no = models.CharField(max_length=32, blank=True)
     document_date = models.DateTimeField(null=True)
+    mail_group_id = models.UUIDField(unique=True, null=True)
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
             MaxValueValidator(3)
             ],
-         null=True
+         null=True,
     )
     secret = models.IntegerField(
          validators=[
             MinValueValidator(0),
             MaxValueValidator(3)
             ],
-         null=True
+         null=True,
     )
 
     group = models.ForeignKey(
@@ -58,11 +60,13 @@ class Mail(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='mails'
+        related_name='mails',
+        editable=False
     )
     documents = models.ManyToManyField(
         "Document",
-        related_name='mails'
+        related_name='mails',
+        editable=False
     )
 
     confirmed = models.BooleanField(default=False)
@@ -82,4 +86,4 @@ class Mail(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.subject} ({self.date})"
+        return f"{self.subject} ({self.datetime})"

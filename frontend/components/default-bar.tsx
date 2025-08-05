@@ -14,23 +14,25 @@ type DefaultBarProps = {
   children: React.ReactNode;
 };
 
-const HIDDEN_ROUTES = ['/login', '/secret', '/no-navbar'];
+const HIDDEN_ROUTES = ['login', 'secret', 'no-navbar', 'confirm'];
 
 export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>) {
     const pathname = usePathname();
+    const pathId = (pathname.split('/'))[1];
     const dispatch = useAppDispatch();
-
     const reduxUser = useAppSelector(state => state.userAuth.user);
-
+    
+    
     useEffect(() => {
         const userChanged = JSON.stringify(reduxUser) !== JSON.stringify(user);
 
         if (userChanged) {
             dispatch(setUser(user ?? null));
         }
-    }, [user, dispatch, reduxUser]);
+    }, [user, dispatch]);
 
-    if (HIDDEN_ROUTES.map(elem => pathname.includes(elem)).some(Boolean)) {
+    if (HIDDEN_ROUTES.map(elem => pathId.includes(elem)).some(Boolean) ||
+        pathname.includes('mail/confirm')) {
         return (
             <>{ children }</>
         );

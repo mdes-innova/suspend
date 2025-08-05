@@ -83,7 +83,6 @@ export function ThaiDatePicker({
   date: Date,
   setDate:  React.Dispatch<React.SetStateAction<Date>>
 }) {
-  // const [date, setDate] = React.useState<Date>();
   const [open, setOpen] = React.useState(false);
 
   const formatThaiDate = (date: Date) => {

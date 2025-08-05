@@ -1,6 +1,6 @@
 """Mail serializer module."""
 from rest_framework import serializers
-from core.models import Mail,Document, Group, GroupFile
+from core.models import Mail, MailStatus, Group, GroupFile
 from user.serializer import UserSerializer
 from document.serializer import DocumentSerializer
 from group.serializer import GroupSerializer, GroupFileSerializer
@@ -12,6 +12,11 @@ import hashlib, base64
 from mail.utils import generate_file
 import smtplib, ssl
 import os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from email.header import Header
 
 
 class MailSerializer(serializers.ModelSerializer):
@@ -45,18 +50,74 @@ class MailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mail
-        fields = ['id', 'group_id', 'group', 'sender', 'document_no',
-                  'document_date', 'speed', 'secret',
+        fields = ['id', 'mail_group_id', 'group', 'sender', 'document_no',
+                  'document_date', 'speed', 'secret', 'group_id',
                   'receiver_id', 'receiver', 'group_file_id', 'group_file',
                   'documents', 'subject', 'document_no', 'status',
                   'datetime', 'confirmed', 'confirmed_hash', 'created_at',
                   'modified_at']
         read_only_fields = ['id', 'group', 'sender', 'receiver', 'group_file',
-                            'documents', 'created_at', 'modified_at', 'confirmed',
-                            'confirmed_hash', 'status', 'datetime']
+                            'documents', 'created_at', 'modified_at',
+                            'confirmed', 'confirmed_hash', 'status',
+                            'datetime']
+
+    def send_email(self, receiver, group_file, group, confirmed_hash):
+        # SMTP server connection
+        server = smtplib.SMTP(os.environ.get('MAIL_SMTP_SERVER'), os.environ.get('MAIL_PORT'))
+        server.starttls()
+        server.login(os.environ.get('MAIL_USER'), os.environ.get('MAIL_PASSWORD'))
+
+        # Email subject and body with non-ASCII characters (Thai in this case)
+        subject = "ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์"
+        content = """ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์
+        กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ"""
+        body = f"""
+        <html>
+            <body>
+                <p>{content}</p>
+                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/mail/confirm/{confirmed_hash}" 
+                style="font-weight: bold; color: blue; font-size: 24px;" 
+                target="_blank">กรุณากดลิงค์นี้เพื่อยืนยันว่าท่านได้รับทราบแล้ว</a>
+            </body>
+        </html>
+        """
+
+        # Create MIME message
+        msg = MIMEMultipart()
+        msg['From'] = os.environ.get('MAIL_USER')
+        msg['To'] = receiver.email
+        msg['Subject'] = subject
+
+        # Attach the body as a MIMEText part (use utf-8 encoding)
+        # body_part = MIMEText(content, 'plain', 'utf-8')
+        body_part = MIMEText(body, 'html', 'utf-8')
+
+        msg.attach(body_part)
+
+        if group_file.file:
+            file_path = group_file.file.path
+            with open(file_path, 'rb') as attachment:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                # Use the original filename from the group_file object
+                filename = group_file.original_filename or\
+                    os.path.basename(file_path)
+                encoded_filename = Header(filename, 'utf-8').encode()
+                part.add_header('Content-Disposition',
+                                f'attachment; filename={encoded_filename}')
+                msg.attach(part)
+        else:
+            raise Exception("No group file found.")
+
+        server.sendmail(os.environ.get('MAIL_USER'),
+                        receiver.email,
+                        msg.as_string())
+        server.quit()
 
     def create(self, validated_data):
         user = self.context['request'].user
+        print(validated_data)
         group = validated_data.pop('group_id')
         group_file = validated_data.pop('group_file_id')
         receiver = validated_data.pop('receiver_id')
@@ -65,30 +126,22 @@ class MailSerializer(serializers.ModelSerializer):
             group=group,
             receiver=receiver,
             group_file=group_file,
-            datetime=timezone.now(),
             confirmed=False,
             **validated_data
         )
         mail.documents.set(group.documents.all())
-        h = hashlib.sha256((str(group_file.id)).encode()).digest()
+
+        h = hashlib.sha256((str(mail.id)).encode()).digest()  # type: ignore
         mail.confirmed_hash = base64.urlsafe_b64encode(h).decode()
         mail.save(update_fields=['confirmed_hash'])
 
-        context = ssl.create_default_context()
-        server = smtplib.SMTP(os.environ.get('MAIL_SMTP_SERVER'),  # type: ignore
-                              os.environ.get('MAIL_PORT'))  # type: ignore
-        server.ehlo()
-        server.starttls(context=context)
-        server.ehlo()
-        server.login(os.environ.get('MAIL_USER'), os.environ.get('MAIL_PASSWORD'))
-        subject = "ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์"
-        body = """ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์
-        กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ"""
+        try:
+            self.send_email(receiver, group_file, group, mail.confirmed_hash)
+            mail.status = MailStatus.SUCCESSFUL
+            mail.datetime = timezone.now()
+        except:
+            mail.status = MailStatus.FAIL
 
-        message = f"Subject: {subject}\n\n{body}"
-
-        server.sendmail(os.environ.get('MAIL_USER'), receiver.email,
-                        message)
-        server.quit()
+        mail.save(update_fields=['status', 'datetime'])
 
         return mail
