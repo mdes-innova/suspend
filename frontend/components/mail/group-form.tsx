@@ -22,6 +22,12 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { ScrollArea } from "../ui/scroll-area"
 import { Label } from "../ui/label"
 import { Separator } from "../ui/separator"
+import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 import DatePicker, {ThaiDatePicker} from "../date-picker"
 import { getIsps } from "../actions/isp"
 import { BookCard } from "../court-order/book-card"
@@ -52,6 +58,7 @@ export function GroupForm({
     const [speed, setSpeed] = useState('');
     const [secret, setSecret] = useState('');
     const [date, setDate] = useState<Date>();
+    const [mailStatus, setMailStatus] = useState(2);
     const submitRef = useRef(null);
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
@@ -65,8 +72,8 @@ export function GroupForm({
     const getData = async() => {
       try{
         const group: Group = await getGroup(groupId);
-        if (group.speed) setSpeed(`${group.speed}`);
-        if (group.secret) setSecret(`${group.secret}`);
+        if (group.speed != null || group.speed != undefined) setSpeed(`${group.speed}`);
+        if (group.secret != null || group.secret != undefined) setSecret(`${group.secret}`);
         if (group.documentDate) setDate(new Date(group.documentDate));
         form.reset({
             documentNo: group.documentNo || '',
@@ -163,24 +170,45 @@ export function GroupForm({
   }
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => { 
-    if (values.title === '' || values.documentNo === '' || !date || speed === '' || secret === '')
-      alert('Cannot send mails.');
-    await updateField({
-      kind: 'title',
-      value: values.title
-    });
-    await updateField({
-      kind: 'documentNo',
-      value: values.documentNo
-    });
-
-    await SendMails(groupId);
+    try {
+      if (values.title === '' || values.documentNo === '' || !date || speed === '' || secret === '')
+        alert('Cannot send mails.');
+      await updateField({
+        kind: 'title',
+        value: values.title
+      });
+      await updateField({
+        kind: 'documentNo',
+        value: values.documentNo
+      });
+      setMailStatus(0);
+      await SendMails(groupId);
+      
+    } catch (error) {
+      setMailStatus(1);
+    }
   }
 
 
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
+      <Dialog open={mailStatus != 2} onOpenChange={(open) => {
+        if (!open) setMailStatus(2);
+      }}>
+        <DialogContent>
+          <DialogTitle>
+            {
+              mailStatus === 0? 'ส่งอีเมลล์สำเร็จ':'ส่งอีเมลล์ไม่สำเร็จ'
+            }
+          </DialogTitle>
+          <DialogClose asChild>
+            <Button variant={mailStatus === 0? '': 'destructive'}>
+              ตกลง
+            </Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 w-full">
             <FormField

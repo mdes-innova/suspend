@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import uuid
 import urllib.parse
+from django.utils import timezone
 
 
 class MailViews(viewsets.ModelViewSet):
@@ -38,8 +39,10 @@ class MailViews(viewsets.ModelViewSet):
         try:
             decoded_hash = urllib.parse.unquote(hcode)
             mail = self.queryset.get(confirmed_hash=decoded_hash)
-            mail.confirmed = True
-            mail.save(update_fields=['confirmed'])
+            if not mail.confirmed:
+                mail.confirmed = True
+                mail.confirmed_date = timezone.now()
+                mail.save(update_fields=['confirmed', 'confirmed_date'])
             return Response(MailSerializer(mail).data)
         except Exception as e:
             return Response({'error': 'Confirm mail fail.'})

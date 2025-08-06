@@ -11,8 +11,6 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
     networks:
       - mdes_network
 
@@ -26,7 +24,7 @@ services:
     depends_on:
       - db
     ports:
-      - "8000:8000"
+      - "8009:8000"
     networks:
         - mdes_network
   
@@ -37,6 +35,7 @@ services:
     command: celery -A app worker --loglevel=info
     depends_on:
       - redis
+      - backend
       - db
     volumes:
       - ./backend:/app
@@ -52,6 +51,7 @@ services:
     depends_on:
       - redis
       - db
+      - backend
       - celery
     volumes:
       - ./backend:/app
@@ -64,7 +64,10 @@ services:
       context: ./frontend
       dockerfile: ./Dockerfile.dev
     ports:
-      - "3000:3000"
+      - "8010:3000"
+    depends_on:
+      - backend
+      - db
     volumes:
       - ./frontend:/app
       - /app/node_modules

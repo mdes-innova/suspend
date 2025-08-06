@@ -21,7 +21,7 @@ class Mail(models.Model):
     datetime = models.DateTimeField(null=True)
     document_no = models.CharField(max_length=32, blank=True)
     document_date = models.DateTimeField(null=True)
-    mail_group_id = models.UUIDField(unique=True, null=True)
+    mail_group_id = models.UUIDField(null=True)
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
@@ -77,6 +77,7 @@ class Mail(models.Model):
         null=True,
         blank=True
     )
+    confirmed_date = models.DateTimeField(null=True)
     status = models.CharField(
         max_length=20,
         choices=MailStatus.choices,

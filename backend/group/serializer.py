@@ -31,11 +31,11 @@ class GroupSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-    document_no = serializers.CharField(allow_blank=True)
-    document_date = serializers.DateTimeField(allow_null=True)
-    title = serializers.CharField(allow_blank=True)
-    speed = serializers.IntegerField(allow_null=True)
-    secret = serializers.IntegerField(allow_null=True)
+    document_no = serializers.CharField(allow_blank=True, required=False)
+    document_date = serializers.DateTimeField(allow_null=True, required=False)
+    title = serializers.CharField(allow_blank=True, required=False)
+    speed = serializers.IntegerField(allow_null=True, required=False)
+    secret = serializers.IntegerField(allow_null=True, required=False)
     documents = DocumentSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
 

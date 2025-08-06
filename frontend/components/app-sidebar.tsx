@@ -31,7 +31,7 @@ const items = [
     icon: Plus,
   },
   {
-    title: "หน้าแรก",
+    title: "คำสั่งศาล",
     url: "/",
     icon: Home,
   },

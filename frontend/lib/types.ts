@@ -93,7 +93,8 @@ export type Mail = {
   documentNo: string,
   documentDate?: string,
   speed?: number,
-  secret?: number
+  secret?: number,
+  confirmedDate?: string
 
 }
 

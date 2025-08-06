@@ -72,13 +72,13 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       );
     },
   }, {
-    id: 'ชื่อเรื่อง',
-    accessorKey: "subject",
+    id: 'เลขหนังสือ',
+    accessorKey: "documentNo",
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ชื่อ
+            เลขหนังสือ
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -87,10 +87,10 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { subject } = row.original;
+      const { documentNo } = row.original;
       return (
         <div>
-          {subject?? '-'}
+          {documentNo?? '-'}
           </div>
       );
     },
@@ -197,13 +197,18 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       );
     },
   }, {
-    id: 'ยืนยันสถานะ',
-    accessorKey: "confirmed",
+    id: 'ยืนยัน',
+    accessorKey: "confirmedDate",
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId));
+      const dateB = new Date(rowB.getValue(columnId));
+      return dateA.getTime() - dateB.getTime(); // ascending
+    },
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ยืนยันสถานะ
+            ยืนยัน
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -212,11 +217,11 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { confirmed } = row.original;
+      const { confirmedDate } = row.original;
 
       return (
-        <div className={`${confirmed? 'text-green-700': 'text-red-700'}`}>
-          {confirmed? 'ยืนยันแล้ว': 'ยังไม่ยืนยัน'}
+        <div>
+          {confirmedDate? Datetime2Thai(confirmedDate): 'ยังไม่ยืนยัน'}
           </div>
       );
     },
@@ -254,13 +259,13 @@ const ispColumns: ColumnDef<(Mail | any)[]> = [
       );
     },
   }, {
-    id: 'ชื่อเรื่อง',
-    accessorKey: "subject",
+    id: 'เลขหนังสือ',
+    accessorKey: "DocumentNo",
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ชื่อ
+            เลขหนังสือ
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -269,10 +274,10 @@ const ispColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { subject } = row.original;
+      const { documentNo } = row.original;
       return (
         <div>
-          {subject?? '-'}
+          {documentNo?? '-'}
           </div>
       );
     },
@@ -306,13 +311,18 @@ const ispColumns: ColumnDef<(Mail | any)[]> = [
       );
     },
   }, {
-    id: 'ยืนยันสถานะ',
-    accessorKey: "confirmed",
+    id: 'ยืนยัน',
+    accessorKey: "confirmedDate",
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = new Date(rowA.getValue(columnId));
+      const dateB = new Date(rowB.getValue(columnId));
+      return dateA.getTime() - dateB.getTime(); // ascending
+    },
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ยืนยันสถานะ
+            ยืนยัน
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -321,11 +331,11 @@ const ispColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { confirmed } = row.original;
+      const { confirmedDate } = row.original;
 
       return (
         <div>
-          {confirmed? 'ยืนยันแล้ว': 'ยังไม่ยืนยัน'}
+          {confirmedDate? Datetime2Thai(confirmedDate): 'ยังไม่ยืนยัน'}
           </div>
       );
     },
@@ -382,6 +392,14 @@ export default function MailTable({
     return (
     <div className="w-full">
       <div className="flex items-center py-4">
+        <Input
+          placeholder="ค้นหาเลขหนังสือ..."
+          value={(table.getColumn("เลขหนังสือ")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("เลขหนังสือ")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
         <div className="ml-auto flex items-center gap-x-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
