@@ -34,6 +34,8 @@ import { BookCard } from "../court-order/book-card"
 import { SendMails } from "../actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
 import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "../actions/group"
+import DialogLoading from "../loading/dialog"
+import { closeModal, LOADINGUI, openModal } from "../store/features/loading-ui-slice"
 
 const tempUsers = [
     "user1", 'arnon songmoolnak', 'arnon', 'pok', 'arnonsongmoolnak arnonsongmoolnak'
@@ -59,6 +61,7 @@ export function GroupForm({
     const [secret, setSecret] = useState('');
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
+    const dispatch = useAppDispatch();
     const submitRef = useRef(null);
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
@@ -171,8 +174,11 @@ export function GroupForm({
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => { 
     try {
-      if (values.title === '' || values.documentNo === '' || !date || speed === '' || secret === '')
+      if (values.title === '' || values.documentNo === '' || !date || speed === '' || secret === '') {
         alert('Cannot send mails.');
+        return;
+      }
+      dispatch(openModal({ui: LOADINGUI.dialog}));
       await updateField({
         kind: 'title',
         value: values.title
@@ -181,18 +187,20 @@ export function GroupForm({
         kind: 'documentNo',
         value: values.documentNo
       });
-      setMailStatus(0);
       await SendMails(groupId);
+      setMailStatus(0);
       
     } catch (error) {
       setMailStatus(1);
     }
+    dispatch(closeModal({ui: LOADINGUI.dialog}));
   }
 
 
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
+      <DialogLoading />
       <Dialog open={mailStatus != 2} onOpenChange={(open) => {
         if (!open) setMailStatus(2);
       }}>
@@ -268,7 +276,10 @@ export function GroupForm({
                 )}
             />
             <div className="flex flex-col">
-              <br />
+              <FormLabel className="inline-flex items-center gap-0.5">
+                  ชั้นความเร็ว<span className="text-red-400">*</span>
+              </FormLabel>
+              <div className="mt-2">
                 <Select
                   name="speed"
                   required
@@ -292,9 +303,14 @@ export function GroupForm({
                     </SelectGroup>
                 </SelectContent>
               </Select>
+
+              </div>
             </div>
             <div className="flex flex-col">
-              <br />
+              <FormLabel className="inline-flex items-center gap-0.5">
+                  ชั้นความลับ<span className="text-red-400">*</span>
+              </FormLabel>
+              <div className="mt-2">
                 <Select
                   name="secret"
                   required
@@ -318,6 +334,8 @@ export function GroupForm({
                     </SelectGroup>
                 </SelectContent>
               </Select>
+
+              </div>
             </div>
             <Button type="submit" className="hidden" ref={submitRef}>Submit</Button>
         </form>

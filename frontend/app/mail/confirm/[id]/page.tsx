@@ -1,7 +1,7 @@
 import { confirm } from '@/components/actions/mail';
 import {type Mail } from '@/lib/types';
 import { Suspense } from 'react';
-import { CircleX, CheckCircle2Icon, PopcornIcon } from "lucide-react"
+import { CircleX, CheckCircle2Icon } from "lucide-react"
 import {
   Alert,
   AlertDescription,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert"
 import ConfirmLoading from '@/components/loading/confirm';
 
-async function Content({params} : {params: any}) {
+async function Content({ params }: { params: { id: string } }) {
     const { id } = await params;
 
     try {

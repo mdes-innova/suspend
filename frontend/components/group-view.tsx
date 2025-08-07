@@ -47,6 +47,7 @@ import {useState, useRef, useEffect} from 'react';
 import { RenameGroup } from "./actions/group";
 import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged } from "./store/features/group-list-ui-slice";
+import { usePathname, redirect } from 'next/navigation';
 
 export default function GroupView(
   { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
@@ -54,6 +55,14 @@ export default function GroupView(
     const [onTitleChange, setOnTitleChange] = useState(false);
     const titleRef = useRef<HTMLDivElement>(null);
     const dispatch = useAppDispatch();
+    const pathname = usePathname();
+
+    useEffect(() => {
+      const pathnameSplits = pathname.split('/');
+      const groupId = pathnameSplits[pathnameSplits.length - 1];
+      if (groupId === '-1')
+        redirect(`/document-groups/${groupData?.id}`);
+    }, []);
 
     useEffect(() => {
       if (titleRef?.current) {

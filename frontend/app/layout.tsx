@@ -4,13 +4,11 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import DefaultBar from "@/components/default-bar";
 import Providers from './providers';
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { cookies } from 'next/headers';
 import { Toaster } from "@/components/ui/sonner"
 import { type User } from "@/lib/types";
 import { CustomTrigger } from "@/components/sidebar-trigger";
-import { getAccess } from "@/components/actions/auth";
 import { getProfile } from "@/components/actions/user";
 import DialogLoading from "@/components/loading/dialog";
 
@@ -62,7 +60,7 @@ export default async function RootLayout({
     const resJson = await getProfile();
     user = resJson;
     if (user && resJson.isp) user['isp'] = resJson.isp.name;
-  } catch (error) {
+  } catch (_) {
     user = null;
   }
 

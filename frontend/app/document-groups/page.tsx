@@ -1,7 +1,5 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
-import DataTable from '@/components/main/content';
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthError } from '@/components/exceptions/auth';
 import GroupTable from '@/components/group-table';

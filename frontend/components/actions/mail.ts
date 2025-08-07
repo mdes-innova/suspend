@@ -128,3 +128,27 @@ export async function confirm(hash: string) {
       throw error; 
   }
 }
+
+export async function getStaffMails() {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+  try {
+    const res = await fetch(`${url}/mail/mails/staff-mails/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get staff mails fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}

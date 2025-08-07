@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets
 from .serializer import MailSerializer
 from user.serializer import UserSerializer
+from group.serializer import GroupFileSerializer, GroupSerializer
 from core.models import Mail, MailStatus, Group, GroupFile
 from rest_framework.decorators import action
 from rest_framework import status
@@ -10,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import uuid
 import urllib.parse
+from core.permissions import IsAdminOnlyUser
 from django.utils import timezone
 
 
@@ -24,7 +26,7 @@ class MailViews(viewsets.ModelViewSet):
             if self.request.method == 'GET':
                 return [IsAuthenticated()]
             else:
-                return super().get_permissions()
+                return [IsAdminOnlyUser()]
 
     @action(
         detail=False,
@@ -105,6 +107,39 @@ class MailViews(viewsets.ModelViewSet):
         return Response({
             'data': "Mail has been being successfully sent."
         })
+
+    @action(
+        detail=False,
+        methods=["GET"],
+        url_path='staff-mails'
+    ) 
+    def staff_mails(self, request):
+        mail_group_ids = (
+            self.queryset
+            .exclude(mail_group_id__isnull=True)
+            .values_list('mail_group_id', flat=True)
+            .distinct()
+        )
+        data = []
+
+        for mail_group_id in mail_group_ids:
+            objs = self.queryset.filter(mail_group_id=mail_group_id)\
+                .distinct().order_by('created_at')
+            obj = objs.first()
+            obj_confirms = len(objs.filter(confirmed=True))
+            obj_sends = len(objs.filter(status='successful'))
+            if obj:
+                document_no = obj.document_no
+                created_at = obj.created_at
+                n_documents = len(obj.documents.all())
+                data.append({
+                    'document_no': document_no,
+                    'created_at': created_at,
+                    'num_documents': n_documents,
+                    'sends': f'{obj_sends}/{len(objs)}',
+                    'confirms': f'{obj_confirms}/{len(objs)}'
+                })
+        return Response(data)
 
     def get_queryset(self):
         user = self.request.user

@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 from core.permissions import IsActiveUser, IsAdminOrStaff
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 
 class GroupView(viewsets.ModelViewSet):
     """Group view."""
@@ -22,6 +22,20 @@ class GroupView(viewsets.ModelViewSet):
         data = self.queryset.filter(user=self.request.user)
         return data
 
+    def perform_update(self, serializer):
+        group = serializer.instance
+        user = self.request.user
+        if user != group.user or not user.is_superuser:
+            raise PermissionDenied("You are not allowed to update this group.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+
+        if user != instance.user and not user.is_superuser:
+            raise PermissionDenied("You are not allowed to delete this group.")
+        instance.delete()
+
     @action(
         detail=False,
         url_path='group-list',
@@ -32,12 +46,12 @@ class GroupView(viewsets.ModelViewSet):
         data = GroupSerializer(query_set, many=True).data
         return Response(data)
 
-    # def get_permissions(self):
-    #     match self.request.method:
-    #         case 'GET':
-    #             return [IsAuthenticated()]
-    #         case _:
-    #             return super().get_permissions()
+    def get_permissions(self):
+        match self.request.method:
+            case 'GET':
+                return [IsAuthenticated()]
+            case _:
+                return super().get_permissions()
 
     @action(
         detail=False,
@@ -101,6 +115,20 @@ class GroupFileView(viewsets.ModelViewSet):
     """Group file view."""
     queryset = GroupFile.objects.all().order_by('id')
     serializer_class = GroupFileSerializer
+
+    def perform_update(self, serializer):
+        group = serializer.instance.group
+        user = self.request.user
+        if user != group.user or not user.is_superuser:
+            raise PermissionDenied("You are not allowed to update this group file.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+
+        if user != instance.group.user and not user.is_superuser:
+            raise PermissionDenied("You are not allowed to delete this group file.")
+        instance.delete()
 
     def delete(self, *args, **kwargs):
         if self.file:

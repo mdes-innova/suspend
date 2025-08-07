@@ -27,7 +27,7 @@ async function PlaylistContent() {
   const user = await getData();
   return (
     <div className='w-full h-full flex flex-col px-2'>
-      <MailTable user={user}/>
+      <MailTable user={user as User}/>
     </div>
   );
 }

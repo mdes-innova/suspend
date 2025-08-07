@@ -1,0 +1,606 @@
+./app/login/page.tsx
+2:8  Error: 'ResetPassword' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/mail/[id]/page.tsx
+3:8  Error: 'DataTable' is defined but never used.  @typescript-eslint/no-unused-vars
+4:10  Error: 'cookies' is defined but never used.  @typescript-eslint/no-unused-vars
+6:8  Error: 'PlaylistDialog' is defined but never used.  @typescript-eslint/no-unused-vars
+7:10  Error: 'NewPlaylistSheet' is defined but never used.  @typescript-eslint/no-unused-vars
+8:10  Error: 'clearSelections' is defined but never used.  @typescript-eslint/no-unused-vars
+8:27  Error: 'getContent' is defined but never used.  @typescript-eslint/no-unused-vars
+10:10  Error: 'getGroups' is defined but never used.  @typescript-eslint/no-unused-vars
+24:47  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/mail/confirm/[id]/page.tsx
+4:37  Error: 'PopcornIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+12:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:14  Error: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+30:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/mail/page.tsx
+3:8  Error: 'DataTable' is defined but never used.  @typescript-eslint/no-unused-vars
+4:10  Error: 'cookies' is defined but never used.  @typescript-eslint/no-unused-vars
+6:8  Error: 'PlaylistDialog' is defined but never used.  @typescript-eslint/no-unused-vars
+7:10  Error: 'NewPlaylistSheet' is defined but never used.  @typescript-eslint/no-unused-vars
+8:10  Error: 'clearSelections' is defined but never used.  @typescript-eslint/no-unused-vars
+8:27  Error: 'getContent' is defined but never used.  @typescript-eslint/no-unused-vars
+10:10  Error: 'getGroups' is defined but never used.  @typescript-eslint/no-unused-vars
+12:10  Error: 'getMails' is defined but never used.  @typescript-eslint/no-unused-vars
+13:26  Error: 'Mail' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/page.tsx
+4:10  Error: 'cookies' is defined but never used.  @typescript-eslint/no-unused-vars
+8:10  Error: 'clearSelections' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/playlist/page.tsx
+3:8  Error: 'DataTable' is defined but never used.  @typescript-eslint/no-unused-vars
+4:10  Error: 'cookies' is defined but never used.  @typescript-eslint/no-unused-vars
+6:8  Error: 'PlaylistDialog' is defined but never used.  @typescript-eslint/no-unused-vars
+7:10  Error: 'NewPlaylistSheet' is defined but never used.  @typescript-eslint/no-unused-vars
+8:10  Error: 'clearSelections' is defined but never used.  @typescript-eslint/no-unused-vars
+8:27  Error: 'getContent' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/profile-view/document-builder/page.tsx
+1:8  Error: 'DocumentView' is defined but never used.  @typescript-eslint/no-unused-vars
+8:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+12:7  Error: 'access' is never reassigned. Use 'const' instead.  prefer-const
+26:12  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/profile-view/page.tsx
+1:8  Error: 'DocumentView' is defined but never used.  @typescript-eslint/no-unused-vars
+8:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+12:7  Error: 'access' is never reassigned. Use 'const' instead.  prefer-const
+26:12  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/action-dropdown.tsx
+5:3  Error: 'DropdownMenuCheckboxItem' is defined but never used.  @typescript-eslint/no-unused-vars
+16:10  Error: 'ArrowUpDown' is defined but never used.  @typescript-eslint/no-unused-vars
+16:23  Error: 'ChevronDown' is defined but never used.  @typescript-eslint/no-unused-vars
+16:36  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+18:8  Error: 'PlaylistDialog' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+20:21  Error: 'useRef' is defined but never used.  @typescript-eslint/no-unused-vars
+30:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:50  Error: 'open' is defined but never used.  @typescript-eslint/no-unused-vars
+62:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/actions/auth.ts
+33:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/actions/group-file.ts
+3:15  Error: 'GroupFile' is defined but never used.  @typescript-eslint/no-unused-vars
+3:31  Error: 'Document' is defined but never used.  @typescript-eslint/no-unused-vars
+3:46  Error: 'Group' is defined but never used.  @typescript-eslint/no-unused-vars
+110:9  Error: 'access' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/actions/mail.ts
+5:10  Error: 'GetFilesFromGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/actions/user.ts
+91:15  Error: 'ip' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/activity.tsx
+3:36  Error: 'id' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/app-sidebar.tsx
+2:10  Error: 'Calendar' is defined but never used.  @typescript-eslint/no-unused-vars
+2:57  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'SidebarGroupAction' is defined but never used.  @typescript-eslint/no-unused-vars
+12:3  Error: 'SidebarMenuAction' is defined but never used.  @typescript-eslint/no-unused-vars
+15:3  Error: 'SidebarMenuSub' is defined but never used.  @typescript-eslint/no-unused-vars
+16:3  Error: 'SidebarMenuSubButton' is defined but never used.  @typescript-eslint/no-unused-vars
+17:3  Error: 'SidebarMenuSubItem' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'DropdownMenu' is defined but never used.  @typescript-eslint/no-unused-vars
+20:24  Error: 'DropdownMenuContent' is defined but never used.  @typescript-eslint/no-unused-vars
+20:45  Error: 'DropdownMenuItem' is defined but never used.  @typescript-eslint/no-unused-vars
+20:63  Error: 'DropdownMenuTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+82:78  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/content-dialog.tsx
+7:3  Error: 'ColumnFiltersState' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'SortingState' is defined but never used.  @typescript-eslint/no-unused-vars
+9:3  Error: 'VisibilityState' is defined but never used.  @typescript-eslint/no-unused-vars
+17:36  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+17:52  Error: 'SlidersVertical' is defined but never used.  @typescript-eslint/no-unused-vars
+45:10  Error: 'getContent' is defined but never used.  @typescript-eslint/no-unused-vars
+56:10  Error: 'PinIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+56:19  Error: 'docId' is defined but never used.  @typescript-eslint/no-unused-vars
+60:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+95:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+135:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+164:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+194:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+218:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+279:6  Warning: React Hook React.useEffect has missing dependencies: 'dispatch' and 'table'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+324:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/content.tsx
+2:8  Error: 'axios' is defined but never used.  @typescript-eslint/no-unused-vars
+13:8  Error: 'ContentLoading' is defined but never used.  @typescript-eslint/no-unused-vars
+15:6  Error: 'Document' is defined but never used.  @typescript-eslint/no-unused-vars
+72:17  Error: Missing "key" prop for element in iterator  react/jsx-key
+76:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/court-order/book-card.tsx
+7:3  Error: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'CardFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+13:10  Error: 'ISPS' is defined but never used.  @typescript-eslint/no-unused-vars
+15:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+24:3  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+39:5  Error: 'TableCaption' is defined but never used.  @typescript-eslint/no-unused-vars
+41:5  Error: 'TableFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+48:10  Error: 'useAppDispatch' is defined but never used.  @typescript-eslint/no-unused-vars
+78:6  Warning: React Hook useEffect has a missing dependency: 'tableData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+98:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+133:55  Error: 'ispData' is defined but never used.  @typescript-eslint/no-unused-vars
+133:76  Error: 'setIspSelected' is defined but never used.  @typescript-eslint/no-unused-vars
+133:92  Error: 'setSelectedIsps' is defined but never used.  @typescript-eslint/no-unused-vars
+135:16  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+148:89  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:82  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+186:87  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+202:31  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+272:64  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+292:116  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+323:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+344:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/court-order/court-card.tsx
+9:3  Error: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+10:3  Error: 'CardFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+14:10  Error: 'Input' is defined but never used.  @typescript-eslint/no-unused-vars
+17:3  Error: 'Select' is defined but never used.  @typescript-eslint/no-unused-vars
+18:3  Error: 'SelectContent' is defined but never used.  @typescript-eslint/no-unused-vars
+19:3  Error: 'SelectItem' is defined but never used.  @typescript-eslint/no-unused-vars
+20:3  Error: 'SelectTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+21:3  Error: 'SelectValue' is defined but never used.  @typescript-eslint/no-unused-vars
+26:5  Error: 'TableBody' is defined but never used.  @typescript-eslint/no-unused-vars
+27:5  Error: 'TableCaption' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/court-orders.tsx
+7:10  Error: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+11:3  Error: 'FormDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+19:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+21:10  Error: 'ResetPassword' is defined but never used.  @typescript-eslint/no-unused-vars
+25:10  Error: 'PasswordInput' is defined but never used.  @typescript-eslint/no-unused-vars
+26:10  Error: 'RadioGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+26:22  Error: 'RadioGroupItem' is defined but never used.  @typescript-eslint/no-unused-vars
+27:10  Error: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+43:10  Error: 'errorMessage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+44:10  Error: 'progress' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+44:20  Error: 'setProgress' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+46:12  Error: 'isp' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+46:17  Error: 'setIsp' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+76:13  Error: '_' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+83:14  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/default-bar.tsx
+6:8  Error: 'SlideBar' is defined but never used.  @typescript-eslint/no-unused-vars
+9:10  Error: 'Mail' is defined but never used.  @typescript-eslint/no-unused-vars
+13:9  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+32:8  Warning: React Hook useEffect has a missing dependency: 'reduxUser'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+45:31  Error: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+45:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/document-category.tsx
+17:42  Error: 'User' is defined but never used.  @typescript-eslint/no-unused-vars
+21:10  Error: 'getGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+22:10  Error: 'getContent' is defined but never used.  @typescript-eslint/no-unused-vars
+68:22  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+74:8  Warning: React Hook useEffect has a missing dependency: 'doc.id'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+80:8  Warning: React Hook useEffect has a missing dependency: 'dispatch'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+92:89  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+127:70  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+135:46  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/document-list/document-list.tsx
+11:10  Error: 'ScrollArea' is defined but never used.  @typescript-eslint/no-unused-vars
+12:10  Error: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+14:10  Error: 'DragEndEvent' is defined but never used.  @typescript-eslint/no-unused-vars
+18:60  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'DialogClose' is defined but never used.  @typescript-eslint/no-unused-vars
+22:3  Error: 'RowSelectionState' is defined but never used.  @typescript-eslint/no-unused-vars
+24:10  Error: 'setDocIds' is defined but never used.  @typescript-eslint/no-unused-vars
+64:8  Warning: React Hook useEffect has missing dependencies: 'dispatch' and 'groupId'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+81:22  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+87:8  Warning: React Hook useEffect has a missing dependency: 'groupId'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+91:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+270:30  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+293:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+296:43  Error: 'addedGroup' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+319:58  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+339:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+349:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+361:105  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+388:7  Error: 'tags' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/document-list/drag.tsx
+18:6  Warning: React Hook useEffect has missing dependencies: 'dispatch' and 'id'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/document-sheet.tsx
+37:71  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./components/document-upload.tsx
+3:10  Error: 'useState' is defined but never used.  @typescript-eslint/no-unused-vars
+4:10  Error: 'useRouter' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/document-view.tsx
+13:3  Error: 'Table' is defined but never used.  @typescript-eslint/no-unused-vars
+14:3  Error: 'TableBody' is defined but never used.  @typescript-eslint/no-unused-vars
+15:3  Error: 'TableCaption' is defined but never used.  @typescript-eslint/no-unused-vars
+16:3  Error: 'TableCell' is defined but never used.  @typescript-eslint/no-unused-vars
+17:3  Error: 'TableFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+18:3  Error: 'TableHead' is defined but never used.  @typescript-eslint/no-unused-vars
+19:3  Error: 'TableHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+20:3  Error: 'TableRow' is defined but never used.  @typescript-eslint/no-unused-vars
+24:10  Error: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+26:3  Error: 'Dialog' is defined but never used.  @typescript-eslint/no-unused-vars
+27:3  Error: 'DialogClose' is defined but never used.  @typescript-eslint/no-unused-vars
+28:3  Error: 'DialogContent' is defined but never used.  @typescript-eslint/no-unused-vars
+29:3  Error: 'DialogDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+30:3  Error: 'DialogFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+31:3  Error: 'DialogHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+32:3  Error: 'DialogTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+33:3  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+35:10  Error: 'ScrollArea' is defined but never used.  @typescript-eslint/no-unused-vars
+36:10  Error: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+37:10  Error: 'Input' is defined but never used.  @typescript-eslint/no-unused-vars
+38:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+39:10  Error: 'Fragment' is defined but never used.  @typescript-eslint/no-unused-vars
+39:20  Error: 'memo' is defined but never used.  @typescript-eslint/no-unused-vars
+39:26  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+39:37  Error: 'useState' is defined but never used.  @typescript-eslint/no-unused-vars
+40:10  Error: 'number' is defined but never used.  @typescript-eslint/no-unused-vars
+41:10  Error: 'MyPagination' is defined but never used.  @typescript-eslint/no-unused-vars
+41:29  Error: 'Paginor' is defined but never used.  @typescript-eslint/no-unused-vars
+44:8  Error: 'axios' is defined but never used.  @typescript-eslint/no-unused-vars
+45:10  Error: 'useAppSelector' is defined but never used.  @typescript-eslint/no-unused-vars
+58:6  Error: 'LogactivityType' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/group-list.tsx
+22:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/group-table.tsx
+18:89  Error: 'DropdownMenuLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+27:24  Error: 'getGroups' is defined but never used.  @typescript-eslint/no-unused-vars
+29:9  Error: 'useRouter' is defined but never used.  @typescript-eslint/no-unused-vars
+35:3  Error: 'SheetDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+37:3  Error: 'SheetHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+39:3  Error: 'SheetTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+43:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+57:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+82:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+111:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+205:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:12  Error: 'changeNameId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+230:26  Error: 'setChangeNameId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+259:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+282:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+318:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/group-view.tsx
+4:3  Error: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+5:3  Error: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+6:3  Error: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+7:3  Error: 'CardFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'CardHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+9:3  Error: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+13:3  Error: 'Table' is defined but never used.  @typescript-eslint/no-unused-vars
+14:3  Error: 'TableBody' is defined but never used.  @typescript-eslint/no-unused-vars
+15:3  Error: 'TableCaption' is defined but never used.  @typescript-eslint/no-unused-vars
+16:3  Error: 'TableCell' is defined but never used.  @typescript-eslint/no-unused-vars
+17:3  Error: 'TableFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+18:3  Error: 'TableHead' is defined but never used.  @typescript-eslint/no-unused-vars
+19:3  Error: 'TableHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+20:3  Error: 'TableRow' is defined but never used.  @typescript-eslint/no-unused-vars
+24:10  Error: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+26:3  Error: 'Dialog' is defined but never used.  @typescript-eslint/no-unused-vars
+27:3  Error: 'DialogClose' is defined but never used.  @typescript-eslint/no-unused-vars
+28:3  Error: 'DialogContent' is defined but never used.  @typescript-eslint/no-unused-vars
+29:3  Error: 'DialogDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+30:3  Error: 'DialogFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+31:3  Error: 'DialogHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+32:3  Error: 'DialogTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+33:3  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+35:10  Error: 'ScrollArea' is defined but never used.  @typescript-eslint/no-unused-vars
+36:10  Error: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+38:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+39:10  Error: 'number' is defined but never used.  @typescript-eslint/no-unused-vars
+40:10  Error: 'MyPagination' is defined but never used.  @typescript-eslint/no-unused-vars
+40:29  Error: 'Paginor' is defined but never used.  @typescript-eslint/no-unused-vars
+41:20  Error: 'User' is defined but never used.  @typescript-eslint/no-unused-vars
+43:8  Error: 'DragDrop' is defined but never used.  @typescript-eslint/no-unused-vars
+74:8  Warning: React Hook useEffect has missing dependencies: 'dispatch' and 'groupData?.id'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+84:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:26  Error: 'evt' is defined but never used.  @typescript-eslint/no-unused-vars
+90:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/loading/dialog.tsx
+8:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/login-form.tsx
+11:3  Error: 'FormDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+26:8  Error: 'axios' is defined but never used.  @typescript-eslint/no-unused-vars
+28:10  Error: 'RadioGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+28:22  Error: 'RadioGroupItem' is defined but never used.  @typescript-eslint/no-unused-vars
+45:9  Error: 'pathname' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:14  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/mail/content.tsx
+6:3  Error: 'ColumnFiltersState' is defined but never used.  @typescript-eslint/no-unused-vars
+7:3  Error: 'SortingState' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'VisibilityState' is defined but never used.  @typescript-eslint/no-unused-vars
+16:23  Error: 'ChevronDown' is defined but never used.  @typescript-eslint/no-unused-vars
+16:36  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+16:52  Error: 'SlidersVertical' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'Checkbox' is defined but never used.  @typescript-eslint/no-unused-vars
+22:3  Error: 'DropdownMenu' is defined but never used.  @typescript-eslint/no-unused-vars
+23:3  Error: 'DropdownMenuCheckboxItem' is defined but never used.  @typescript-eslint/no-unused-vars
+24:3  Error: 'DropdownMenuContent' is defined but never used.  @typescript-eslint/no-unused-vars
+25:3  Error: 'DropdownMenuTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+37:8  Error: 'ActionDropdown' is defined but never used.  @typescript-eslint/no-unused-vars
+38:10  Error: 'useEffectExceptOnMount' is defined but never used.  @typescript-eslint/no-unused-vars
+55:10  Error: 'PinIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+55:19  Error: 'docId' is defined but never used.  @typescript-eslint/no-unused-vars
+59:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+111:15  Error: 'title' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+139:16  Error: 'column' is defined but never used.  @typescript-eslint/no-unused-vars
+199:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+205:6  Warning: React Hook React.useEffect has a missing dependency: 'dataChaged'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+211:8  Warning: React Hook React.useEffect has a missing dependency: 'table'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+233:6  Warning: React Hook React.useEffect has missing dependencies: 'dispatch' and 'table'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+250:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/mail/group-form.tsx
+11:3  Error: 'FormDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+19:43  Error: 'User' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'useAppDispatch' is defined but never used.  @typescript-eslint/no-unused-vars
+20:26  Error: 'useAppSelector' is defined but never used.  @typescript-eslint/no-unused-vars
+21:46  Error: 'DialogDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+21:65  Error: 'DialogFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+21:79  Error: 'DialogHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+21:106  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+22:10  Error: 'ScrollArea' is defined but never used.  @typescript-eslint/no-unused-vars
+23:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+24:10  Error: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+25:10  Error: 'AlertCircleIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+25:27  Error: 'CheckCircle2Icon' is defined but never used.  @typescript-eslint/no-unused-vars
+25:45  Error: 'PopcornIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+27:3  Error: 'Alert' is defined but never used.  @typescript-eslint/no-unused-vars
+28:3  Error: 'AlertDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+29:3  Error: 'AlertTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+31:8  Error: 'DatePicker' is defined but never used.  @typescript-eslint/no-unused-vars
+32:10  Error: 'getIsps' is defined but never used.  @typescript-eslint/no-unused-vars
+38:7  Error: 'tempUsers' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+87:6  Warning: React Hook useEffect has missing dependencies: 'form' and 'groupId'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+98:6  Warning: React Hook useEffect has a missing dependency: 'updateField'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+112:6  Warning: React Hook useEffect has a missing dependency: 'updateField'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+123:6  Warning: React Hook useEffect has a missing dependency: 'updateField'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+187:14  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+226:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+328:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/mail-table.tsx
+3:27  Error: 'Group' is defined but never used.  @typescript-eslint/no-unused-vars
+16:36  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+16:52  Error: 'Trash2' is defined but never used.  @typescript-eslint/no-unused-vars
+16:60  Error: 'FolderPen' is defined but never used.  @typescript-eslint/no-unused-vars
+16:71  Error: 'Plus' is defined but never used.  @typescript-eslint/no-unused-vars
+18:71  Error: 'DropdownMenuItem' is defined but never used.  @typescript-eslint/no-unused-vars
+18:89  Error: 'DropdownMenuLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+18:108  Error: 'DropdownMenuSeparator' is defined but never used.  @typescript-eslint/no-unused-vars
+23:10  Error: 'NewPlaylistSheet' is defined but never used.  @typescript-eslint/no-unused-vars
+24:10  Error: 'openModal' is defined but never used.  @typescript-eslint/no-unused-vars
+24:21  Error: 'PLAYLISTUI' is defined but never used.  @typescript-eslint/no-unused-vars
+25:26  Error: 'useAppSelector' is defined but never used.  @typescript-eslint/no-unused-vars
+26:20  Error: 'useRef' is defined but never used.  @typescript-eslint/no-unused-vars
+27:10  Error: 'getGroupList' is defined but never used.  @typescript-eslint/no-unused-vars
+27:24  Error: 'getGroups' is defined but never used.  @typescript-eslint/no-unused-vars
+27:35  Error: 'RemoveGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+27:48  Error: 'RenameGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+29:9  Error: 'useRouter' is defined but never used.  @typescript-eslint/no-unused-vars
+30:10  Error: 'setRename' is defined but never used.  @typescript-eslint/no-unused-vars
+30:21  Error: 'toggleDataChanged' is defined but never used.  @typescript-eslint/no-unused-vars
+32:3  Error: 'Sheet' is defined but never used.  @typescript-eslint/no-unused-vars
+33:3  Error: 'SheetClose' is defined but never used.  @typescript-eslint/no-unused-vars
+34:3  Error: 'SheetContent' is defined but never used.  @typescript-eslint/no-unused-vars
+35:3  Error: 'SheetDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+36:3  Error: 'SheetFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+37:3  Error: 'SheetHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+38:3  Error: 'SheetTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+39:3  Error: 'SheetTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+41:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+42:10  Error: 'getMails' is defined but never used.  @typescript-eslint/no-unused-vars
+44:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+58:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+82:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+129:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+158:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+177:7  Error: 'ispColumns' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+177:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:3  Error: 'user' is defined but never used.  @typescript-eslint/no-unused-vars
+188:11  Error: 'dispatch' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+221:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+272:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/main/content.tsx
+7:3  Error: 'ColumnFiltersState' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'SortingState' is defined but never used.  @typescript-eslint/no-unused-vars
+9:3  Error: 'VisibilityState' is defined but never used.  @typescript-eslint/no-unused-vars
+56:10  Error: 'PinIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+56:19  Error: 'docId' is defined but never used.  @typescript-eslint/no-unused-vars
+60:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+95:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+131:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+159:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+189:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+213:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+238:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+266:9  Error: 'ws' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+311:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+317:6  Warning: React Hook React.useEffect has a missing dependency: 'dataChaged'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+324:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+337:8  Warning: React Hook React.useEffect has a missing dependency: 'table'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+347:6  Warning: React Hook React.useEffect has missing dependencies: 'dispatch' and 'table'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+399:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/main/new-playlist-sheet.tsx
+3:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+11:3  Error: 'SheetDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+15:3  Error: 'SheetTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+18:34  Error: 'toggleModal' is defined but never used.  @typescript-eslint/no-unused-vars
+21:10  Error: 'X' is defined but never used.  @typescript-eslint/no-unused-vars
+23:3  Error: 'Select' is defined but never used.  @typescript-eslint/no-unused-vars
+24:3  Error: 'SelectContent' is defined but never used.  @typescript-eslint/no-unused-vars
+25:3  Error: 'SelectGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+26:3  Error: 'SelectItem' is defined but never used.  @typescript-eslint/no-unused-vars
+27:3  Error: 'SelectLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+28:3  Error: 'SelectTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+29:3  Error: 'SelectValue' is defined but never used.  @typescript-eslint/no-unused-vars
+42:6  Error: 'KindOption' is defined but never used.  @typescript-eslint/no-unused-vars
+52:11  Error: 'rowsSelect' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+56:12  Error: 'kind' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+56:18  Error: 'setKind' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+95:83  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:69  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/main/playlist-dialog.tsx
+6:3  Error: 'DialogDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+10:3  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+12:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+13:10  Error: 'Input' is defined but never used.  @typescript-eslint/no-unused-vars
+33:7  Error: 'tags' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+47:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:26  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+94:20  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+101:8  Warning: React Hook useEffect has a missing dependency: 'dispatch'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+115:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/my-pagination.tsx
+20:29  Error: Component definition is missing display name  react/display-name
+
+./components/newdoc-form.tsx
+11:3  Error: 'FormDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+18:3  Error: 'Select' is defined but never used.  @typescript-eslint/no-unused-vars
+19:3  Error: 'SelectContent' is defined but never used.  @typescript-eslint/no-unused-vars
+20:3  Error: 'SelectGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+21:3  Error: 'SelectItem' is defined but never used.  @typescript-eslint/no-unused-vars
+22:3  Error: 'SelectLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+23:3  Error: 'SelectTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+24:3  Error: 'SelectValue' is defined but never used.  @typescript-eslint/no-unused-vars
+29:10  Error: 'ResetPassword' is defined but never used.  @typescript-eslint/no-unused-vars
+33:10  Error: 'PasswordInput' is defined but never used.  @typescript-eslint/no-unused-vars
+50:12  Error: 'isp' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+50:17  Error: 'setIsp' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:13  Error: '_' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+87:14  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/password-input.tsx
+6:11  Error: An interface declaring no members is equivalent to its supertype.  @typescript-eslint/no-empty-object-type
+9:6  Error: 'type' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/playlist-table.tsx
+16:36  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+16:52  Error: 'SlidersVertical' is defined but never used.  @typescript-eslint/no-unused-vars
+27:24  Error: 'getGroups' is defined but never used.  @typescript-eslint/no-unused-vars
+30:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+44:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+69:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+98:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+117:40  Error: 'data' is defined but never used.  @typescript-eslint/no-unused-vars
+152:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+175:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+211:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/profile-view.tsx
+15:3  Error: 'TableCaption' is defined but never used.  @typescript-eslint/no-unused-vars
+27:3  Error: 'DialogClose' is defined but never used.  @typescript-eslint/no-unused-vars
+30:3  Error: 'DialogFooter' is defined but never used.  @typescript-eslint/no-unused-vars
+37:10  Error: 'Input' is defined but never used.  @typescript-eslint/no-unused-vars
+38:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+39:20  Error: 'memo' is defined but never used.  @typescript-eslint/no-unused-vars
+40:10  Error: 'number' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/register-form.tsx
+11:3  Error: 'FormDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+29:10  Error: 'ResetPassword' is defined but never used.  @typescript-eslint/no-unused-vars
+32:8  Error: 'axios' is defined but never used.  @typescript-eslint/no-unused-vars
+50:18  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/reset-password.tsx
+4:3  Error: 'Dialog' is defined but never used.  @typescript-eslint/no-unused-vars
+10:3  Error: 'DialogTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+13:10  Error: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+21:3  Error: 'FormDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+45:26  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/slidebar.tsx
+4:5  Error: 'Sidebar' is defined but never used.  @typescript-eslint/no-unused-vars
+5:5  Error: 'SidebarContent' is defined but never used.  @typescript-eslint/no-unused-vars
+6:5  Error: 'SidebarGroup' is defined but never used.  @typescript-eslint/no-unused-vars
+7:5  Error: 'SidebarGroupLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+8:5  Error: 'SidebarGroupContent' is defined but never used.  @typescript-eslint/no-unused-vars
+9:5  Error: 'SidebarMenu' is defined but never used.  @typescript-eslint/no-unused-vars
+10:5  Error: 'SidebarMenuItem' is defined but never used.  @typescript-eslint/no-unused-vars
+11:5  Error: 'SidebarMenuButton' is defined but never used.  @typescript-eslint/no-unused-vars
+13:6  Error: 'MenuType' is defined but never used.  @typescript-eslint/no-unused-vars
+94:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/store/features/group-list-ui-slice.ts
+1:15  Error: 'Document' is defined but never used.  @typescript-eslint/no-unused-vars
+4:3  Error: 'SortingState' is defined but never used.  @typescript-eslint/no-unused-vars
+5:3  Error: 'ColumnFiltersState' is defined but never used.  @typescript-eslint/no-unused-vars
+6:3  Error: 'VisibilityState' is defined but never used.  @typescript-eslint/no-unused-vars
+7:3  Error: 'RowSelectionState' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/table-content.tsx
+6:5  Error: 'TableCaption' is defined but never used.  @typescript-eslint/no-unused-vars
+24:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+89:27  Error: 'setDelDocumentId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+90:12  Error: 'editDocumentId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+90:28  Error: 'setEditDocumentId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+107:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/user-dropdown.tsx
+22:49  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:9  Error: 'pathname' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+38:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+47:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+60:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+63:19  Error: '_' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/user-inbox.tsx
+6:3  Error: 'ColumnFiltersState' is defined but never used.  @typescript-eslint/no-unused-vars
+7:3  Error: 'SortingState' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'VisibilityState' is defined but never used.  @typescript-eslint/no-unused-vars
+38:10  Error: 'useEffectExceptOnMount' is defined but never used.  @typescript-eslint/no-unused-vars
+55:10  Error: 'PinIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+55:19  Error: 'docId' is defined but never used.  @typescript-eslint/no-unused-vars
+59:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+121:15  Error: 'selected' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+151:15  Error: 'title' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+251:16  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+257:6  Warning: React Hook React.useEffect has a missing dependency: 'dataChaged'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+300:6  Warning: React Hook React.useEffect has missing dependencies: 'dispatch' and 'table'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+352:56  Error: 'idx' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/user-mailbox.tsx
+17:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/utils.ts
+4:10  Error: 'NextApiResponse' is defined but never used.  @typescript-eslint/no-unused-vars
+53:39  Error: 'returnRes' is defined but never used.  @typescript-eslint/no-unused-vars
+88:12  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+95:19  Error: 'refresh' is never reassigned. Use 'const' instead.  prefer-const
+95:28  Error: 'url' is never reassigned. Use 'const' instead.  prefer-const
+95:33  Error: 'method' is never reassigned. Use 'const' instead.  prefer-const
+95:41  Error: 'file' is never reassigned. Use 'const' instead.  prefer-const
+95:55  Error: 'bodyParams' is never reassigned. Use 'const' instead.  prefer-const
+95:67  Error: 'returnRes' is never reassigned. Use 'const' instead.  prefer-const
+161:12  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules

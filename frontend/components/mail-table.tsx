@@ -39,7 +39,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Label } from "./ui/label";
-import { getMails } from "./actions/mail";
+import { getMails, getStaffMails } from "./actions/mail";
 
 const staffColumns: ColumnDef<(Mail | any)[]> = [
  {
@@ -63,11 +63,11 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { datetime } = row.original;
+      const { createdAt } = row.original;
 
       return (
         <div>
-          {Datetime2Thai(datetime)}
+          {Datetime2Thai(createdAt)}
           </div>
       );
     },
@@ -95,41 +95,8 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       );
     },
   }, {
-    id: 'ผู้ให้บริการ',
-    accessorKey: "receiver",
-    sortingFn: (rowA, rowB, columnId) => {
-      const ispA = rowA.getValue(columnId).isp.name;
-      const ispB = rowB.getValue(columnId).isp.name;
-      return ispA - ispB; // ascending
-    },
-    header: ({ column }) => {
-      return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
-            ผู้ให้บริการ
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const { receiver } = row.original;
-      return (
-        <div>
-          {receiver?.isp?.name?? '-'}
-          </div>
-      );
-    },
-  }, {
     id: 'จำนวนคำสั่งศาล',
-    accessorKey: "documents",
-    sortingFn: (rowA, rowB, columnId) => {
-      const lenA = rowA.getValue(columnId).length;
-      const lenB = rowB.getValue(columnId).length;
-      return lenA - lenB; // ascending
-    },
+    accessorKey: "numDocuments",
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -143,22 +110,22 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { documents } = row.original;
+      const { numDocuments } = row.original;
 
       return (
         <div>
-          {documents?.length?? '-'}
+          {numDocuments}
           </div>
       );
     },
   }, {
-    id: 'สถานะการส่ง',
-    accessorKey: "status",
+    id: 'ส่ง',
+    accessorKey: "sends",
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            สถานะการส่ง
+            ส่ง
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
@@ -167,43 +134,22 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { status} = row.original;
-
-      let sendStatus = '-';
-      let sendColor = '';
-
-      switch (status) {
-        case 'successful':
-          sendStatus = 'สำเร็จ' 
-          sendColor = 'text-green-700'
-          break;
-        case 'fail':
-          sendStatus = 'ไม่สำเร็จ' 
-          sendColor = 'text-red-700'
-          break;
-        case 'idle':
-          sendStatus = 'ยังไม่ส่ง' 
-          sendColor = 'text-orange-700'
-          break;
-      
-        default:
-          break;
-      }
+      const { sends } = row.original;
 
       return (
-        <div className={sendColor}>
-          {sendStatus}
+        <div>
+          {sends}
           </div>
       );
     },
   }, {
     id: 'ยืนยัน',
-    accessorKey: "confirmedDate",
-    sortingFn: (rowA, rowB, columnId) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
+    accessorKey: "confirms",
+    // sortingFn: (rowA, rowB, columnId) => {
+    //   const dateA = new Date(rowA.getValue(columnId));
+    //   const dateB = new Date(rowB.getValue(columnId));
+    //   return dateA.getTime() - dateB.getTime(); // ascending
+    // },
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -217,11 +163,11 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
       )
     },
     cell: ({ row }) => {
-      const { confirmedDate } = row.original;
+      const { confirms } = row.original;
 
       return (
         <div>
-          {confirmedDate? Datetime2Thai(confirmedDate): 'ยังไม่ยืนยัน'}
+          {confirms}
           </div>
       );
     },
@@ -229,117 +175,7 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
 ]
 
 const ispColumns: ColumnDef<(Mail | any)[]> = [
-  {
-    id: 'ส่งวันที่',
-    accessorKey: "datetime",
-    sortingFn: (rowA, rowB, columnId) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
-    header: ({ column }) => {
-      return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
-          วันที่
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const { datetime } = row.original;
-
-      return (
-        <div>
-          {Datetime2Thai(datetime)}
-          </div>
-      );
-    },
-  }, {
-    id: 'เลขหนังสือ',
-    accessorKey: "DocumentNo",
-    header: ({ column }) => {
-      return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
-            เลขหนังสือ
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const { documentNo } = row.original;
-      return (
-        <div>
-          {documentNo?? '-'}
-          </div>
-      );
-    },
-  }, {
-    id: 'จำนวนคำสั่งศาล',
-    accessorKey: "documents",
-    sortingFn: (rowA, rowB, columnId) => {
-      const lenA = rowA.getValue(columnId).length;
-      const lenB = rowB.getValue(columnId).length;
-      return lenA - lenB; // ascending
-    },
-    header: ({ column }) => {
-      return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
-            จำนวนคำสั่งศาล
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const { documents } = row.original;
-
-      return (
-        <div>
-          {documents?.length?? '-'}
-          </div>
-      );
-    },
-  }, {
-    id: 'ยืนยัน',
-    accessorKey: "confirmedDate",
-    sortingFn: (rowA, rowB, columnId) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
-    header: ({ column }) => {
-      return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
-            ยืนยัน
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const { confirmedDate } = row.original;
-
-      return (
-        <div>
-          {confirmedDate? Datetime2Thai(confirmedDate): 'ยังไม่ยืนยัน'}
-          </div>
-      );
-    },
-  }
+  
 ]
 
 export default function MailTable({
@@ -353,7 +189,8 @@ export default function MailTable({
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    const columns = user.isp? ispColumns: staffColumns;
+    // const columns = user.isp? ispColumns: staffColumns;
+    const columns = staffColumns;
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
@@ -379,7 +216,7 @@ export default function MailTable({
   useEffect(() => {
     const getData = async() => {
       try {
-        const data = await getMails(); 
+        const data = await getStaffMails(); 
         setTableData(data);
       } catch (error) {
         setTableData([]);

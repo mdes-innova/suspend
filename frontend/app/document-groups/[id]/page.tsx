@@ -1,19 +1,14 @@
 import { getGroup, getUntilted, postGroup } from "@/components/actions/group";
 import { GetFilesFromGroup } from "@/components/actions/group-file";
 import { getIsps } from "@/components/actions/isp";
-import { getProfile, getUsers } from "@/components/actions/user";
 import { getCurrentDate } from "@/components/actions/utils";
-import Activity from "@/components/activity";
-import DocumentView from "@/components/document-view";
 import { AuthError } from "@/components/exceptions/auth";
 import GroupView from "@/components/group-view";
-import { type Group, type User } from "@/lib/types";
-import { fetchWithAccessApp } from "@/lib/utils";
-import { cookies } from "next/headers";
+import { type Group} from "@/lib/types";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-async function Components({ params, searchParams }: { params: any, searchParams: any }) {
+async function Components({ params }: { params: { id: string }}) {
   const { id } = (await params);
 
   try {
@@ -27,22 +22,10 @@ async function Components({ params, searchParams }: { params: any, searchParams:
         groupData = createdUntitled;
       } catch (err1) {
         if (err1 instanceof AuthError) throw err1;
-        else {
-          try {
-            const gettedUntitled = await getUntilted();
-            gettedUntitled.createdAt = currentDate;
-            console.log(gettedUntitled)
-            groupData = gettedUntitled;
-          } catch (err2) {
-            if (err1 instanceof AuthError) throw err1;
-            else {
-              return <></>;
-            }
-          }
-        }
+            return <></>;
       }
     } else {
-      groupData = await getGroup(id);
+      groupData = await getGroup(parseInt(id));
     }
 
     const isps = await getIsps();

@@ -105,3 +105,11 @@ export type GroupFile = {
   file?: Blob,
   originalFilename?: string
 }
+
+export type StaffMail = {
+  createdAt: string,
+  documentNo: string,
+  numDocuments: number,
+  sends: string,
+  confirms: string
+}
