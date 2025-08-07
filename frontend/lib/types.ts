@@ -86,7 +86,7 @@ export type Mail = {
   receiver: User,
   sender: User,
   group?: Group,
-  groupFiles?: GroupFile[],
+  mailFile: MailFile,
   createdAt: string,
   confirmed?: boolean,
   confirmedHash?: string,
@@ -94,8 +94,16 @@ export type Mail = {
   documentDate?: string,
   speed?: number,
   secret?: number,
-  confirmedDate?: string
+  confirmedDate?: string,
+  status: string
+}
 
+export type MailFile = {
+  id?: number,
+  originalFilename: string,
+  isp: Isp,
+  mail: number,
+  createdAt: string
 }
 
 export type GroupFile = {
@@ -107,6 +115,8 @@ export type GroupFile = {
 }
 
 export type StaffMail = {
+  id?: number,
+  mailGroupId: string,
   createdAt: string,
   documentNo: string,
   numDocuments: number,

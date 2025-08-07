@@ -3,7 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets
 from .serializer import ISPSerializer
 from document.serializer import DocumentSerializer
-from core.models import ISP, Document, Activity
+from core.models import ISP, Document
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response

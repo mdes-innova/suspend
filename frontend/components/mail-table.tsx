@@ -121,6 +121,13 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }, {
     id: 'ส่ง',
     accessorKey: "sends",
+    sortingFn: (rowA, rowB, columnId) => {
+      const splitedAs = rowA.getValue(columnId).split('/');
+      const splitedBs = rowB.getValue(columnId).split('/');
+      const a = parseFloat(splitedAs[0])/parseFloat(splitedAs[1]);
+      const b = parseFloat(splitedBs[0])/parseFloat(splitedBs[1]);
+      return a - b; // ascending
+    },
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -145,11 +152,13 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }, {
     id: 'ยืนยัน',
     accessorKey: "confirms",
-    // sortingFn: (rowA, rowB, columnId) => {
-    //   const dateA = new Date(rowA.getValue(columnId));
-    //   const dateB = new Date(rowB.getValue(columnId));
-    //   return dateA.getTime() - dateB.getTime(); // ascending
-    // },
+    sortingFn: (rowA, rowB, columnId) => {
+      const splitedAs = rowA.getValue(columnId).split('/');
+      const splitedBs = rowB.getValue(columnId).split('/');
+      const a = parseFloat(splitedAs[0])/parseFloat(splitedAs[1]);
+      const b = parseFloat(splitedBs[0])/parseFloat(splitedBs[1]);
+      return a - b; // ascending
+    },
     header: ({ column }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -217,6 +226,7 @@ export default function MailTable({
     const getData = async() => {
       try {
         const data = await getStaffMails(); 
+        console.log(data)
         setTableData(data);
       } catch (error) {
         setTableData([]);
@@ -296,19 +306,12 @@ export default function MailTable({
                 >
                   {row.getVisibleCells().map((cell, idx) => (
                     <TableCell key={cell.id}>
-                        {idx != row.getVisibleCells().length - 1? <Link href={`/document-groups/${row.original.id}`}>
+                        <Link href={`/mail/${row.original.mailGroupId}`}>
                             {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()
                             )}
-                            </Link>:
-                            <div>
-                              {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                              )}
-                            </div>
-                          }
+                        </Link>
                     </TableCell>
                   ))}
                 </TableRow>

@@ -1,18 +1,20 @@
 """View module for activity app."""
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets
-from .serializer import MailSerializer
+from .serializer import MailSerializer, MailFileSerializer
 from user.serializer import UserSerializer
-from group.serializer import GroupFileSerializer, GroupSerializer
-from core.models import Mail, MailStatus, Group, GroupFile
+from core.models import Mail, MailStatus, Group, GroupFile, MailFile
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.http import FileResponse
 import uuid
 import urllib.parse
 from core.permissions import IsAdminOnlyUser
 from django.utils import timezone
+from django.core.files.base import File
+
 
 
 class MailViews(viewsets.ModelViewSet):
@@ -22,6 +24,8 @@ class MailViews(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'confirm':
             return [AllowAny()]
+        elif self.action == 'send_mails':
+            return super().get_permissions()
         else:
             if self.request.method == 'GET':
                 return [IsAuthenticated()]
@@ -67,8 +71,21 @@ class MailViews(viewsets.ModelViewSet):
         document_no = group.document_no
         group_files = GroupFile.objects.filter(group=group)
 
-        for group_file in group_files:
-            isp = group_file.isp
+        mail_files = []
+        for gf in group_files:
+            mail_file = MailFile.objects.create(
+                isp=gf.isp,
+                original_filename=gf.original_filename
+            )
+
+            gf_file = gf.file
+            with gf_file.open('rb') as f:
+                mail_file.file.save(gf_file.name.split('/')[-1], File(f))
+                mail_file.save()
+            mail_files.append(mail_file)
+
+        for mail_file in mail_files:
+            isp = mail_file.isp
             receivers = isp.users.all()  # type: ignore
             for receiver in receivers:
                 try:
@@ -80,7 +97,7 @@ class MailViews(viewsets.ModelViewSet):
                         'subject': group.title,
                         'speed': group.speed,
                         'secret': group.secret,
-                        'group_file_id': group_file.id,  # type: ignore
+                        'mail_file_id': mail_file.id,  # type: ignore
                         'receiver_id': receiver.id
                     }
                     serializer = MailSerializer(data=data, context={'request': request})
@@ -105,7 +122,7 @@ class MailViews(viewsets.ModelViewSet):
         #         serializer.save
 
         return Response({
-            'data': "Mail has been being successfully sent."
+            'data': str(mail_group_id)
         })
 
     @action(
@@ -133,6 +150,7 @@ class MailViews(viewsets.ModelViewSet):
                 created_at = obj.created_at
                 n_documents = len(obj.documents.all())
                 data.append({
+                    'mail_group_id': str(mail_group_id),
                     'document_no': document_no,
                     'created_at': created_at,
                     'num_documents': n_documents,
@@ -140,6 +158,27 @@ class MailViews(viewsets.ModelViewSet):
                     'confirms': f'{obj_confirms}/{len(objs)}'
                 })
         return Response(data)
+    
+    @action(
+        detail=False,
+        methods=['GET'],
+        url_path='group-mail/(?P<gmid>[^/]+)'
+    )
+    def group_mail(self, request, gmid=None):
+        if not gmid:
+            return Response({
+                'error': 'Mail group id not found.'
+            })
+        
+        mails = Mail.objects.filter(mail_group_id=gmid)
+        if not mails or not len(mails):
+            return Response({
+                'error': 'Empty mails.'
+            })
+        
+        serializer = MailSerializer(mails, many=True) 
+        return Response(serializer.data)
+        
 
     def get_queryset(self):
         user = self.request.user
@@ -148,3 +187,43 @@ class MailViews(viewsets.ModelViewSet):
         else:
             return Mail.objects.filter(receiver=user,
                                        statsu=MailStatus.SUCCESSFUL).distinct()
+
+
+class MailFileView(viewsets.ModelViewSet):
+    serializer_class = MailFileSerializer
+    queryset = MailFile.objects.all().order_by('-created_at')
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        else:
+            return [IsAdminOnlyUser()]
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='download/(?P<fid>[^/]+)'
+    )
+    def download(self, request, fid=None):
+        if not fid:
+            return Response({"error": "Cannot download group file."}, status=400)
+
+        try:
+            mail_file = MailFile.objects.get(pk=fid)
+        except MailFile.DoesNotExist:
+            return Response({'detail': "File not available"},
+                            status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'detail': "File not available"},
+                            status.HTTP_404_NOT_FOUND)
+        else:
+            if mail_file:
+                return FileResponse(
+                    mail_file.file.open('rb'),
+                    as_attachment=True,
+                    filename=str(mail_file.original_filename),
+                    content_type='application/pdf'
+                )
+            else:
+                return Response({'detail': "File not available"},
+                                status.HTTP_404_NOT_FOUND)

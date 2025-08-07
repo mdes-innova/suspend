@@ -38,7 +38,7 @@ ISPS = {
 def create_all_isps():
     ISP.objects.all().delete()
     ISP.objects.bulk_create([
-        ISP(name=v, isp_id=k, email="arnon3339@gmail.com")
+        ISP(name=v, isp_id=k)
             for k, v in ISPS.items()
     ])
 

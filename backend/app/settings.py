@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'category',
     'url',
     'group',
-    'activity',
+    # 'activity',
     'mail',
     'kind',
     'celr',
@@ -76,7 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'logs.middleware.RequestLoggingMiddleware'
+    # 'logs.middleware.RequestLoggingMiddleware'
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

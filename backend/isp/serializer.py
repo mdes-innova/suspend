@@ -1,6 +1,6 @@
 """Serializer module for isp app."""
 from rest_framework import serializers
-from core.models import ISP, Activity
+from core.models import ISP
 
 
 class ISPSerializer(serializers.ModelSerializer):

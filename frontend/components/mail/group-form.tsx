@@ -35,7 +35,9 @@ import { SendMails } from "../actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
 import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "../actions/group"
 import DialogLoading from "../loading/dialog"
-import { closeModal, LOADINGUI, openModal } from "../store/features/loading-ui-slice"
+import { closeModal, LOADINGUI, openModal } from "../store/features/loading-ui-slice";
+import { useRouter } from 'next/navigation';
+
 
 const tempUsers = [
     "user1", 'arnon songmoolnak', 'arnon', 'pok', 'arnonsongmoolnak arnonsongmoolnak'
@@ -63,6 +65,8 @@ export function GroupForm({
     const [mailStatus, setMailStatus] = useState(2);
     const dispatch = useAppDispatch();
     const submitRef = useRef(null);
+    const [sendText, setSendText] = useState(0);
+    const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
       defaultValues: {
@@ -70,6 +74,7 @@ export function GroupForm({
         title: "",
       },
   });
+  const router = useRouter();
 
   useEffect(() => {
     const getData = async() => {
@@ -187,16 +192,24 @@ export function GroupForm({
         kind: 'documentNo',
         value: values.documentNo
       });
-      await SendMails(groupId);
-      setMailStatus(0);
+      const mailGroupId = (await SendMails(groupId)).data;
+      setSendText(1)
+      setMgId(mailGroupId);
       
     } catch (error) {
-      setMailStatus(1);
+      setSendText(2)
     }
     dispatch(closeModal({ui: LOADINGUI.dialog}));
   }
 
+  useEffect(() => {
+    if (sendText === 1) setMailStatus(0);
+    else if (sendText === 2) setMailStatus(1);
+  }, [sendText]);
 
+  useEffect(() => {
+    if (mailStatus === 2) setSendText(0);
+  }, [mailStatus]);
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
@@ -207,14 +220,19 @@ export function GroupForm({
         <DialogContent>
           <DialogTitle>
             {
-              mailStatus === 0? 'ส่งอีเมลล์สำเร็จ':'ส่งอีเมลล์ไม่สำเร็จ'
+              ['', 'ส่งเมลล์สำเร็จ', 'ส่งเมลล์ไม่สำเร็จ'][sendText]
             }
           </DialogTitle>
-          <DialogClose asChild>
-            <Button variant={mailStatus === 0? '': 'destructive'}>
+            <Button variant={mailStatus === 0? '': 'destructive'}
+              onClick={(e: any) => {
+                e.preventDefault();
+                if (mailStatus === 0)
+                  router.push(`/mail/${mgId}`);
+                setMailStatus(2);
+              }}
+            >
               ตกลง
             </Button>
-          </DialogClose>
         </DialogContent>
       </Dialog>
       <Form {...form}>

@@ -1,9 +1,10 @@
 """Mail serializer module."""
 from rest_framework import serializers
-from core.models import Mail, MailStatus, Group, GroupFile
+from core.models import Mail, MailStatus, Group, ISP, MailFile
 from user.serializer import UserSerializer
 from document.serializer import DocumentSerializer
 from group.serializer import GroupSerializer, GroupFileSerializer
+from isp.serializer import ISPSerializer
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from django.utils import timezone
@@ -22,6 +23,20 @@ import io
 import tempfile
 
 
+class MailFileSerializer(serializers.ModelSerializer):
+    isp_id = serializers.PrimaryKeyRelatedField(
+        queryset=ISP.objects.all(),
+        write_only=True
+    )
+    isp = ISPSerializer(read_only=True)
+    class Meta:
+        model = MailFile
+        fields = ['id', 'original_filename',
+                  'isp_id', 'isp', 'created_at', 'mail']
+        read_only_fields = ['id', 'file', 'original_filename',
+                            'isp', 'created_at']
+
+
 class MailSerializer(serializers.ModelSerializer):
     """Serializer class"""
     group_id = serializers.PrimaryKeyRelatedField(
@@ -35,11 +50,11 @@ class MailSerializer(serializers.ModelSerializer):
         write_only=True
     )
     receiver = UserSerializer(read_only=True)
-    group_file_id = serializers.PrimaryKeyRelatedField(
-        queryset=GroupFile.objects.all(),
+    mail_file_id = serializers.PrimaryKeyRelatedField(
+        queryset=MailFile.objects.all(),
         write_only=True
     )
-    group_file = GroupFileSerializer(read_only=True)
+    mail_file = MailFileSerializer(read_only=True)
     documents = DocumentSerializer(
         read_only=True,
         many=True
@@ -58,18 +73,18 @@ class MailSerializer(serializers.ModelSerializer):
         model = Mail
         fields = ['id', 'mail_group_id', 'group', 'sender', 'document_no',
                   'document_date', 'speed', 'secret', 'group_id',
-                  'receiver_id', 'receiver', 'group_file_id', 'group_file',
+                  'receiver_id', 'receiver', 'mail_file_id', 'mail_file',
                   'documents', 'subject', 'document_no', 'status',
                   'datetime', 'confirmed', 'confirmed_hash', 'confirmed_date',
                   'created_at',
                   'modified_at']
-        read_only_fields = ['id', 'group', 'sender', 'receiver', 'group_file',
+        read_only_fields = ['id', 'group', 'sender', 'receiver', 'mail_file',
                             'documents', 'created_at', 'modified_at',
                             'confirmed_date',
                             'confirmed', 'confirmed_hash', 'status',
                             'datetime']
 
-    def send_email(self, receiver, group_file, group, confirmed_hash):
+    def send_email(self, receiver, mail_file, group, confirmed_hash):
         # SMTP server connection
         server = smtplib.SMTP(os.environ.get('MAIL_SMTP_SERVER'), os.environ.get('MAIL_PORT'))
         server.starttls()
@@ -115,13 +130,13 @@ class MailSerializer(serializers.ModelSerializer):
 
         msg.attach(body_part)
 
-        if group_file.file:
-            file_path = group_file.file.path
+        if mail_file.file:
+            file_path = mail_file.file.path
             with open(file_path, 'rb') as attachment:
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload(attachment.read())
                 encoders.encode_base64(part)
-                filename = group_file.original_filename or\
+                filename = mail_file.original_filename or\
                     os.path.basename(file_path)
                 encoded_filename = Header(filename, 'utf-8').encode()
                 part.add_header('Content-Disposition',
@@ -155,6 +170,8 @@ class MailSerializer(serializers.ModelSerializer):
                         )
                         if (res.status_code != 200):
                             raise Exception("Fetch court order file fail.")
+
+                        os.makedirs(os.path.dirname(file_path), exist_ok=True)
                         with open(file_path, 'wb') as f:
                             f.write(res.content)
 
@@ -162,7 +179,7 @@ class MailSerializer(serializers.ModelSerializer):
                         part = MIMEBase('application', 'octet-stream')
                         part.set_payload(attachment.read())
                         encoders.encode_base64(part)
-                        filename = group_file.original_filename or\
+                        filename = document.order_filename or\
                             os.path.basename(file_path)
                         encoded_filename =\
                             Header(filename, 'utf-8').encode()
@@ -181,28 +198,30 @@ class MailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         group = validated_data.pop('group_id')
-        group_file = validated_data.pop('group_file_id')
+        mail_file = validated_data.pop('mail_file_id')
         receiver = validated_data.pop('receiver_id')
         mail = Mail.objects.create(
             sender=user,
             group=group,
             receiver=receiver,
-            group_file=group_file,
+            mail_file=mail_file,
             confirmed=False,
             **validated_data
         )
         mail.documents.set(group.documents.all())
+        mail_file.mail = mail
+        mail_file.save(update_fields=['mail'])
 
         h = hashlib.sha256((str(mail.id)).encode()).digest()  # type: ignore
         mail.confirmed_hash = base64.urlsafe_b64encode(h).decode()
         mail.save(update_fields=['confirmed_hash'])
 
         try:
-            self.send_email(receiver, group_file, group,
+            self.send_email(receiver, mail_file, group,
                             mail.confirmed_hash)
             mail.status = MailStatus.SUCCESSFUL
             mail.datetime = timezone.now()
-        except:
+        except Exception as e:
             mail.status = MailStatus.FAIL
 
 

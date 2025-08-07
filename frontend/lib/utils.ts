@@ -218,14 +218,14 @@ export function Date2Thai(date: string) {
 
 export function Datetime2Thai(date: string) {
   const newDate = new Date(date);
-  return new Intl.DateTimeFormat('th-TH', {
+  return (new Intl.DateTimeFormat('th-TH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  }).format(newDate);
+  }).format(newDate)).toString();
 }
 
 export function Text2Thai(text: string) {
