@@ -95,7 +95,8 @@ export type Mail = {
   speed?: number,
   secret?: number,
   confirmedDate?: string,
-  status: string
+  status: string,
+  documents?: Document[]
 }
 
 export type MailFile = {

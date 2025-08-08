@@ -151,7 +151,6 @@ class GroupFileView(viewsets.ModelViewSet):
         url_path='download/(?P<fid>[^/]+)'
     )
     def download(self, request, fid=None):
-
         if not fid:
             return Response({"error": "Cannot download group file."}, status=400)
 
