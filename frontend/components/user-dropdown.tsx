@@ -18,16 +18,17 @@ import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
 import { useState } from 'react'
-import { type User } from "@/lib/types";
-import { useAppDispatch } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setUser } from "./store/features/user-auth-slice";
 import { logoutUser } from "./actions/user";
+import { RootState } from "./store";
 
-export function DropdownMenuUser({user}: {user: User | null}) {
+export function DropdownMenuUser() {
   const router = useRouter();
   const [open, setOpen] = useState(false)
   const dispatch = useAppDispatch();
   const pathname = usePathname();
+  const user = useAppSelector((state: RootState) => state.userAuth.user);
 
   if (!user) return null;
 

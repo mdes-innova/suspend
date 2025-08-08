@@ -19,14 +19,7 @@ import { addToGroup, getGroups } from "../actions/group";
 import { getDocumentList } from "../actions/document";
 import { Datetime2Thai } from "@/lib/utils";
 import { RootState } from "../store";
-import { type Group } from "@/lib/types";
-
-type Playlist = {
-  id: number,
-  username: string,
-  name: string,
-  modifiedAt: Date,
-}
+import { type Group, type Document } from "@/lib/types";
  
 
 function MyScrollArea({ data }: { data: Group[] }) {
@@ -53,11 +46,11 @@ function MyScrollArea({ data }: { data: Group[] }) {
                   const documentList = await getDocumentList(docIds);
                   console.log(documentList)
                   dispatch(closeModal({ui: PLAYLISTUI.list,
-                    info: [newPlaylist, ...documentList.map(ee => ee.orderNo)] }));
+                    info: [newPlaylist, ...documentList.map((ee: Document) => ee.orderNo)] }));
                 } catch (error) {
                   console.error(error);
                   dispatch(closeModal({ui: PLAYLISTUI.new,
-                    info: [error1 as string], err: true }));
+                    info: [error as string], err: true }));
                 }
               }
             }}>
@@ -79,7 +72,7 @@ function MyScrollArea({ data }: { data: Group[] }) {
 export default function PlaylistDialog() {
     const dispatch = useAppDispatch();
     const uiOpen = useAppSelector((state: RootState) => state.playlistDialogUi.listOpen);
-    const [data, setData] = useState<Playlist[]>([]);
+    const [data, setData] = useState<Group[]>([]);
 
     useEffect(() => {
       const getData = async() => {
@@ -109,7 +102,7 @@ export default function PlaylistDialog() {
                 </DialogHeader>
                 <MyScrollArea data={data}/>
                 <DialogFooter>
-                  <Button type="submit" onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                  <Button type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                     e.preventDefault();
                     dispatch(closeModal({ ui: PLAYLISTUI.list }));
                     dispatch(openModal({ ui: PLAYLISTUI.new }));

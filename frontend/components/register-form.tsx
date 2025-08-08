@@ -55,7 +55,7 @@ const FormSchema = z.object({
   message: "รหัสผ่านไม่ตรงกัน",
 });
 
-export default function RegisterForm({ ispData }: { ispData: Isp }) {
+export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
   const [errorMessage, setErrorMessage] = useState('');
   const [userType, setUserType]= useState('user');
@@ -92,7 +92,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp }) {
 
     } catch (error) {
       if (error instanceof AuthError)
-        router.redirect('/login?path=/register');
+        router.push('/login?path=/register');
       else{
         setSuccess(false);
         setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');

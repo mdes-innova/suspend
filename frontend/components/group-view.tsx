@@ -15,7 +15,7 @@ export default function GroupView(
   { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
     const [title, setTitle] = useState(groupData?.name?? 'ไม่มีชื่อ');
     const [onTitleChange, setOnTitleChange] = useState(false);
-    const titleRef = useRef<HTMLDivElement>(null);
+    const titleRef = useRef<HTMLInputElement>(null);
     const dispatch = useAppDispatch();
     const pathname = usePathname();
 
@@ -59,11 +59,13 @@ export default function GroupView(
               >{title}</div>:
               <Input defaultValue={title} ref={titleRef} 
                 onBlur={() => {
-                  setTitle(titleRef?.current?.value);
+                  if (titleRef?.current)
+                    setTitle(titleRef?.current?.value);
                   setOnTitleChange(false);
                 }}
                 onKeyDown={(evt: React.KeyboardEvent<HTMLInputElement>) => {
                   if (evt.key === "Enter") {
+                    if (titleRef?.current)
                     setTitle(titleRef?.current?.value);
                     setOnTitleChange(false);
                     evt.currentTarget.blur();
@@ -72,7 +74,9 @@ export default function GroupView(
               }
               />
             }
-            <div className="w-full text-start text-md">{Text2Thai(Date2Thai(groupData.createdAt))}</div>
+            <div className="w-full text-start text-md">{
+            groupData && groupData?.createdAt? Text2Thai(Date2Thai(groupData.createdAt)): '-'
+            }</div>
           </div>
         <GroupForm isps={isps} groupId={(groupData as Group).id} fileData={fileData}>
           <DocumentList data={groupData?.documents} groupId={groupData?.id}/>

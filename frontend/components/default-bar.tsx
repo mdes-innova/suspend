@@ -3,32 +3,24 @@ import React, { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { DropdownMenuUser } from './user-dropdown';
-import { useAppDispatch, useAppSelector  } from '../components/store/hooks';
+import { useAppDispatch  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
-import { RootState } from './store';
-import { type User } from '@/lib/types';
-
-type DefaultBarProps = {
-  user: User | null;
-  children?: React.ReactNode;
-};
+import { getProfile } from './actions/user';
 
 const HIDDEN_ROUTES = ['login', 'secret', 'no-navbar', 'confirm'];
 
-export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>) {
+export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
     const pathname = usePathname();
     const pathId = (pathname.split('/'))[1];
     const dispatch = useAppDispatch();
-    const reduxUser = useAppSelector((state: RootState) => state.userAuth.user);
-    
     
     useEffect(() => {
-        const userChanged = JSON.stringify(reduxUser) !== JSON.stringify(user);
-
-        if (userChanged) {
-            dispatch(setUser(user ?? null));
+        const getData = async() => {
+            const user = await getProfile();
+            dispatch(setUser(user)); 
         }
-    }, [user]);
+        getData();
+    }, []);
 
     if (HIDDEN_ROUTES.map(elem => pathId.includes(elem)).some(Boolean) ||
         pathname.includes('mail/confirm')) {
@@ -38,11 +30,10 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
     }
 
     return (
-        <div className="w-full min-h-dvh flex flex-col justify-start items-start relative">
+         <div className="w-full min-h-dvh flex flex-col justify-start items-start relative">
             <div className="w-full h-36 bg-blue-400 flex justify-between items-center px-4">
                 <div className="w-32 h-32 block relative selection:none cursor-pointer"
                     onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                        e.preventDefault();
                         if (window) window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND}`;
                     }}>
                     <Image 
@@ -58,8 +49,9 @@ export default function DefaultBar({ user, children }: Readonly<DefaultBarProps>
                     <div className="text-2xl font-bold">ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์</div>
                     <div>กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ</div>
                 </div>
-                <DropdownMenuUser user={user}/>
+                <DropdownMenuUser/>
             </div>
+            { children }
         </div>
     );
 }

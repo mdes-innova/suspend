@@ -29,5 +29,5 @@ const groupUiSlice = createSlice({
     }
 });
 
-export const { setName, setDocuments, setGroupFiles, setToggleCollectData } = groupUiSlice.actions;
+export const { setName, setDocuments, setGroupFiles } = groupUiSlice.actions;
 export default groupUiSlice.reducer;

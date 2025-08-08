@@ -25,15 +25,21 @@ export default function DocumentView(
               <CategoryGroup group={groupData?? null} doc={docData} />
             </div>
             <div className="w-full text-start text-2xl font-bold mt-2">{docData.orderNo}</div>
-            <div className="w-full text-start text-md">{Text2Thai(Date2Thai(docData.orderDate))}</div>
+            <div className="w-full text-start text-md">{
+              docData && docData?.orderDate ? Text2Thai(Date2Thai(docData.orderDate)): '-'
+            }</div>
           </div>
           <div className="flex flex-col">
             <div className="w-full text-start text-xl font-bold">คดีหมายเลขดำที่:</div>
-            <div className="w-full text-start text-md">{Text2Thai(docData.orderblackNo)?? ""}</div>
+            <div className="w-full text-start text-md">{
+              docData && docData?.orderblackNo? Text2Thai(docData.orderblackNo): '-`'
+            }</div>
           </div>
           <div className="flex flex-col">
             <div className="w-full text-start text-xl font-bold">คดีหมายเลขแดงที่</div>
-            <div className="w-full text-start text-md">{Text2Thai(docData.orderredNo)}</div>
+            <div className="w-full text-start text-md">{
+              docData && docData?.orderredNo? Text2Thai(docData.orderredNo): '-'
+            }</div>
           </div>
           <div className="mt-auto">
 
@@ -47,10 +53,10 @@ export default function DocumentView(
           </CardHeader>
           <CardContent>
             <ul className="list-decimal list-outside pl-6 underline cursor-pointer">
-              <li onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+              <li onClick={(e: React.MouseEvent<HTMLLIElement>) => {
                 e.preventDefault();
               }}>PDF</li>
-              <li onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+              <li onClick={(e: React.MouseEvent<HTMLLIElement>) => {
                 e.preventDefault();
               }}>XLSX</li>
             </ul>

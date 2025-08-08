@@ -80,8 +80,8 @@ export default function DatePicker() {
 export function ThaiDatePicker({
   date, setDate
 }: {
-  date: Date,
-  setDate:  React.Dispatch<React.SetStateAction<Date>>
+  date: Date | undefined,
+  setDate:  React.Dispatch<React.SetStateAction<Date | undefined>>
 }) {
   const [open, setOpen] = React.useState(false);
 

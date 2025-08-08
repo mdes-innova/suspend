@@ -48,9 +48,9 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
             </div>
             <SheetFooter>
               <SheetClose asChild>
-                <Button className='w-fit ml-auto' type="submit" onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                <Button className='w-fit ml-auto' type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.preventDefault();
-                  if (docIds && docIds.length) {
+                  if (docIds && docIds.length && inputNameRef?.current) {
                     try {
                       const newGroup = await postGroup(inputNameRef.current.value);
                       const newDocsGroup = await addToGroup({
@@ -66,9 +66,13 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                     }
                   } else {
                     try {
-                      const newGroup = await postGroup(inputNameRef.current.value);
-                      dispatch(closeModal({ui: PLAYLISTUI.new, info: [newGroup.name] }));
-                      if (main) router.push(`/document-groups/${newGroup.id}`);
+                      if (inputNameRef?.current) {
+                        const newGroup = await postGroup(inputNameRef.current.value);
+                        dispatch(closeModal({ui: PLAYLISTUI.new, info: [newGroup.name] }));
+                        if (main) router.push(`/document-groups/${newGroup.id}`);
+                      } else {
+                        throw new Error('Empty name');
+                      }
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
                     }

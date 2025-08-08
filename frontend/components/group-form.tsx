@@ -49,7 +49,7 @@ export function GroupForm({
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
     const dispatch = useAppDispatch();
-    const submitRef = useRef(null);
+    const submitRef = useRef<HTMLButtonElement>(null);
     const [sendText, setSendText] = useState(0);
     const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -81,10 +81,11 @@ export function GroupForm({
 
   useEffect(() => {
     const updateDocumentDate = async() => {
-      await updateField({
-        kind: 'documentDate',
-        value: date
-      });
+      if (date != undefined)
+        await updateField({
+          kind: 'documentDate',
+          value: date.toString()
+        });
     }
 
     if (date) updateDocumentDate();
@@ -200,7 +201,7 @@ export function GroupForm({
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
       <DialogLoading />
-      <Dialog open={mailStatus != 2} onOpenChange={(open) => {
+      <Dialog open={mailStatus != 2} onOpenChange={(open: boolean) => {
         if (!open) setMailStatus(2);
       }}>
         <DialogContent>
@@ -209,8 +210,8 @@ export function GroupForm({
               ['', 'ส่งเมลล์สำเร็จ', 'ส่งเมลล์ไม่สำเร็จ'][sendText]
             }
           </DialogTitle>
-            <Button variant={mailStatus === 0? '': 'destructive'}
-              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            <Button variant={mailStatus === 0? 'default': 'destructive'}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                 e.preventDefault();
                 if (mailStatus === 0)
                   router.push(`/mail/${mgId}`);
@@ -263,10 +264,10 @@ export function GroupForm({
                         เรื่อง<span className="text-red-400">*</span>
                     </FormLabel>
                     <FormControl>
-                    <Input {...field} onChange={(e) => {
+                    <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         field.onChange(e)
                     }}
-                      onBlur={async(e: React.FocusEvent<HTMLDivElement>) => {
+                      onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
                         const title = e.target.value;
                         await updateField({
                           kind: 'title',
@@ -347,10 +348,10 @@ export function GroupForm({
       <BookCard ispData={isps} groupId={groupId} fileData={fileData}/>
       { children }
       <div className='w-full flex justify-center items-center gap-x-4'>
-        <Button onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+        <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
-          if (submitRef?.current){
-            submitRef?.current?.click();
+          if (submitRef.current) {
+            submitRef.current.click();
           }
         }}>
           ส่ง ISP 

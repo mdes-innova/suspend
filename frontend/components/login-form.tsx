@@ -17,7 +17,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "./password-input";
 import { useSearchParams } from "next/navigation";
-import { loginUser } from "./actions/user";
+import { getProfile, loginUser } from "./actions/user";
+import { useAppDispatch } from "./store/hooks";
+import { setUser } from "./store/features/user-auth-slice";
 
 
 const FormSchema = z.object({
@@ -30,6 +32,7 @@ export default function LoginForm() {
   const params = useSearchParams();
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
   }, []);
@@ -45,9 +48,11 @@ export default function LoginForm() {
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      await loginUser({
+      const user = await loginUser({
         ...values
       });
+      dispatch(setUser(user));
+
       router.push(params.get('pathname')?? '/');
       router.refresh();
     } catch (error) {

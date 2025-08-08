@@ -51,7 +51,7 @@ const columns: ColumnDef<Group>[] = [
       const dateB = new Date(rowB.getValue(columnId));
       return dateA.getTime() - dateB.getTime(); // ascending
     },
-    header: ({ column }: { column: Column<string> }) => {
+    header: ({ column }: { column: Column<Group> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -77,7 +77,7 @@ const columns: ColumnDef<Group>[] = [
   {
     id: 'ชื่อฉบับร่าง',
     accessorKey: "name",
-    header: ({ column }: { column: Column<string> }) => {
+    header: ({ column }: { column: Column<Group> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -103,11 +103,11 @@ const columns: ColumnDef<Group>[] = [
     id: 'จำนวนคำสั่งศาล',
     accessorKey: "documents",
     sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
-      const lenA = rowA.getValue(columnId).length;
-      const lenB = rowB.getValue(columnId).length;
+      const lenA = (rowA.getValue(columnId) as unknown[]).length;
+      const lenB = (rowB.getValue(columnId) as unknown[]).length;
       return lenA - lenB; // ascending
     },
-    header: ({ column }: { column: Column<string>}) => {
+    header: ({ column }: { column: Column<Group>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -150,7 +150,7 @@ function GroupActions({
   const dispatch = useAppDispatch();
  const [uiOpen, setUiOpen] = useState(false);
  const rename = useAppSelector((state: RootState) => state.groupListUi.rename);
- const nameRef = useRef(null);
+ const nameRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="w-full text-right flex justify-end">
@@ -158,7 +158,7 @@ function GroupActions({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation();
               setUiOpen(true);
             }}
@@ -169,7 +169,7 @@ function GroupActions({
 
         <DropdownMenuContent>
           <DropdownMenuItem
-            onClick={(e: MouseEvent<HTMLDivElement>) => {
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => {
               e.stopPropagation();
               e.preventDefault();
               dispatch(setRename(id));
@@ -183,7 +183,7 @@ function GroupActions({
           <DropdownMenuSeparator />
 
           <DropdownMenuItem
-            onClick={async (e: React.MouseEvent<HTMLDialogElement>) => {
+          onClick={async (e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
               e.stopPropagation();
               await RemoveGroup(id);
@@ -207,9 +207,10 @@ function GroupActions({
                     </div>
                 </div>
                 <SheetFooter>
-                    <SheetClose asChild onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                    <SheetClose asChild onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.preventDefault();
-                        await RenameGroup({name: nameRef?.current?.value, groupId: rename});
+                        if (nameRef?.current)
+                          await RenameGroup({name: nameRef?.current?.value, groupId: rename});
                         dispatch(toggleDataChanged());
                         dispatch(setRename(-1));
                     }}>
@@ -275,7 +276,7 @@ export default function GroupTable() {
         <Input
           placeholder="ค้นหา ฉบับร่าง..."
           value={(table.getColumn("ชื่อฉบับร่าง")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLDivElement>) =>
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             table.getColumn("ชื่อฉบับร่าง")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
@@ -284,7 +285,7 @@ export default function GroupTable() {
           <Button variant="secondary" className="ml-1">สร้างแบบเร่งด่วน</Button>
         </Link>
         <div className="ml-auto flex items-center gap-x-1">
-          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             dispatch(openModal({ ui: PLAYLISTUI.new }));
           }}><Plus /></Button>
@@ -298,8 +299,8 @@ export default function GroupTable() {
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column: Column<string>) => column.getCanHide())
-                .map((column: Column<string>) => {
+                .filter((column: Column<Group>) => column.getCanHide())
+                .map((column: Column<Group>) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -345,7 +346,7 @@ export default function GroupTable() {
                   key={row.id}
                   className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell: Cell<string>, idx: number) => (
+                  {row.getVisibleCells().map((cell: Cell<Group, unknown>, idx: number) => (
                     <TableCell key={cell.id}>
                         {idx != row.getVisibleCells().length - 1? <Link href={`/document-groups/${row.original.id}`}>
                             {flexRender(

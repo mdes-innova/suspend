@@ -7,9 +7,7 @@ import Providers from './providers';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "@/components/ui/sonner"
-import { type User } from "@/lib/types";
 import { CustomTrigger } from "@/components/sidebar-trigger";
-import { getProfile } from "@/components/actions/user";
 import DialogLoading from "@/components/loading/dialog";
 
 const geistSans = Geist({
@@ -55,19 +53,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let user: User | null = null;
-  try {
-    const resJson = await getProfile();
-    user = resJson;
-    if (user && resJson.isp) user['isp'] = resJson.isp.name;
-  } catch(error) {
-    user = null;
-    console.error("Failed to get profile:", error);
-  }
-
   return (
-    // <html lang="en" suppressHydrationWarning>
-      <html lang="th" className={notoThai.className} suppressHydrationWarning>
+  <html lang="th" className={notoThai.className} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -82,8 +69,7 @@ export default async function RootLayout({
               <Providers>
                 <SidebarProvider>
                   <AppSidebar />
-                {/* <SidebarProvider> */}
-                  <DefaultBar user={user ?? null}>
+                  <DefaultBar>
                     <div className="absolute top-0 left-0 w-24 h-24">
                       <CustomTrigger />
                     </div>

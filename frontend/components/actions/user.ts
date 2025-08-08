@@ -127,6 +127,20 @@ export async function loginUser({
             maxAge: 60 * 60 * 24 * 7,  // 5 minutes
         });
 
+        const userRes = await fetch(`${url}/user/users/me/`, {
+            headers: {
+            Authorization: `Bearer ${access}`
+            },
+        });
+        
+        if (!userRes.ok) {
+            if (userRes.status === 401)
+                throw new AuthError('Authentication fail.')
+        }
+
+        const profile = await userRes.json();
+        return profile;
+
     } catch (error) {
        throw error; 
     }

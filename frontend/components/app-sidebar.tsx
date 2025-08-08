@@ -14,6 +14,7 @@ import {
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "./store/hooks";
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { RootState } from "./store";
 
 const HIDDEN_ROUTES = ['login', 'secret', 'no-navbar', 'confirm'];
@@ -55,22 +56,25 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const pathId = (pathname.split('/'))[1];
+  const pathId = pathname.split('/')[1];
   const user = useAppSelector((state: RootState) => state.userAuth.user);
 
-  if (HIDDEN_ROUTES.includes(pathname)) {
-      return null;
-  }
-  if (HIDDEN_ROUTES.map(elem => pathId.includes(elem)).some(Boolean) ||
-    pathname.includes('mail/confirm')) {
-      let dom = undefined;
-      if (document)
-        dom = document.getElementById('app-bar-trigger');
+  // Check hidden routes
+  const isHidden =
+    HIDDEN_ROUTES.includes(pathname) ||
+    HIDDEN_ROUTES.map(elem => pathId.includes(elem)).some(Boolean) ||
+    pathname.includes('mail/confirm');
+
+    useEffect(() => {
+    if (!isHidden) return;
+
+    if (typeof document !== 'undefined') {
+      const dom = document.getElementById('app-bar-trigger');
       if (dom) dom.remove();
-    return (
-        <></>
-      );
-  }
+    }
+  }, [isHidden]);
+
+  if (isHidden) return null;
 
   return (
         user != null || user != undefined?

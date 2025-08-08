@@ -1,8 +1,8 @@
-import { DocumentType } from '@/components/document-list/document-list';
+import { type Document } from '@/lib/types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface DocumentListUiState {
-  data: DocumentType[]
+  data: Document[]
   yPos: number
   dragId: string,
   isDragging: boolean,
@@ -28,10 +28,10 @@ const documentListUiSlice = createSlice({
   name: 'document-list',
   initialState,
   reducers: {
-    setData(state, action: PayloadAction<DocumentType[]>) {
+    setData(state: DocumentListUiState, action: PayloadAction<Document[]>) {
       state.data = action.payload;
     },
-    setDragging(state, action: PayloadAction<IsDraggingState>) {
+    setDragging(state: DocumentListUiState, action: PayloadAction<IsDraggingState>) {
       state.isDragging = action.payload.isDragging;
       state.yPos = action.payload.yPos;
       state.dragId= action.payload.dragId;
