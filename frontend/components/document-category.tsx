@@ -14,16 +14,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation";
-import { type Group, type Document, type User } from "@/lib/types";
+import { type Group, type Document } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "./store/hooks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { getGroup, getGroupFromDocument, removeDocumentFromGroup } from "./actions/group";
-import { getContent } from "./actions/document";
+import { getGroupFromDocument, removeDocumentFromGroup } from "./actions/group";
 import { toggleData } from "./store/features/content-list-ui-slice";
 import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged as toggleDataChangedDocumentList} from "./store/features/document-list-ui-slice";
 import { toggleDataChanged as toggleDataChangedGroupList } from "./store/features/group-list-ui-slice";
+import { RootState } from "./store";
 
 export default function CategoryGroup({ doc, group }:
     { doc: Document, group: Group }) {
@@ -53,7 +53,7 @@ export default function CategoryGroup({ doc, group }:
         '#FDBA74', // orange-300
     ];
     const [groupData, setGroupData] = useState<Group | null>(null);
-    const user = useAppSelector(state => state.userAuth.user);
+    const user = useAppSelector((state: RootState) => state.userAuth.user);
     const isOwner = user && groupData && user.id === groupData.user.id;
 
     const router = useRouter();
@@ -66,6 +66,7 @@ export default function CategoryGroup({ doc, group }:
                 const fetchGroup = await getGroupFromDocument(doc.id);
                 setGroupData(Object.keys(fetchGroup).length === 0? null: fetchGroup);
             } catch (error) {
+                console.error(error);
                 setGroupData(null);
             }
         }
@@ -81,7 +82,7 @@ export default function CategoryGroup({ doc, group }:
 
     return (
         <>
-            <Button className={`${bgColors[doc.kindId]} rounded-xl px-2 py-1 hover:${bgColors[doc.kindId]}`}>
+            <Button className={`${bgColors[doc?.kindId?? 0]} rounded-xl px-2 py-1 hover:${bgColors[doc?.kindId?? 0]}`}>
                 {label}
             </Button>
             {
@@ -89,7 +90,8 @@ export default function CategoryGroup({ doc, group }:
                 <div className="px-2 flex justify-center items-center">
                     {
                         isOwner &&
-                        <div className="p-0 px-1 underline cursor-pointer" onClick={(e: any) => {
+                        <div className="p-0 px-1 underline cursor-pointer"
+                        onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
                             if (!isOwner) return;
                             router.push(`/document-groups/${groupData?.id}/`);
@@ -124,7 +126,7 @@ export default function CategoryGroup({ doc, group }:
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={async(e: any) => {
+                                <AlertDialogAction onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                                     e.preventDefault();
                                     try {
                                         await removeDocumentFromGroup({
@@ -133,7 +135,7 @@ export default function CategoryGroup({ doc, group }:
                                         });
                                         setGroupData(null);
                                     } catch (error) {
-                                        
+                                       console.error(error);
                                     }
                                    
                                 }}>Continue</AlertDialogAction>

@@ -3,13 +3,13 @@
 import { type UserRegister } from "@/lib/types";
 import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 
 export async function getProfile() {
     const access = await getAccess();
 
     try {
-        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/user/users/me/`, {
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/me/`, {
         headers: {
           Authorization: `Bearer ${access}`
         },
@@ -31,7 +31,7 @@ export async function getUsers() {
     const access = await getAccess();
 
     try {
-        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
         console.log(url)
         const res = await fetch(`${url}/user/users/`, {
         headers: {
@@ -54,7 +54,7 @@ export async function getUsers() {
 export async function registerUser(userRegisterParams: UserRegister) {
    const access = await getAccess(); 
     try {
-        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/user/users/`, {
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${access}`,
@@ -86,10 +86,7 @@ export async function loginUser({
 }) {
     try {
         const cookieStore = await cookies()
-        const headersList = await headers();
-        const forwardedFor = headersList.get('x-forwarded-for') || '';
-        const ip = forwardedFor.split(',')[0];
-        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
         console.log(url)
         const res = await fetch(`${url}/token/`, {
         method: 'POST',
@@ -130,6 +127,16 @@ export async function loginUser({
             maxAge: 60 * 60 * 24 * 7,  // 5 minutes
         });
 
+    } catch (error) {
+       throw error; 
+    }
+}
+
+export async function logoutUser() {
+    try {
+        const cookieStore = await cookies();
+        cookieStore.delete('access');
+        cookieStore.delete('refresh');
     } catch (error) {
        throw error; 
     }

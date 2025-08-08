@@ -60,8 +60,9 @@ export default async function RootLayout({
     const resJson = await getProfile();
     user = resJson;
     if (user && resJson.isp) user['isp'] = resJson.isp.name;
-  } catch (_) {
+  } catch(error) {
     user = null;
+    console.error("Failed to get profile:", error);
   }
 
   return (

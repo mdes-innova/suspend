@@ -1,11 +1,5 @@
-import { type Document } from '@/lib/types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {
-  SortingState,
-  ColumnFiltersState,
-  VisibilityState,
-  RowSelectionState,
-} from '@tanstack/react-table';
+
 
 // Define the shape of the table state
 interface GroupListtUiState {

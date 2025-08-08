@@ -1,6 +1,9 @@
 'use client';
 
 import { ArrowUpDown, Plus, CircleX } from "lucide-react";
+import {
+  DragEndEvent
+} from '@dnd-kit/core';
 import { Card } from "../ui/card";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
@@ -8,28 +11,23 @@ import { useEffect, useRef, useState } from "react";
 import DragDrop from "./drag-drop";
 import DraggableItem from "./drag";
 import React from "react";
-import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { Separator } from "@radix-ui/react-dropdown-menu";
 import DroppableArea from "./drop";
-import { DragEndEvent } from "@dnd-kit/core";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setDragging } from "../store/features/document-list-ui-slice";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/playlist-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/playlist-dialog";
 import ContentDialog from "../content-dialog";
-import { DialogClose, DialogFooter } from "../ui/dialog";
-import {
-  RowSelectionState,
-} from '@tanstack/react-table';
-import { setDocIds, setRowSelection} 
+import { DialogFooter } from "../ui/dialog";
+import { setRowSelection} 
   from "../store/features/dialog-list-ui-slice";
 import {closeModal, LOADINGUI, openModal} from '../store/features/loading-ui-slice';
 import { getContent, getDocumentList } from "../actions/document";
 import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
 import { toggleDataChanged } from "../store/features/group-list-ui-slice";
+import { RootState } from "../store";
 
-export default function DocumentList({ data, groupId }: { data: DocumentType[] | undefined, groupId: number | undefined}) {
+export default function DocumentList({ data, groupId }: { data: Document[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
     const [docData, setDocData] = useState(data && data.length? [...data]: []);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -41,11 +39,11 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
     const [openContent, setOpenContent] = useState(false);
     const [contentData, setContentData] = useState<Document[] | null>(null);
 
-    const isDragging = useAppSelector(state => state.documentListUi.isDragging);
-    const draggingId = useAppSelector(state => state.documentListUi.dragId);
-    const dataChanged = useAppDispatch(state => state.documentListUi.dataChanged);
-    const docIds = useAppSelector(state => state.dialogListUi.docIds)
-    const [columns, setColumns] = useState([]);
+    const isDragging = useAppSelector((state: RootState) => state.documentListUi.isDragging);
+    const draggingId = useAppSelector((state: RootState) => state.documentListUi.dragId);
+    const dataChanged = useAppSelector((state: RootState) => state.documentListUi.dataChanged);
+    const docIds = useAppSelector((state: RootState) => state.dialogListUi.docIds)
+    const [columns, setColumns] = useState<Document[]>([]);
     
     useEffect(() => {
         setColumns(docData);
@@ -79,7 +77,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                     newDocumentIds.includes(doc.id)
                 ));
             } catch (error) {
-                
+               console.error(error);
             }
         }
 
@@ -88,7 +86,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
 
 
 
-    const handleDragEnd = (event: any) => {
+    const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) return;
 
@@ -268,13 +266,14 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                         const cData = await getContent();
                         setContentData(cData);
                     } catch (error) {
+                        console.error(error);
                         setContentData([]);
                     }
 
                 }}>
                     <Plus /> <span>เพิ่มคำสั่งศาล</span>
                 </Button>
-                <Dialog open={contentData === null? false: openContent} onOpenChange={(open) => {
+                <Dialog open={contentData === null? false: openContent} onOpenChange={(open: boolean) => {
                     if (!open) {
                         setContentData(null);
                         dispatch(closeModal({ui: LOADINGUI.dialog}));
@@ -287,18 +286,18 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                         <DialogHeader>
                             <DialogTitle>เพิ่มคำสั่งศาล</DialogTitle>
                         </DialogHeader>
-                            <ContentDialog data={contentData}/>
+                            <ContentDialog data={contentData?? []}/>
                     <DialogFooter>
                         <div className="flex gap-x-2">
-                            <Button onClick={async(e: any) => {
+                            <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.preventDefault();
                                 try {
-                                    const addedGroup = await addToGroup({
-                                        groupId,
-                                        docIds,
+                                    await addToGroup({
+                                        groupId: groupId as number,
+                                        docIds: docIds?? [],
                                         mode: 'append'
                                     });
-                                    const docs = await getDocumentList(docIds);
+                                    const docs = docIds && docIds.length > 0? await getDocumentList(docIds): [];
                                     setDocData([...columns, ...docs]);
                                 } catch (error) {
                                     console.error(error);
@@ -306,7 +305,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                                 setOpenContent(false);
                                 dispatch(closeModal({ui: LOADINGUI.dialog}));
                             }}>เพิ่ม</Button>
-                            <Button variant='destructive' onClick={(e) => {
+                            <Button variant='destructive' onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.preventDefault();
                                 setOpenContent(false);
                                 dispatch(closeModal({ui: LOADINGUI.dialog}));
@@ -316,9 +315,9 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                     </DialogContent>
                 </Dialog>
                 <Button className={`${edit? 'bg-accent': ''}`} variant='outline' 
-                    id={documentListEditId} onClick={(e: any) => {
+                    id={documentListEditId} onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                     e.preventDefault();
-                    setEdit(prev => !prev);
+                    setEdit((prev: boolean) => !prev);
                 }}>Edit</Button>
             </div>
             <Card className="flex flex-row w-full px-8 border-0 shadow-none py-0"  id='document-list-header'>
@@ -336,7 +335,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                 >
                     <DragDrop onDragEnd={handleDragEnd} disabled={edit? false: true}>
                         <div className="flex flex-col px-6 w-full h-fit" ref={documentListRef}>
-                            {columns.map((e: any, idx: number) => (
+                            {columns.map((e: Document, idx: number) => (
                             <div key={`drag-drop-${idx}`}>
                                 <DroppableArea key={`drop-${idx}`} id={`drop-${idx}`} >
                                     <div className="w-full h-6"></div>
@@ -346,7 +345,7 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                                         ${(draggingId === `drag-${idx}` && isDragging)? 'opacity-70': 'opacity-100'}`}>
                                         <Card key={`group-${idx}`}
                                             className="flex flex-row px-4 hover:shadow-md w-full"
-                                            onClick={(evt: any) => {
+                                            onClick={(evt: React.MouseEvent<HTMLDivElement>) => {
                                                 if (edit) return;
                                                 evt.preventDefault();
                                                 router.push(`/document-view/${e.id}/`);
@@ -354,14 +353,15 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
                                             >
                                             <div className="flex-[2]">{idx + 1}</div>
                                             <div className="flex-[6]">{e.orderNo}</div>
-                                            <div className="flex-[6]">{Text2Thai(Date2Thai(e?.orderDate))}</div>
+                                            <div className="flex-[6]">{e?.orderDate != undefined? Text2Thai(Date2Thai(e?.orderDate)): '-'}</div>
                                             <div className="flex-[6]">{e?.orderblackNo?? '-'}</div>
                                             <div className="flex-[6]">{e?.orderredNo?? '-'}</div>
                                             <div className="flex-[1]">
-                                                <CircleX className="cursor-pointer" onClick={async(evt: any) => {
+                                                <CircleX className="cursor-pointer"
+                                                onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                                                     evt.stopPropagation();
                                                     await addToGroup({
-                                                        groupId,
+                                                        groupId: groupId as number,
                                                         docIds: [e.id],
                                                         mode: 'remove'
                                                     });
@@ -384,7 +384,3 @@ export default function DocumentList({ data, groupId }: { data: DocumentType[] |
         </div>
     );
 }
-
-const tags = Array.from({ length: 50 }).map(
-  (_, i, a) => `v1.2.0-beta.${a.length - i}`
-)

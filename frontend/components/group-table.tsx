@@ -12,10 +12,15 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  Row,
+  Column,
+  Cell,
+  Header,
+  HeaderGroup
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash2, FolderPen, Plus } from "lucide-react"
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import {useState} from 'react';
@@ -24,44 +29,42 @@ import { NewPlaylistSheet } from "./main/new-playlist-sheet";
 import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect, useRef} from 'react';
-import { getGroupList, getGroups, RemoveGroup, RenameGroup } from "./actions/group";
+import { getGroupList, RemoveGroup, RenameGroup } from "./actions/group";
 import { Datetime2Thai } from "@/lib/utils";
-import {useRouter} from 'next/navigation';
 import { setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
 import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
-  SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 import { Label } from "./ui/label";
+import { RootState } from "./store";
 
-const columns: ColumnDef<(Group | any)[]> = [
+const columns: ColumnDef<Group>[] = [
   {
     id: 'วันที่',
     accessorKey: "modifiedAt",
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
       const dateA = new Date(rowA.getValue(columnId));
       const dateB = new Date(rowB.getValue(columnId));
       return dateA.getTime() - dateB.getTime(); // ascending
     },
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
           วันที่
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Group> }) => {
       const { modifiedAt } = row.original;
 
       return (
@@ -74,19 +77,20 @@ const columns: ColumnDef<(Group | any)[]> = [
   {
     id: 'ชื่อฉบับร่าง',
     accessorKey: "name",
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
             ชื่อ
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Group> }) => {
       const { name } = row.original;
       return (
         <div>
@@ -98,24 +102,25 @@ const columns: ColumnDef<(Group | any)[]> = [
   {
     id: 'จำนวนคำสั่งศาล',
     accessorKey: "documents",
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
       const lenA = rowA.getValue(columnId).length;
       const lenB = rowB.getValue(columnId).length;
       return lenA - lenB; // ascending
     },
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
             จำนวนคำสั่งศาล
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Group> }) => {
       const { documents } = row.original;
 
       return (
@@ -127,7 +132,7 @@ const columns: ColumnDef<(Group | any)[]> = [
   }, {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Group> }) => {
       const {id, name} = row.original;
       return (
         <GroupActions id={id} name={name}/>
@@ -144,7 +149,7 @@ function GroupActions({
 }) {
   const dispatch = useAppDispatch();
  const [uiOpen, setUiOpen] = useState(false);
- const rename = useAppSelector(state => state.groupListUi.rename);
+ const rename = useAppSelector((state: RootState) => state.groupListUi.rename);
  const nameRef = useRef(null);
 
   return (
@@ -153,7 +158,7 @@ function GroupActions({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => {
               e.stopPropagation();
               setUiOpen(true);
             }}
@@ -164,7 +169,7 @@ function GroupActions({
 
         <DropdownMenuContent>
           <DropdownMenuItem
-            onClick={(e) => {
+            onClick={(e: MouseEvent<HTMLDivElement>) => {
               e.stopPropagation();
               e.preventDefault();
               dispatch(setRename(id));
@@ -178,7 +183,7 @@ function GroupActions({
           <DropdownMenuSeparator />
 
           <DropdownMenuItem
-            onClick={async (e) => {
+            onClick={async (e: React.MouseEvent<HTMLDialogElement>) => {
               e.preventDefault();
               e.stopPropagation();
               await RemoveGroup(id);
@@ -190,7 +195,7 @@ function GroupActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-        <Sheet open={rename != -1} onOpenChange={(open) => {
+        <Sheet open={rename != -1} onOpenChange={(open: boolean) => {
             if (!open) dispatch(setRename(-1));
         }}>
             <SheetContent>
@@ -202,7 +207,7 @@ function GroupActions({
                     </div>
                 </div>
                 <SheetFooter>
-                    <SheetClose asChild onClick={async(e: any) => {
+                    <SheetClose asChild onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                         e.preventDefault();
                         await RenameGroup({name: nameRef?.current?.value, groupId: rename});
                         dispatch(toggleDataChanged());
@@ -227,8 +232,7 @@ export default function GroupTable() {
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    const [changeNameId, setChangeNameId] = useState(-1);
-    const dataChanged = useAppSelector(state=>state.groupListUi.dataChanged);
+    const dataChanged = useAppSelector((state: RootState) => state.groupListUi.dataChanged);
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
@@ -257,6 +261,7 @@ export default function GroupTable() {
         const data = await getGroupList(); 
         setTableData(data);
       } catch (error) {
+        console.error(error);
         setTableData([]);
       }
     }
@@ -270,7 +275,7 @@ export default function GroupTable() {
         <Input
           placeholder="ค้นหา ฉบับร่าง..."
           value={(table.getColumn("ชื่อฉบับร่าง")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
+          onChange={(event: React.ChangeEvent<HTMLDivElement>) =>
             table.getColumn("ชื่อฉบับร่าง")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
@@ -279,7 +284,7 @@ export default function GroupTable() {
           <Button variant="secondary" className="ml-1">สร้างแบบเร่งด่วน</Button>
         </Link>
         <div className="ml-auto flex items-center gap-x-1">
-          <Button variant="outline" onClick={(e: any) => {
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
             dispatch(openModal({ ui: PLAYLISTUI.new }));
           }}><Plus /></Button>
@@ -293,14 +298,14 @@ export default function GroupTable() {
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
+                .filter((column: Column<string>) => column.getCanHide())
+                .map((column: Column<string>) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
+                      onCheckedChange={(value: boolean) =>
                         column.toggleVisibility(!!value)
                       }
                     >
@@ -315,9 +320,9 @@ export default function GroupTable() {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup, idx: number) => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<Group>) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header: Header<Group, unknown>) => {
                   return (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
@@ -334,13 +339,13 @@ export default function GroupTable() {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
+              table.getRowModel().rows.map((row: Row<Group>) => {
                 return (
                 <TableRow
                   key={row.id}
                   className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell, idx) => (
+                  {row.getVisibleCells().map((cell: Cell<string>, idx: number) => (
                     <TableCell key={cell.id}>
                         {idx != row.getVisibleCells().length - 1? <Link href={`/document-groups/${row.original.id}`}>
                             {flexRender(

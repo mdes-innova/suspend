@@ -5,7 +5,7 @@ import { AuthError } from "@/components/exceptions/auth";
 import { redirect, notFound } from "next/navigation";
 import { Suspense } from "react";
 
-async function Components({ params }: { params: { id: string } }) {
+async function Components({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {
@@ -21,7 +21,7 @@ async function Components({ params }: { params: { id: string } }) {
   }
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Suspense fallback={<div>Loading document...</div>}>
       <Components params={params} />

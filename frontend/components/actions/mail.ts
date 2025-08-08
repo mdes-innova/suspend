@@ -2,12 +2,11 @@
 
 import { type GroupFile } from "@/lib/types";
 import { getAccess } from "./auth";
-import { GetFilesFromGroup } from "./group-file";
 import { AuthError } from "../exceptions/auth";
 
 export async function getMails() {
     const access = await getAccess();
-    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
   try {
     const res = await fetch(`${url}/mail/mails/`, {
       method: 'GET',
@@ -40,7 +39,7 @@ export async function SendMail({
     try {
         const res = await fetch(
         `${process.env.NODE_ENV === "development"?
-            process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/mail/mails/send/`,
+            process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send/`,
         {
             headers: {
                 Authorization: `Bearer ${access}`,
@@ -74,7 +73,7 @@ export async function SendMails(groupId: number) {
     try {
         const res = await fetch(
         `${process.env.NODE_ENV === "development"?
-            process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/mail/mails/send-mails/`,
+            process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send-mails/`,
         {
             headers: {
                 Authorization: `Bearer ${access}`,
@@ -104,7 +103,7 @@ export async function confirm(hash: string) {
   const access = await getAccess();
 
   try {
-    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
     const res = await fetch(`${url}/mail/mails/confirm/`, {
       method: 'POST',
       body: JSON.stringify({
@@ -131,7 +130,7 @@ export async function confirm(hash: string) {
 
 export async function getStaffMails() {
     const access = await getAccess();
-    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
   try {
     const res = await fetch(`${url}/mail/mails/staff-mails/`, {
       method: 'GET',
@@ -155,7 +154,7 @@ export async function getStaffMails() {
 
 export async function getGroupMails(groupMailId: string) {
     const access = await getAccess();
-    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
   try {
     const res = await fetch(`${url}/mail/mails/group-mail/${groupMailId}/`, {
       method: 'GET',
@@ -180,7 +179,7 @@ export async function getGroupMails(groupMailId: string) {
 export async function downloadFile(fid: number) {
   const access = await getAccess();
   try {
-    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/mail/mailfiles/download/${fid}/`, {
+    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mailfiles/download/${fid}/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${access}`

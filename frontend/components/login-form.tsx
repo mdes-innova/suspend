@@ -1,40 +1,26 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, ControllerRenderProps } from "react-hook-form";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { ResetPassword } from "./reset-password";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { PasswordInput } from "./password-input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSearchParams } from "next/navigation";
-import { usePathname } from "next/navigation";
 import { loginUser } from "./actions/user";
 
 
 const FormSchema = z.object({
-  // username: z.string().min(2, {
-  //   message: "Username must be at least 2 characters.",
-  // }),
   username: z.string(),
   password: z.string()
 })
@@ -42,7 +28,6 @@ const FormSchema = z.object({
 export default function LoginForm() {
 
   const params = useSearchParams();
-  const pathname = usePathname();
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
 
@@ -60,24 +45,13 @@ export default function LoginForm() {
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      // const res = await fetch('api/auth/login/', 
-      //   {
-      //     method: 'POST',
-      //     body: JSON.stringify(
-      //       {
-      //         ...values
-      //       }
-      //     ),
-      //     credentials: 'include'
-      //   }
-      // );
       await loginUser({
         ...values
       });
-
       router.push(params.get('pathname')?? '/');
       router.refresh();
     } catch (error) {
+      console.error(error);
       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
     }
   }
@@ -89,7 +63,7 @@ export default function LoginForm() {
           <FormField
             control={form.control}
             name="username"
-            render={({ field }) => (
+            render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "username">}) => (
               <FormItem>
                 <FormLabel>Username</FormLabel>
                 <FormControl>
@@ -98,9 +72,6 @@ export default function LoginForm() {
                     field.onChange(e);
                   }}/>
                 </FormControl>
-                {/* <FormDescription>
-                  This is your public display name.
-                </FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
@@ -108,7 +79,7 @@ export default function LoginForm() {
           <FormField
             control={form.control}
             name="password"
-            render={({ field }) => (
+            render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "password">}) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
@@ -125,12 +96,6 @@ export default function LoginForm() {
               </FormItem>
             )}
           /> 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Label className="underline cursor-pointer">รีเซ็ตรหัสผ่าน</Label>
-            </DialogTrigger>
-            <ResetPassword />
-          </Dialog>
           <Button type="submit">Login</Button>
         </form>
       </Form>

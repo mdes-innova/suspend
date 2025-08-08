@@ -102,9 +102,11 @@ export function ThaiDatePicker({
         <Calendar
           mode="single"
           selected={date}
-          onSelect={(selectedDate: Date) => {
-            setDate(selectedDate);
-            setOpen(false);
+          onSelect={(selectedDate: Date | undefined) => {
+            if (selectedDate) {
+              setDate(selectedDate);
+              setOpen(false);
+            }
           }}
           locale={th}
           initialFocus

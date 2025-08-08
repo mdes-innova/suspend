@@ -9,57 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Fragment, memo, useEffect, useState } from "react";
-import { number } from "zod";
-import { MyPagination, type Paginor } from "./my-pagination";
 import { type Group, type Document } from "@/lib/types";
 import CategoryGroup from "./document-category";
-import axios from "axios";
-import { useAppSelector } from "./store/hooks";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
 
-type Logtype = {
-  id: number
-  activity: string
-  createdAt: string
-}
-
-type Downloads = {
-  pdf: number,
-  xlsx: number
-}
-type LogactivityType = {
-  count: number,
-  downloads: Downloads,
-  data: Logtype[]
-}
 
 export default function DocumentView(
   { docData, groupData }: { docData: Document, groupData: Group }) {
@@ -94,10 +47,10 @@ export default function DocumentView(
           </CardHeader>
           <CardContent>
             <ul className="list-decimal list-outside pl-6 underline cursor-pointer">
-              <li onClick={(e) => {
+              <li onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                 e.preventDefault();
               }}>PDF</li>
-              <li onClick={(e) => {
+              <li onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                 e.preventDefault();
               }}>XLSX</li>
             </ul>

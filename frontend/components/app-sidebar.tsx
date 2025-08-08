@@ -1,27 +1,28 @@
 'use client';
-import { Calendar, Home, Inbox, Search, Settings, Plus, MoreHorizontal } from "lucide-react"
+import { Home, Inbox, Search, Settings, Plus } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { usePathname } from "next/navigation";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { useAppSelector } from "./store/hooks";
 import Link from 'next/link';
+import { RootState } from "./store";
 
 const HIDDEN_ROUTES = ['login', 'secret', 'no-navbar', 'confirm'];
+
+type MenuType = {
+  title: string,
+  url: string,
+  icon: React.FC<React.SVGProps<SVGSVGElement>>
+}
 
 // Menu items.
 const items = [
@@ -55,7 +56,7 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname();
   const pathId = (pathname.split('/'))[1];
-  const user = useAppSelector(state => state.userAuth.user);
+  const user = useAppSelector((state: RootState) => state.userAuth.user);
 
   if (HIDDEN_ROUTES.includes(pathname)) {
       return null;
@@ -79,7 +80,7 @@ export function AppSidebar() {
               <SidebarGroupLabel>Suspend</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {items.slice(user?.isStaff? 0: 1 ,items.length).map((item, idx: number) => 
+                  {items.slice(user?.isStaff? 0: 1 ,items.length).map((item: MenuType) => 
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild>
                           <Link href={item.url}>

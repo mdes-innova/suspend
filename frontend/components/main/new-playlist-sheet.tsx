@@ -1,6 +1,5 @@
 "use client"
 
-import Image from 'next/image';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,56 +7,30 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { closeModal, PLAYLISTUI, toggleModal } from '../store/features/playlist-diaolog-ui-slice';
-import { useRef, useState } from 'react';
+import { closeModal, PLAYLISTUI } from '../store/features/playlist-diaolog-ui-slice';
+import { useRef } from 'react';
+import { type Document } from "@/lib/types";
 import {useRouter} from 'next/navigation';
-import { X } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { addToGroup, postGroup } from '../actions/group';
-
-const Kinds = [
-  { value: 'Nokind', text: 'ไม่มี'},
-  { value: 'Kind1', text: 'ชนิดที่ 1'},
-  { value: 'Kind2', text: 'ชนิดที่ 2'},
-  { value: 'Kind3', text: 'ชนิดที่ 3'},
-  { value: 'Kind4', text: 'ชนิดที่ 4'}
-]
-
-
-type KindOption = {
- value: string;
- text: string;
-};
+import { RootState } from "../store"
 
 
 export function NewPlaylistSheet({main}: {main?: boolean}) {
     const dispatch = useAppDispatch();
-    const uiOpen = useAppSelector(state=>state.playlistDialogUi.newOpen);
-    const docIds = useAppSelector(state=>state.playlistDialogUi.docIds);
-    const rowsSelect = useAppSelector(state=>state.contentListUi.rowSelection);
+    const uiOpen = useAppSelector((state: RootState)=>state.playlistDialogUi.newOpen);
+    const docIds = useAppSelector((state: RootState)=>state.playlistDialogUi.docIds);
     const inputNameRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
-    const [kind, setKind] = useState<string>(Kinds[0].value);
 
   return (
     <div className="grid grid-cols-2 gap-2 flex-1">
-        <Sheet open={uiOpen} onOpenChange={(open) => {
+        <Sheet open={uiOpen} onOpenChange={(open: boolean) => {
           if (open) dispatch(closeModal({ ui: PLAYLISTUI.list }));
           if (!open) dispatch(closeModal({ ui: PLAYLISTUI.new }));
         }}>
@@ -72,27 +45,10 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                 </Label>
                 <Input id="name" ref={inputNameRef} defaultValue="New playlist" className="col-span-3" />
               </div>
-              {/* <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">
-                  ชนิด 
-                </Label>
-                <Select onValueChange={(value) => setKind(value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="เลือกชนิด" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {
-                        Kinds.map((kind: KindOption) => <SelectItem key={`select-${kind}`} value={kind.value}>{kind.text}</SelectItem>)
-                      }
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div> */}
             </div>
             <SheetFooter>
               <SheetClose asChild>
-                <Button className='w-fit ml-auto' type="submit" onClick={async(e: any) => {
+                <Button className='w-fit ml-auto' type="submit" onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                   e.preventDefault();
                   if (docIds && docIds.length) {
                     try {
@@ -103,7 +59,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                         mode: 'append'
                       });
                       const newPlaylist = newDocsGroup.name;
-                      const docs = newDocsGroup.documents.map((doc: any) => doc.orderNo).slice(0, 3);
+                      const docs = newDocsGroup.documents.map((doc: Document) => doc.orderNo).slice(0, 3);
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));

@@ -1,18 +1,15 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
 import DataTable from '@/components/main/content';
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import PlaylistDialog from '@/components/main/playlist-dialog';
 import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
-import { clearSelections, getContent } from '@/components/actions/document';
+import { getContent } from '@/components/actions/document';
 import { AuthError } from '@/components/exceptions/auth';
 
 async function getData() {
   try {
-    // await clearSelections();
     const data = await getContent();
-    // console.log(data.slice(0, 20))
     return data;
   } catch (error) {
     if (error instanceof AuthError) redirect('/login') ;

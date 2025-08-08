@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
   
   if (!access && refresh) {
     const url = process.env.NODE_ENV === "development"?
-        process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD;
+        process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
     const tokenRes = await fetch(`${url}/token/refresh/`, {
       method: 'POST',
       headers: {

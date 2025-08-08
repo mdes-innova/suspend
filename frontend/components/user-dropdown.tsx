@@ -18,10 +18,15 @@ import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
 import { useState } from 'react'
+import { type User } from "@/lib/types";
+import { useAppDispatch } from "./store/hooks";
+import { setUser } from "./store/features/user-auth-slice";
+import { logoutUser } from "./actions/user";
 
-export function DropdownMenuUser({user}: {user: any}) {
+export function DropdownMenuUser({user}: {user: User | null}) {
   const router = useRouter();
   const [open, setOpen] = useState(false)
+  const dispatch = useAppDispatch();
   const pathname = usePathname();
 
   if (!user) return null;
@@ -29,13 +34,13 @@ export function DropdownMenuUser({user}: {user: any}) {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="text-xl">{user.username}</Button>
+        <Button variant="outline" className="text-xl">{user?.username}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>บัญชีของฉัน</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={(e: any) => {
+          <DropdownMenuItem onClick={(e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
               setOpen(false);
               router.push('/profile-view');
@@ -44,7 +49,7 @@ export function DropdownMenuUser({user}: {user: any}) {
           </DropdownMenuItem>
           {
             user?.isStaff &&
-            <DropdownMenuItem onClick={(e: any) => {
+            <DropdownMenuItem onClick={(e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
               setOpen(false);
               router.push('/register');
@@ -57,24 +62,12 @@ export function DropdownMenuUser({user}: {user: any}) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={async (e: any)=>{
+        <DropdownMenuItem onClick={async (e: React.MouseEvent<HTMLDivElement>)=>{
           e.preventDefault();
           try {
-            const _ = await fetch('/api/auth/logout', {
-              method: 'POST',
-              credentials: 'include',
-              body: JSON.stringify(
-                {
-                  path: `${process.env.NEXT_PUBLIC_FRONTEND}pathname`
-                }
-              )
-            });
-
-            // if (res.ok) {
-              window.location.href = '/login';
-            // } else {
-              // console.error('Logout failed:', await res.json());
-            // }
+            await logoutUser();
+              dispatch(setUser(null));
+              window.location.href = `/login/?path=${pathname}`;
           } catch (err) {
             console.error('Logout error:', err);
           }

@@ -7,7 +7,7 @@ export async function getContent() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/document/documents/content/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/content/`, {
       headers: {
           Authorization: `Bearer ${access}`
         },
@@ -30,7 +30,7 @@ export async function clearSelections() {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/document/documents/clear-selection/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/clear-selection/`, {
       method: 'POST',
       headers: {
           Authorization: `Bearer ${access}`
@@ -54,7 +54,7 @@ export async function getDocument(docId: number) {
   const access = await getAccess();
 
   try {
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/document/documents/${docId}/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/${docId}/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -78,7 +78,7 @@ export async function getDocumentList(ids: number[]) {
   const access = await getAccess(); 
 
   try {
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.process.env.BACKEND_URL_PROD}/document/documents/document-list/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/document-list/`, {
       method: 'POST',
       headers: {
           Authorization: `Bearer ${access}`,

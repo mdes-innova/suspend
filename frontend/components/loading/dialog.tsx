@@ -3,9 +3,10 @@
 import { useAppSelector } from "../store/hooks";
 import { BeatLoader } from "react-spinners";
 import { Card } from "../ui/card";
+import { RootState } from "../store";
 
 export default function DialogLoading() {
-    const uiOpen = useAppSelector((state: any) => state.loadingUi.openDialog);
+    const uiOpen = useAppSelector((state: RootState) => state.loadingUi.openDialog);
 
     return uiOpen? 
         <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-20">

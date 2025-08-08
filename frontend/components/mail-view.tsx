@@ -53,7 +53,8 @@ export default function MailView({
                                 </TableCell>
                                 <TableCell className='max-w-[400px]'>
                                     <div className='w-full h-full flex'>
-                                    <ArrowDownToLine size={16} className='cursor-pointer' onClick={async(evt: any) => {
+                                    <ArrowDownToLine size={16} className='cursor-pointer'
+                                    onClick={async(evt: React.MouseEvent<HTMLDivElement>) => {
                                         evt.preventDefault();
                                         const fileName = e.mailFile.originalFilename;
                                         const fileId = e.mailFile.id;

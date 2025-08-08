@@ -3,14 +3,10 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/playlist-dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { openModal, closeModal, PLAYLISTUI } from "../store/features/playlist-diaolog-ui-slice";
@@ -22,6 +18,8 @@ import { Plus } from "lucide-react";
 import { addToGroup, getGroups } from "../actions/group";
 import { getDocumentList } from "../actions/document";
 import { Datetime2Thai } from "@/lib/utils";
+import { RootState } from "../store";
+import { type Group } from "@/lib/types";
 
 type Playlist = {
   id: number,
@@ -30,21 +28,18 @@ type Playlist = {
   modifiedAt: Date,
 }
  
-const tags = Array.from({ length: 50 }).map(
-  (_, i, a) => `v1.2.0-beta.${a.length - i}`
-)
- 
-function MyScrollArea({ data }: { data: Playlist[] }) {
+
+function MyScrollArea({ data }: { data: Group[] }) {
   const dispatch = useAppDispatch();
-  const docIds = useAppSelector(state=>state.playlistDialogUi.docIds);
+  const docIds = useAppSelector((state: RootState) =>state.playlistDialogUi.docIds);
 
   return (
     <ScrollArea className="h-48 w-full rounded-md ">
       <div className="p-4">
-        {data.map((elem) => (
+        {data.map((elem: Group) => (
           <>
             <div key={`playlist-${elem.id}`} className="text-sm cursor-pointer w-full flex justify-between" 
-            onClick={async(e: any) => {
+            onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
               if (docIds && docIds.length){
                 try {
@@ -60,6 +55,7 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
                   dispatch(closeModal({ui: PLAYLISTUI.list,
                     info: [newPlaylist, ...documentList.map(ee => ee.orderNo)] }));
                 } catch (error) {
+                  console.error(error);
                   dispatch(closeModal({ui: PLAYLISTUI.new,
                     info: [error1 as string], err: true }));
                 }
@@ -82,7 +78,7 @@ function MyScrollArea({ data }: { data: Playlist[] }) {
 
 export default function PlaylistDialog() {
     const dispatch = useAppDispatch();
-    const uiOpen = useAppSelector(state => state.playlistDialogUi.listOpen);
+    const uiOpen = useAppSelector((state: RootState) => state.playlistDialogUi.listOpen);
     const [data, setData] = useState<Playlist[]>([]);
 
     useEffect(() => {
@@ -92,6 +88,7 @@ export default function PlaylistDialog() {
             const playlist = await getGroups(); 
             setData(playlist);
           } catch (error) {
+            console.error(error);
            dispatch(closeModal({ui: PLAYLISTUI.list}));
            dispatch(closeModal({ui: PLAYLISTUI.new, info: ["error"], err: true}));
           }
@@ -102,7 +99,7 @@ export default function PlaylistDialog() {
 
     return (
         <Dialog open={uiOpen}
-            onOpenChange={(open) => {
+            onOpenChange={(open: boolean) => {
                 if (!open) dispatch(closeModal({ui: PLAYLISTUI.list}));
             }}
         >
@@ -112,7 +109,7 @@ export default function PlaylistDialog() {
                 </DialogHeader>
                 <MyScrollArea data={data}/>
                 <DialogFooter>
-                  <Button type="submit" onClick={async(e: any) => {
+                  <Button type="submit" onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                     e.preventDefault();
                     dispatch(closeModal({ ui: PLAYLISTUI.list }));
                     dispatch(openModal({ ui: PLAYLISTUI.new }));

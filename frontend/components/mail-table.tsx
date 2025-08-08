@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, User, type Group } from "@/lib/types";
+import { Mail } from "@/lib/types";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,57 +12,46 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  Column,
+  Cell,
+  Row,
+  HeaderGroup,
+  Header
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash2, FolderPen, Plus } from "lucide-react"
+import { ArrowUpDown, ChevronDown } from "lucide-react"
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import {useState} from 'react';
 import Link from 'next/link';
-import { NewPlaylistSheet } from "./main/new-playlist-sheet";
-import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
-import { useAppDispatch, useAppSelector } from './store/hooks';
-import {useEffect, useRef} from 'react';
-import { getGroupList, getGroups, RemoveGroup, RenameGroup } from "./actions/group";
+import {useEffect} from 'react';
 import { Datetime2Thai } from "@/lib/utils";
-import {useRouter} from 'next/navigation';
-import { setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { Label } from "./ui/label";
-import { getMails, getStaffMails } from "./actions/mail";
+import { getStaffMails } from "./actions/mail";
 
-const staffColumns: ColumnDef<(Mail | any)[]> = [
+const staffColumns: ColumnDef<Mail>[] = [
  {
     id: 'วันที่',
     accessorKey: "createdAt",
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<Mail>, rowB: Row<Mail>, columnId: string) => {
       const dateA = new Date(rowA.getValue(columnId));
       const dateB = new Date(rowB.getValue(columnId));
       return dateA.getTime() - dateB.getTime(); // ascending
     },
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
           วันที่
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Mail> }) => {
       const { createdAt } = row.original;
 
       return (
@@ -74,19 +63,20 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }, {
     id: 'เลขหนังสือ',
     accessorKey: "documentNo",
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<stirng> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
             เลขหนังสือ
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Mail> }) => {
       const { documentNo } = row.original;
       return (
         <div>
@@ -97,19 +87,20 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }, {
     id: 'จำนวนคำสั่งศาล',
     accessorKey: "numDocuments",
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
             จำนวนคำสั่งศาล
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Mail> }) => {
       const { numDocuments } = row.original;
 
       return (
@@ -121,26 +112,27 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }, {
     id: 'ส่ง',
     accessorKey: "sends",
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<Mail>, rowB: Row<Mail>, columnId: string) => {
       const splitedAs = rowA.getValue(columnId).split('/');
       const splitedBs = rowB.getValue(columnId).split('/');
       const a = parseFloat(splitedAs[0])/parseFloat(splitedAs[1]);
       const b = parseFloat(splitedBs[0])/parseFloat(splitedBs[1]);
       return a - b; // ascending
     },
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
             ส่ง
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Mail> }) => {
       const { sends } = row.original;
 
       return (
@@ -152,26 +144,27 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }, {
     id: 'ยืนยัน',
     accessorKey: "confirms",
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<Mail>, rowB: Row<Mail>, columnId: string) => {
       const splitedAs = rowA.getValue(columnId).split('/');
       const splitedBs = rowB.getValue(columnId).split('/');
       const a = parseFloat(splitedAs[0])/parseFloat(splitedAs[1]);
       const b = parseFloat(splitedBs[0])/parseFloat(splitedBs[1]);
       return a - b; // ascending
     },
-    header: ({ column }) => {
+    header: ({ column }: { column: Column<string>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
             ยืนยัน
-          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: any) => {
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
             column.toggleSorting(column.getIsSorted() === "asc");
           }}/>
         </div>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<Mail> }) => {
       const { confirms } = row.original;
 
       return (
@@ -183,22 +176,12 @@ const staffColumns: ColumnDef<(Mail | any)[]> = [
   }
 ]
 
-const ispColumns: ColumnDef<(Mail | any)[]> = [
-  
-]
-
-export default function MailTable({
-  user
-}: {
-  user: User
-}) {
+export default function MailTable() {
     const [sorting, setSorting] = useState<SortingState>([])
     const [tableData, setTableData] = useState([]);
-    const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    // const columns = user.isp? ispColumns: staffColumns;
     const columns = staffColumns;
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
@@ -229,6 +212,7 @@ export default function MailTable({
         console.log(data)
         setTableData(data);
       } catch (error) {
+        console.error(error);
         setTableData([]);
       }
     }
@@ -242,7 +226,7 @@ export default function MailTable({
         <Input
           placeholder="ค้นหาเลขหนังสือ..."
           value={(table.getColumn("เลขหนังสือ")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             table.getColumn("เลขหนังสือ")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
@@ -257,14 +241,14 @@ export default function MailTable({
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
+                .filter((column: Column<string>) => column.getCanHide())
+                .map((column: Column<string>) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
+                      onCheckedChange={(value: boolean) =>
                         column.toggleVisibility(!!value)
                       }
                     >
@@ -279,9 +263,9 @@ export default function MailTable({
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup, idx: number) => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<Mail>) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header: Header<Mail, unknown>) => {
                   return (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
@@ -298,13 +282,13 @@ export default function MailTable({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
+              table.getRowModel().rows.map((row: Row<Mail>) => {
                 return (
                 <TableRow
                   key={row.id}
                   className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell, idx) => (
+                  {row.getVisibleCells().map((cell: Cell<string>) => (
                     <TableCell key={cell.id}>
                         <Link href={`/mail/${row.original.mailGroupId}`}>
                             {flexRender(

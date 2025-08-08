@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-table';
 
 // Define the shape of the table state
-interface ContentListUiState {
+export interface ContentListUiState {
   sorting: SortingState;
   columnFilters: ColumnFiltersState;
   columnVisibility: VisibilityState;

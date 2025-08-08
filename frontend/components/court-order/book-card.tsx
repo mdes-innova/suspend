@@ -4,15 +4,11 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { ISPS } from "@/lib/constants";
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogClose,
@@ -21,7 +17,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -36,16 +31,13 @@ import { PlusCircleIcon, Check, CircleX, FilePenLine, ArrowDownToLine} from "luc
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
-    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
   } from "@/components/ui/table";
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
 import { GroupFile, type Isp } from "@/lib/types";
-import { useAppDispatch } from "../store/hooks";
 import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
 
 export function BookCard({ispData, fileData, groupId}:
@@ -61,27 +53,34 @@ export function BookCard({ispData, fileData, groupId}:
     if (openNew === null || openNew === -1) {
       setFilename(null);
       setIspSelected(null);
-      const ispList = tableData?.map((e: GroupFile) => e.isp);
-      setSelectedIsps(ispList?? []);
+      const ispList = tableData
+        ?.map((e: GroupFile) => e.isp)
+        .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
+
+      if (ispList && ispList.length > 0) {
+        setSelectedIsps(ispList);
+      }
     } else {
       const currentRow = tableData?.[openNew];
       if (!currentRow) return;
-      const currentIsp: Isp = currentRow.isp;
-      console.log(currentRow)
-      const currentFile: string = currentRow.originalFilename;
-      setIspSelected(currentIsp);
-      setSelectedIsps((prev: Isp[]) => {
-        return prev.filter((isp) => isp.id !== currentIsp.id);
-      });
-      setFilename(currentFile);
+      const currentIsp = currentRow.isp;
+      const currentFile = currentRow.originalFilename;
+      setIspSelected(currentIsp?? null);
+      if (currentIsp)
+        setSelectedIsps((prev: Isp[]) => {
+          return prev.filter((isp) => isp.id !== currentIsp.id);
+        });
+      setFilename(currentFile?? "");
     }
   }, [openNew])
 
   useEffect(() => {
-    const ispList = tableData?.map((e: GroupFile) => e.isp);
-    setSelectedIsps(ispList?? []);
+  const ispList = tableData
+    ?.map((e: GroupFile) => e.isp)
+    .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
 
-  }, [tableData]);
+  setSelectedIsps(ispList ?? []);
+}, [tableData]);
 
   return (
     <Card className="w-full">
@@ -90,12 +89,12 @@ export function BookCard({ispData, fileData, groupId}:
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full items-start justify-center gap-4">
-          <EditDialog groupId={groupId} filename={filename} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
+          <EditDialog groupId={groupId} filename={filename??""} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
             selectedIsps={selectedIsps} setFilename={setFilename} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
             tableData={tableData} uploadRef={uploadRef}/>
       
-          <Button className="w-fit" onClick={(e: any) => {
+          <Button className="w-fit" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             setOpenNew(-1);
           }}>
@@ -112,8 +111,8 @@ export function BookCard({ispData, fileData, groupId}:
             </TableHeader>
             <TableBody>
                 {tableData.length > 0 ? (
-                  <TableData tableData={tableData} ispData={ispData} setTableData={setTableData} setOpenNew={setOpenNew} 
-                    setIspSelected={setIspSelected} setSelectedIsps={setSelectedIsps} groupId={groupId}
+                  <TableData tableData={tableData} setTableData={setTableData} setOpenNew={setOpenNew} 
+                     groupId={groupId}
                   />
                 ) : (
                   <TableRow>
@@ -130,12 +129,10 @@ export function BookCard({ispData, fileData, groupId}:
   )
 }
 
-function TableData({groupId, tableData, setTableData, ispData, setOpenNew, setIspSelected, setSelectedIsps}:
+function TableData({groupId, tableData, setTableData, setOpenNew}:
   {
-    tableData: any[], setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>,
-    ispData: Isp[], setOpenNew: React.Dispatch<React.SetStateAction<number | null>>, 
-    setIspSelected: React.Dispatch<React.SetStateAction<string>>, groupId: number,
-    setSelectedIsps: React.Dispatch<React.SetStateAction<string[]>>,
+    tableData: GroupFile[], setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>,
+    setOpenNew: React.Dispatch<React.SetStateAction<number | null>>, groupId: number,
   }) {
   return (
     <>
@@ -145,7 +142,8 @@ function TableData({groupId, tableData, setTableData, ispData, setOpenNew, setIs
             <TableCell className='w-[20px]'>{idx + 1}</TableCell>
             <TableCell className='max-w-[400px]'>
               <div className='w-full h-full flex'>
-              <ArrowDownToLine size={16} className='cursor-pointer' onClick={async(evt: any) => {
+              <ArrowDownToLine size={16} className='cursor-pointer'
+              onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                 evt.preventDefault();
                 const fileName = e.originalFilename;
                 const fileId = e.id;
@@ -176,14 +174,16 @@ function TableData({groupId, tableData, setTableData, ispData, setOpenNew, setIs
 
               </div>
             </TableCell>
-            <TableCell className='w-[200px]'>{e.isp.name?? '-'}</TableCell>
+            <TableCell className='w-[200px]'>{e?.isp?.name?? '-'}</TableCell>
             <TableCell className='text-right  flex justify-end w-full px-0'>
               <div className="flex gap-x-1">
-                <FilePenLine size={24} className='cursor-pointer' onClick={(evt: any) => {
+                <FilePenLine size={24} className='cursor-pointer'
+                onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
                   evt.preventDefault();
                   setOpenNew(idx);
                 }}/>
-                <CircleX className='hover:text-red-400' size={24} onClick={async(evt: any) => {
+                <CircleX className='hover:text-red-400' size={24}
+                onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                   evt.preventDefault();
                   await RemoveFile(e.id as number);
                   const newData = await GetFilesFromGroup(groupId);
@@ -199,21 +199,20 @@ function TableData({groupId, tableData, setTableData, ispData, setOpenNew, setIs
   );
 }
 
-function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelected,
+function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
   ispData, selectedIsps, filename, setFilename, uploadRef, tableData, setTableData}:
   {
     groupId: number,
-    idx?: number,
     openNew: number | null,
     setOpenNew: React.Dispatch<React.SetStateAction<number | null>>,
-    ispSelected: Isp,
-    setIspSelected: React.Dispatch<React.SetStateAction<Isp>>,
+    ispSelected: Isp | null,
+    setIspSelected: React.Dispatch<React.SetStateAction<Isp | null>>,
     ispData: Isp[],
     selectedIsps: Isp[],
     setSelectedIsps: React.Dispatch<React.SetStateAction<Isp[]>>,
     filename: string,
-    setFilename: React.Dispatch<React.SetStateAction<string>>,
-    uploadRef: React.RefObject<HTMLInputElement>,
+    setFilename: React.Dispatch<React.SetStateAction<string | null>>,
+    uploadRef: React.RefObject<HTMLInputElement | null>,
     tableData: GroupFile[],
     setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>
   }) {
@@ -236,7 +235,7 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                       required
                       value={ispSelected != null? `${ispSelected.id}`: ''}
                       onValueChange={(value: string) => {
-                        setIspSelected(ispData.find((e: Isp) => e.id === parseInt(value)));
+                        setIspSelected(ispData.find((e: Isp) => e.id === parseInt(value)) ?? null);
                       }}
                     >
                       <SelectTrigger className="w-full" >
@@ -261,15 +260,12 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                           </SelectGroup>
                       </SelectContent>
                     </Select>
-                    {/* <Label htmlFor="name-1">เลือก ISP</Label>
-                    <Input id="name-1" name="name" defaultValue="Pedro Duarte" /> */}
                   </div>
                   <div className="grid gap-3">
-                    {/* <Label htmlFor="username-1">อับโหลดเอกสาร</Label> */}
                     {
                       !filename?
                       <>
-                        <Button variant='outline' onClick={(e: any) => {
+                        <Button variant='outline' onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.preventDefault();
                           if (uploadRef.current) uploadRef.current.click();
                         }}>อัพโหลดเอกสาร</Button>
@@ -289,7 +285,8 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                       <>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                              <p className='truncate w-full text-accent p-0 underline cursor-default' onClick={(e: any) => {
+                              <p className='truncate w-full text-accent p-0 underline cursor-default'
+                              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                                 e.preventDefault();
                                 if (uploadRef.current) uploadRef.current.click();
                               }}>{filename}</p>
@@ -320,7 +317,7 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                   </DialogClose>
                   {
                     openNew === -1 &&
-                    <Button type="submit" onClick={async(e: any) => {
+                    <Button type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.preventDefault();
                       if (!filename || !ispSelected) return;
                       const files = uploadRef?.current?.files;
@@ -341,37 +338,24 @@ function EditDialog({groupId, idx, openNew, setOpenNew, ispSelected, setIspSelec
                   }
                   {
                     openNew != null && openNew > -1 &&
-                    <Button type="submit" onClick={async(e: any) => {
+                    <Button type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.preventDefault();
                       if (!filename || !ispSelected) return;
                       const files = uploadRef?.current?.files;
                       if (!files || !(files.length)) {
                         if (ispSelected != tableData[openNew].isp) {
                           await Edit({
-                            fid: tableData[openNew].fileId,
+                            fid: tableData[openNew].id as number,
                             isp: `${ispSelected.id}`
                           });
                         }
                       } else {
                         await Edit({
-                          fid: tableData[openNew]?.id,
-                          isp: ispSelected.id != tableData[openNew]?.isp.id? `${ispSelected.id}`: undefined,
+                          fid: tableData[openNew].id as number,
+                          isp: ispSelected.id != tableData[openNew]?.isp?.id? `${ispSelected.id}`: undefined,
                           file: files[0]
                         });
-                        // formData.append("file", files[0]);
-                        // const data = await uploadFile({
-                        //   formData,
-                        //   gfid: groupId
-                        // });
-                        // setTableData((prev: TableDataType[]) => {
-                        //   const updated = [...prev];
-                        //   updated[openNew] = {
-                        //     fileId: data.id,
-                        //     filename: data.name,
-                        //     isp: ispSelected
-                        //   };
-                        //   return updated;
-                        // });
+                    
                       }
                       const newData = await GetFilesFromGroup(groupId);
                       setTableData(newData);

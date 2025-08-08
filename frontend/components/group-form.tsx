@@ -1,47 +1,32 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, ControllerRenderProps } from "react-hook-form"
 import {z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Fragment, useEffect, useRef, useState } from "react"
-import { Group, GroupFile, type Isp, type User } from "@/lib/types"
-import { useAppDispatch, useAppSelector } from "../store/hooks"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
-import { ScrollArea } from "../ui/scroll-area"
-import { Label } from "../ui/label"
-import { Separator } from "../ui/separator"
-import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert"
-import DatePicker, {ThaiDatePicker} from "../date-picker"
-import { getIsps } from "../actions/isp"
-import { BookCard } from "../court-order/book-card"
-import { SendMails } from "../actions/mail"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
-import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "../actions/group"
-import DialogLoading from "../loading/dialog"
-import { closeModal, LOADINGUI, openModal } from "../store/features/loading-ui-slice";
+import { useEffect, useRef, useState } from "react"
+import { Group, GroupFile, type Isp } from "@/lib/types"
+import { useAppDispatch } from "./store/hooks"
+import { Dialog, DialogContent, DialogTitle} from "./ui/dialog"
+import { ThaiDatePicker } from "./date-picker"
+import { BookCard } from "./court-order/book-card"
+import { SendMails } from "./actions/mail"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
+import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "./actions/group"
+import DialogLoading from "./loading/dialog"
+import { closeModal, LOADINGUI, openModal } from "./store/features/loading-ui-slice";
 import { useRouter } from 'next/navigation';
 
-
-const tempUsers = [
-    "user1", 'arnon songmoolnak', 'arnon', 'pok', 'arnonsongmoolnak arnonsongmoolnak'
-]
 
 const FormSchema = z.object({
   documentNo: z.string(),
@@ -197,6 +182,7 @@ export function GroupForm({
       setMgId(mailGroupId);
       
     } catch (error) {
+      console.error(error);
       setSendText(2)
     }
     dispatch(closeModal({ui: LOADINGUI.dialog}));
@@ -224,7 +210,7 @@ export function GroupForm({
             }
           </DialogTitle>
             <Button variant={mailStatus === 0? '': 'destructive'}
-              onClick={(e: any) => {
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                 e.preventDefault();
                 if (mailStatus === 0)
                   router.push(`/mail/${mgId}`);
@@ -240,16 +226,16 @@ export function GroupForm({
             <FormField
                 control={form.control}
                 name="documentNo"
-                render={({ field }) => (
+                render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "documentNo">}) => (
                 <FormItem>
                     <FormLabel className="inline-flex items-center gap-0.5">
                         เลขหนังสือ<span className="text-red-400">*</span>
                     </FormLabel>
                     <FormControl>
-                    <Input {...field} onChange={(e) => {
+                    <Input {...field} onChange={(e: React.ChangeEvent<HTMLDivElement>) => {
                         field.onChange(e)
                     }} 
-                      onBlur={async(e: any) => {
+                      onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
                         const documentNo = e.target.value;
                         await updateField({
                           kind: 'documentNo',
@@ -271,7 +257,7 @@ export function GroupForm({
             <FormField
                 control={form.control}
                 name="title"
-                render={({ field }) => (
+                render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "title">}) => (
                 <FormItem>
                     <FormLabel className="inline-flex items-center gap-0.5">
                         เรื่อง<span className="text-red-400">*</span>
@@ -280,7 +266,7 @@ export function GroupForm({
                     <Input {...field} onChange={(e) => {
                         field.onChange(e)
                     }}
-                      onBlur={async(e: any) => {
+                      onBlur={async(e: React.FocusEvent<HTMLDivElement>) => {
                         const title = e.target.value;
                         await updateField({
                           kind: 'title',
@@ -361,7 +347,7 @@ export function GroupForm({
       <BookCard ispData={isps} groupId={groupId} fileData={fileData}/>
       { children }
       <div className='w-full flex justify-center items-center gap-x-4'>
-        <Button onClick={async(e: any) => {
+        <Button onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
           e.preventDefault();
           if (submitRef?.current){
             submitRef?.current?.click();

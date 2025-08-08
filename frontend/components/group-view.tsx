@@ -1,47 +1,9 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { number } from "zod";
-import { MyPagination, type Paginor } from "./my-pagination";
-import { type Isp, User, type Group, type GroupFile } from "@/lib/types";
+import { type Isp, type Group, type GroupFile } from "@/lib/types";
 import DocumentList from "./document-list/document-list";
-import DragDrop from "./document-list/drag-drop";
-import { GroupForm } from "./mail/group-form";
+import { GroupForm } from "./group-form";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
 import {useState, useRef, useEffect} from 'react';
 import { RenameGroup } from "./actions/group";
@@ -90,13 +52,13 @@ export default function GroupView(
             {
               !onTitleChange?
               <div className="w-full text-start text-2xl font-bold"
-                onDoubleClick={(evt: any) => {
+                onDoubleClick={(evt: React.MouseEvent<HTMLDivElement>) => {
                   evt.preventDefault();
                   setOnTitleChange(true);
                 }}
               >{title}</div>:
               <Input defaultValue={title} ref={titleRef} 
-                onBlur={(evt: any) => {
+                onBlur={() => {
                   setTitle(titleRef?.current?.value);
                   setOnTitleChange(false);
                 }}

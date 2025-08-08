@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert"
 import ConfirmLoading from '@/components/loading/confirm';
 
-async function Content({ params }: { params: { id: string } }) {
+async function Content({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
     try {
@@ -27,7 +27,8 @@ async function Content({ params }: { params: { id: string } }) {
                 </Alert>
             </div>
         );
-    } catch (err: any) {
+    } catch (err) {
+        console.error(err);
         return (
             <div className="w-full flex justify-center pt-4">
                 <Alert className="w-fit h-fit text-xl">
@@ -43,10 +44,10 @@ async function Content({ params }: { params: { id: string } }) {
 }
 
 export default function Page({ params }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
     return (
-      <Suspense fallback={ConfirmLoading}>
+      <Suspense fallback={<ConfirmLoading />}>
         <Content params={params}/>
       </Suspense>
     );

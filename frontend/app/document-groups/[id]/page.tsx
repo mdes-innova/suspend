@@ -1,4 +1,4 @@
-import { getGroup, getUntilted, postGroup } from "@/components/actions/group";
+import { getGroup, postGroup } from "@/components/actions/group";
 import { GetFilesFromGroup } from "@/components/actions/group-file";
 import { getIsps } from "@/components/actions/isp";
 import { getCurrentDate } from "@/components/actions/utils";
@@ -8,8 +8,8 @@ import { type Group} from "@/lib/types";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-async function Components({ params }: { params: { id: string }}) {
-  const { id } = (await params);
+async function Components({ params }: { params: Promise<{ id: string }>}) {
+  const { id } = await params;
 
   try {
     const currentDate = await getCurrentDate();
@@ -44,11 +44,11 @@ async function Components({ params }: { params: { id: string }}) {
   }
 }
 
-export default function Page({ params, searchParams }:
-  { params: { id: string }, searchParams: { [key: string]: string }}) {
+export default function Page({ params }:
+  { params: Promise<{ id: string }> }) {
   return (
     <Suspense>
-      <Components params={params} searchParams={searchParams} />
+      <Components params={params} />
     </Suspense>
   );
 }
