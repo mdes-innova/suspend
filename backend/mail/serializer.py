@@ -92,11 +92,13 @@ class MailSerializer(serializers.ModelSerializer):
 
         # Email subject and body with non-ASCII characters (Thai in this case)
         subject = group.title
+        documents = group.documents.all()
         content = f"""เรียน ผู้ให้บริการอินเทอร์เน็ต<br>
-        ด้วย กระทรวงดิจิหัลเพื่อเศรษฐกิจและสังคม ได้ตรวจพบเนื้อหาที่ไม่เหมาะสมในอินเทอร์เน็ต<br>
+        ด้วย กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม ได้ตรวจพบเนื้อหาที่ไม่เหมาะสมในอินเทอร์เน็ต<br>
         ซึ่งเนื้อหาดังกล่าวเข้าข่ายผิดตามพระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์<br>
         มีผลกระทบต่อประชาชนที่หากล่าช้าอาจทำให้มีการเผยแพร่ในวงกว้าง<br>
-        ตามหนังสือเลขที่ {group.document_no} ตามเอกสารแนบ<br>
+        ตามหนังสือเลขที่ {group.document_no} ตามเอกสารแนบ และตามคำสั่งศาล<br><br>
+        {'<br>'.join([doc.order_no for doc in documents])}<br><br>
         จึงขอความอนุเคราะห์ท่านโปรดดำเนินการปิดกั้นให้โดยด่วน<br><br>
 
         ทั้งนี้ กระทรวงฯ อยู่ระหว่างยื่นขอให้ศาลมีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์<br>
@@ -109,7 +111,7 @@ class MailSerializer(serializers.ModelSerializer):
             <body>
                 <p style="font-size: 16px;">{content}</p>
                 <br />
-                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/mail/confirm/{confirmed_hash}" 
+                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/confirm-mail/{confirmed_hash}" 
                 style="font-weight: bold; color: blue; font-size: 24px;" 
                 target="_blank">กรุณากดลิงค์นี้เพื่อยืนยันว่าท่านได้รับทราบแล้ว</a>
                 <br />
@@ -146,7 +148,6 @@ class MailSerializer(serializers.ModelSerializer):
             raise Exception("No group file found.")
 
         court_order_path = '/app/uploads/court-orders'
-        documents = group.documents.all()
         if documents and len(documents) != 0:
             for document in documents:
                 if hasattr(document, 'order_filename')\
@@ -222,6 +223,7 @@ class MailSerializer(serializers.ModelSerializer):
             mail.status = MailStatus.SUCCESSFUL
             mail.datetime = timezone.now()
         except Exception as e:
+            print(e)
             mail.status = MailStatus.FAIL
 
 

@@ -44,7 +44,6 @@ function MyScrollArea({ data }: { data: Group[] }) {
                   
                   const newPlaylist = addResJson.name;
                   const documentList = await getDocumentList(docIds);
-                  console.log(documentList)
                   dispatch(closeModal({ui: PLAYLISTUI.list,
                     info: [newPlaylist, ...documentList.map((ee: Document) => ee.orderNo)] }));
                 } catch (error) {

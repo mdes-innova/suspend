@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
-import "./globals.css";
+import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
-import Providers from './providers';
+import Providers from '../../app/providers';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Suspense",
     description: "Open Graph description",
-    url: `${process.env.NEXT_PUBLIC_FRONTEND_PROD}`,
+    url: `${process.env.NEXT_PUBLIC_FRONTEND}`,
     siteName: "Suspend",
     images: [
       {
@@ -42,10 +42,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }>) {
   return (
   <html lang="th" className={notoThai.className} suppressHydrationWarning>
@@ -61,7 +61,7 @@ export default function RootLayout({
       >
           <div className="w-full min-h-full relative">
               <Providers>
-                {children} 
+                {children}
               </Providers>
           </div>
         </ThemeProvider>

@@ -17,9 +17,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "./password-input";
 import { useSearchParams } from "next/navigation";
-import { getProfile, loginUser } from "./actions/user";
-import { useAppDispatch } from "./store/hooks";
+import { loginUser } from "./actions/user";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setUser } from "./store/features/user-auth-slice";
+import { RootState } from "./store";
 
 
 const FormSchema = z.object({
@@ -33,6 +34,14 @@ export default function LoginForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state: RootState) => state.userAuth.user);
+
+  useEffect(() => {
+    if (user) {
+      router.push(params.get('pathname')?? '/');
+      router.refresh();
+    }
+  }, [user]);
 
   useEffect(() => {
   }, []);
@@ -48,13 +57,11 @@ export default function LoginForm() {
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      const user = await loginUser({
+      const logedinUser = await loginUser({
         ...values
       });
-      dispatch(setUser(user));
+      dispatch(setUser(logedinUser));
 
-      router.push(params.get('pathname')?? '/');
-      router.refresh();
     } catch (error) {
       console.error(error);
       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');

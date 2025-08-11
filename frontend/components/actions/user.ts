@@ -32,7 +32,6 @@ export async function getUsers() {
 
     try {
         const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-        console.log(url)
         const res = await fetch(`${url}/user/users/`, {
         headers: {
           Authorization: `Bearer ${access}`
@@ -72,7 +71,7 @@ export async function registerUser(userRegisterParams: UserRegister) {
         const profile = await res.json();
         return profile;
     } catch (error) {
-        console.log(error)
+        console.error(error)
        throw error; 
     }
 }
@@ -87,7 +86,6 @@ export async function loginUser({
     try {
         const cookieStore = await cookies()
         const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-        console.log(url)
         const res = await fetch(`${url}/token/`, {
         method: 'POST',
         headers: {

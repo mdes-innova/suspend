@@ -36,11 +36,11 @@ export default function MailView({
                 <Table className='overflow-y-hidden px-2'>
                     <TableHeader>
                         <TableRow className="hover:bg-background">
-                        <TableHead className="w-[20px]">#</TableHead>
-                        <TableHead className="w-[400px]">ชื่อเอกสาร</TableHead>
-                        <TableHead className='w-[200px]'>ISP</TableHead>
-                        <TableHead className="w-[50px] text-right">เวลาที่ส่ง</TableHead>
-                        <TableHead className="w-[50px] text-right">เวลาที่ยืนยัน</TableHead>
+                        <TableHead className="w-[20px] text-left">#</TableHead>
+                        <TableHead className="w-[400px] text-left">ชื่อเอกสาร</TableHead>
+                        <TableHead className='w-[200px] text-left'>ISP</TableHead>
+                        <TableHead className="w-[50px] text-left">เวลาที่ส่ง</TableHead>
+                        <TableHead className="w-[50px] text-left">เวลาที่ยืนยัน</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

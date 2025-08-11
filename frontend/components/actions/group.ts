@@ -304,11 +304,13 @@ export async function setDocumentDate({
   documentDate 
 }: {
   groupId: number,
-  documentDate: string
+  documentDate: string | Date
 }) {
   const access = await getAccess();
 
   try {
+    const d = new Date(documentDate)
+    const isoUtc = d.toISOString()
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -317,7 +319,7 @@ export async function setDocumentDate({
           "Content-Type": "application/json"
         },
       body: JSON.stringify({
-       documentDate 
+        document_date: isoUtc,
       })
     }); 
 

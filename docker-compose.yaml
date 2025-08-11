@@ -5,85 +5,88 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - mdes_network
-  
+    networks: [mdes_network]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   redis:
     image: redis:7-alpine
     restart: always
-    networks:
-      - mdes_network
+    networks: [mdes_network]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   backend:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile.dev
-    volumes:
-      - ./backend:/app
+    working_dir: /app
     env_file: .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      exec gunicorn app.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
+      "
     ports:
       - "8009:8000"
-    networks:
-        - mdes_network
-  
+    restart: always
+    networks: [mdes_network]
+
   celery:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile.dev
+    working_dir: /app
     command: celery -A app worker --loglevel=info
     depends_on:
-      - redis
-      - backend
-      - db
-    volumes:
-      - ./backend:/app
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file: .env
-    networks:
-      - mdes_network
+    restart: always
+    networks: [mdes_network]
 
   celery-beat:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile.dev
+    working_dir: /app
     command: celery -A app beat --loglevel=info
     depends_on:
-      - redis
-      - db
-      - backend
-      - celery
-    volumes:
-      - ./backend:/app
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      celery:
+        condition: service_started
     env_file: .env
-    networks:
-      - mdes_network
+    restart: always
+    networks: [mdes_network]
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile.dev
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_started
+      db:
+        condition: service_healthy
     ports:
       - "8010:3000"
-    depends_on:
-      - backend
-      - db
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-    networks:
-      - mdes_network
-    develop:
-      watch:
-        - path: ./frontend
-          target: /app
-          action: rebuild
+    restart: always
+    networks: [mdes_network]
 
 volumes:
   postgres_data:
-  static_volume:
 
 networks:
   mdes_network:

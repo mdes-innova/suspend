@@ -65,11 +65,12 @@ const columns: ColumnDef<Group>[] = [
       )
     },
     cell: ({ row }: { row: Row<Group> }) => {
-      const { modifiedAt } = row.original;
-
       return (
         <div>
-          {Datetime2Thai(modifiedAt)}
+          {row.getValue('วันที่')?
+            Datetime2Thai(row.getValue('วันที่')):
+            '-'
+          }
           </div>
       );
     },
@@ -81,7 +82,7 @@ const columns: ColumnDef<Group>[] = [
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ชื่อ
+          ฉบับบร่าง
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -91,10 +92,9 @@ const columns: ColumnDef<Group>[] = [
       )
     },
     cell: ({ row }: { row: Row<Group> }) => {
-      const { name } = row.original;
       return (
         <div>
-          {name?? '-'}
+          {row.getValue('ชื่อฉบับร่าง')?? '-'}
           </div>
       );
     },
@@ -121,13 +121,8 @@ const columns: ColumnDef<Group>[] = [
       )
     },
     cell: ({ row }: { row: Row<Group> }) => {
-      const { documents } = row.original;
-
-      return (
-        <div>
-          {documents?.length?? '-'}
-          </div>
-      );
+      const docs = row.getValue('จำนวนคำสั่งศาล') as unknown[] | undefined;
+      return <div>{docs?.length ?? '-'}</div>;
     },
   }, {
     id: "actions",

@@ -1,17 +1,13 @@
 'use client';
 import React, { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { DropdownMenuUser } from './user-dropdown';
 import { useAppDispatch  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
 import { getProfile } from './actions/user';
 
-const HIDDEN_ROUTES = ['login', 'secret', 'no-navbar', 'confirm'];
 
 export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
-    const pathname = usePathname();
-    const pathId = (pathname.split('/'))[1];
     const dispatch = useAppDispatch();
     
     useEffect(() => {
@@ -22,18 +18,12 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
         getData();
     }, []);
 
-    if (HIDDEN_ROUTES.map(elem => pathId.includes(elem)).some(Boolean) ||
-        pathname.includes('mail/confirm')) {
-        return (
-            <>{ children }</>
-        );
-    }
-
     return (
          <div className="w-full min-h-dvh flex flex-col justify-start items-start relative">
             <div className="w-full h-36 bg-blue-400 flex justify-between items-center px-4">
                 <div className="w-32 h-32 block relative selection:none cursor-pointer"
                     onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                        e.preventDefault();
                         if (window) window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND}`;
                     }}>
                     <Image 

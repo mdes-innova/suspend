@@ -22,8 +22,7 @@ export async function middleware(request: NextRequest) {
   // If refresh exists but access is missing, try to refresh
   if (!access && refresh) {
     try {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
+      const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
 
       const tokenRes = await fetch(`${baseUrl}/token/refresh/`, {
         method: 'POST',

@@ -50,7 +50,6 @@ export async function downloadPdf(fid: number) {
 
 export async function uploadFile({formData, kind = 'pdf'}: {formData: FormData, kind?: string}) {
   const access = await getAccess();
-  console.log(access)
   
   try {
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/${kind}-upload/`, {

@@ -2,7 +2,8 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 import fitz
-from core.models import Document, Group, GroupDocument, DocumentFile
+from core.models import (Document, Group,
+                         GroupDocument, DocumentFile)
 from .serializer import (
     DocumentSerializer,
     FileSerializer
@@ -22,33 +23,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.cache import cache
 import httpx
 from datetime import datetime
+from django.db.models import Prefetch
 
 
 class DocumentView(viewsets.ModelViewSet):
     """Document view."""
     serializer_class = DocumentSerializer
     queryset = Document.objects.all().order_by('-order_id')
-
-    def list(self, request, *args, **kwargs):
-        user = request.user
-
-        selected_qs = self.queryset.filter(groups__user=user).distinct()
-        unselected_qs = self.queryset.exclude(groups__user=user).distinct()
-
-        # Serialize and add `selected` flag
-        selected_data = DocumentSerializer(selected_qs, many=True).data
-        for item in selected_data:
-            item['selected'] = True
-
-        unselected_data = DocumentSerializer(unselected_qs, many=True).data
-        for item in unselected_data:
-            item['selected'] = False
-
-        # Combine and sort by ID
-        combined = selected_data + unselected_data
-        combined_sorted = sorted(combined, key=lambda x: x['id'])
-
-        return Response(combined_sorted)
 
     @action(
         detail=False,
@@ -214,29 +195,13 @@ class DocumentView(viewsets.ModelViewSet):
         methods=['get'],
     )
     def content(self, request):
-        try:
-            documents = self.queryset
-            data = DocumentSerializer(documents, many=True).data
-            for d in data:
-                document = Document.objects.get(pk=d['id'])
-                if hasattr(document, 'groupdocument'):
-                    group = document.groupdocument.group  # type: ignore
-                    group_data = GroupSerializer(group).data
-                    d['active'] = False
-                    d['group_id'] = group_data['id']
-                    d['group_name'] = group_data['name']
-                else:
-                    d['active'] = True
-                    d['group_id'] = None
-                    d['group_name'] = None
-            return Response(data)
-
-        except Exception as e:
-            return Response({
-                'error': str(e),
-            },
-                status.HTTP_404_NOT_FOUND
-            )
+        qs = (
+            Document.objects
+            .all()
+            .select_related('groupdocument__group')  # reverse OneToOne, then FK to group
+        )
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
     @action(
         detail=False,

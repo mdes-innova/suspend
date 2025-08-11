@@ -54,7 +54,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
     cell: ({ row }: { row: Row<StaffMail> }) => {
       return (
         <div>
-          {Datetime2Thai(row.getValue('createdAt'))}
+          {row.getValue('วันที่')? Datetime2Thai(row.getValue('วันที่')): '-'}
           </div>
       );
     },
@@ -77,7 +77,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
     cell: ({ row }: { row: Row<StaffMail> }) => {
       return (
         <div>
-          {row.getValue('documentNo')?? '-'}
+          {row.getValue('เลขหนังสือ')?? '-'}
           </div>
       );
     },
@@ -101,7 +101,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
 
       return (
         <div>
-          {row.getValue('numDocuments')?? '-'}
+          {row.getValue('จำนวนคำสั่งศาล')?? '-'}
           </div>
       );
     },
@@ -132,7 +132,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
 
       return (
         <div>
-          {row.getValue('sends')?? '-'}
+          {row.getValue('ส่ง')?? '-'}
           </div>
       );
     },
@@ -163,7 +163,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
 
       return (
         <div>
-          {row.getValue('confirms')?? '-'}
+          {row.getValue('ยืนยัน')?? '-'}
           </div>
       );
     },
@@ -203,7 +203,6 @@ export default function MailTable() {
     const getData = async() => {
       try {
         const data = await getStaffMails(); 
-        console.log(data)
         setTableData(data);
       } catch (error) {
         console.error(error);

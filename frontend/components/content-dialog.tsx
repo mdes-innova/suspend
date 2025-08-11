@@ -21,7 +21,6 @@ import {
   Cell,
   Row,
   Column,
-  HeaderContext
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility,
@@ -51,20 +50,13 @@ import {
   type Updater,
 } from '@tanstack/react-table';
 import { RootState } from "./store";
+import { Date2Thai } from "@/lib/utils";
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
     ? (updater as (prev: T) => T)(previous)
     : updater;
 }
-
-// function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
-//   return typeof updater === 'function';
-// }
-
-// function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
-//   return isUpdaterFunction(updater) ? updater(previous) : updater;
-// }
 
 export const columns: ColumnDef<Document>[] = [
   {
@@ -82,14 +74,16 @@ export const columns: ColumnDef<Document>[] = [
       </div>
     ),
     cell: ({ row }: { row: Row<Document> }) => {
-        if (row.getValue('active'))
+      const original = row.original;
+      const active = original?.active?? false;
+        if (active)
           return (
             <div className="ml-2">
               <Checkbox
                 checked={row.getIsSelected()}
                 onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
                 aria-label="Select row"
-                disabled={!row.getValue('active')}
+                disabled={!active}
               />
             </div>
           );
@@ -100,8 +94,7 @@ export const columns: ColumnDef<Document>[] = [
   {
     id: 'คำสั่งศาล',
     accessorKey: "orderNo",
-    header: (context: HeaderContext<Document, unknown>) => {
-      const { column } = context;
+    header: ({column}: { column: Column<Document> }) => {
       return (
         <div className='flex gap-x-2 text-left justify-start p-0 m-0'
         >
@@ -116,10 +109,12 @@ export const columns: ColumnDef<Document>[] = [
     },
     cell: ({ row }: { row: Row<Document> }) => 
     {
+      const original = row.original;
+      const id = original?.id?? '';
       return (<Link
-        href={`/document-view/${row.getValue('id')}`}
+        href={`/document-view/${id}`}
         target="_blank" rel="noopener noreferrer"
-        className="text-left underline cursor-pointer hover:text-blue-400">{row.getValue('orderNo')}</Link>);
+        className="text-left underline cursor-pointer hover:text-blue-400">{row.getValue('คำสั่งศาล')?? '-'}</Link>);
     }
   },
     {
@@ -132,8 +127,7 @@ export const columns: ColumnDef<Document>[] = [
     },
     header: ({ column }: { column: Column<Document> }) => {
       return (
-        <div className='flex gap-x-2 text-left justify-start -ml-1'
-        >
+        <div className='flex gap-x-2 text-left justify-start -ml-1'>
           วันที่
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
@@ -147,11 +141,10 @@ export const columns: ColumnDef<Document>[] = [
 
       return (
         <div>
-          {(new Date(row.getValue('orderDate'))).toLocaleString("en-GB", {
-            year: "numeric",
-            day: "2-digit",
-            month: "2-digit"
-          })}
+          {
+            row.getValue('วันที่')?
+            Date2Thai(row.getValue('วันที่')): '-'
+          }
           </div>
       );
     },
@@ -162,8 +155,7 @@ export const columns: ColumnDef<Document>[] = [
     header: ({ column }: { column: Column<Document> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full -ml-2'
-        >
-          หมายเลขคดีดำ
+        >คดีหมายเลขดำ
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -175,7 +167,7 @@ export const columns: ColumnDef<Document>[] = [
     cell: ({ row }: { row: Row<Document> }) => {
       return (
         <div>
-          {row.getValue('orderblackNo')?? '-'}
+          {row.getValue('คดีหมายเลขดำ')?? '-'}
           </div>
       );
     },
@@ -186,8 +178,7 @@ export const columns: ColumnDef<Document>[] = [
     header: ({ column }: { column: Column<Document> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full -ml-3'
-        >
-          หมายเลขคดีแดง
+        >คดีหมายเลขแดง
           <ArrowUpDown size={16}
           className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -199,7 +190,7 @@ export const columns: ColumnDef<Document>[] = [
     cell: ({ row }: { row: Row<Document> }) => {
       return (
         <div>
-          {row.getValue('orderredNo')?? '-'}
+          {row.getValue('คดีหมายเลขแดง')?? '-'}
           </div>
       );
     },
@@ -314,11 +305,13 @@ export default function ContentDialog({data}: {data: Document[]}) {
           <TableBody className="block max-h-[50vh] overflow-auto w-full">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row: Row<Document>) => {
+                const original = row.original;
+                const active = original?.active?? false;
                 return (
                 <TableRow
                   key={row.id}
-                  data-state={row.getValue('active')? row.getIsSelected() && "selected": ""}
-                  className={`flex items-center justify-between w-full ${row.getValue('active')? "bg-muted text-gray-400": "bg-gray-100"}`}
+                  data-state={active? row.getIsSelected() && "selected": ""}
+                  className={`flex items-center justify-between w-full ${active? "": "bg-muted text-gray-400"}`}
                 >
                   {row.getVisibleCells().map((cell: Cell<Document, unknown>, idx2: number) => (
                     <TableCell key={cell.id} className={`flex flex-col justify-center px-0 mx-0  ${idx2 === 0? "flex-[1]": "flex-[2]"}`}>

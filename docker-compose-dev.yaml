@@ -5,82 +5,93 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - mdes_network
-  
+    networks: [mdes_network]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"  # Optional: expose Redis port if you want to connect from host
-    networks:
-      - mdes_network
+    networks: [mdes_network]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   backend:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile.dev
-    volumes:
-      - ./backend:/app
+      dockerfile: Dockerfile   # production
     env_file: .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      gunicorn app.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
+      "
     ports:
-      - "8000:8000"
-    networks:
-        - mdes_network
-  
+      - "8009:8000"
+    restart: always
+    networks: [mdes_network]
+
   celery:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile.dev
-    command: celery -A app worker --loglevel=info
-    depends_on:
-      - redis
-      - db
-    volumes:
-      - ./backend:/app
+      dockerfile: Dockerfile
     env_file: .env
-    networks:
-      - mdes_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: celery -A app worker --loglevel=info
+    restart: always
+    networks: [mdes_network]
 
   celery-beat:
     build:
       context: ./backend
-      dockerfile: ./Dockerfile.dev
-    command: celery -A app beat --loglevel=info
-    depends_on:
-      - redis
-      - db
-      - celery
-    volumes:
-      - ./backend:/app
+      dockerfile: Dockerfile
     env_file: .env
-    networks:
-      - mdes_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      celery:
+        condition: service_started
+    command: celery -A app beat --loglevel=info
+    restart: always
+    networks: [mdes_network]
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: ./Dockerfile.dev
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules # Don't override node_modules inside container
+      dockerfile: Dockerfile   # production
     environment:
-      - NODE_ENV=development
-    networks:
-      - mdes_network
-    develop:
-      watch:
-        - path: ./frontend
-          target: /app
-          action: rebuild
+      - NODE_ENV=production
+      # If Next.js needs the API url at runtime:
+      # - NEXT_PUBLIC_API_URL=https://your-domain-or-host:8009
+    depends_on:
+      backend:
+        condition: service_started
+      db:
+        condition: service_healthy
+    ports:
+      - "8010:3000"
+    restart: always
+    networks: [mdes_network]
 
 volumes:
   postgres_data:
-  static_volume:
 
 networks:
   mdes_network:

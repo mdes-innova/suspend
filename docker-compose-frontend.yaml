@@ -1,0 +1,11 @@
+services:
+  frontend-build:
+    build:
+      context: ./frontend
+    command: npm run build 
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      NODE_ENV: production

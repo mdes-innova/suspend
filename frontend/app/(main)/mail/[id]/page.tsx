@@ -19,7 +19,6 @@ async function getData(id: string) {
 async function MailContent({params}: {params: Promise<{ id: string }>}) {
     const {id} = await params;
     const data = await getData(id);
-    console.log(data);
 
   return (
     <div className='w-full h-full flex flex-col px-2'>
