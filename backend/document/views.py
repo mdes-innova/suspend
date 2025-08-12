@@ -198,7 +198,8 @@ class DocumentView(viewsets.ModelViewSet):
         qs = (
             Document.objects
             .all()
-            .select_related('groupdocument__group')  # reverse OneToOne, then FK to group
+            .select_related('groupdocument__group')
+            .order_by('-order_date')
         )
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)

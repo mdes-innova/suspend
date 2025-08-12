@@ -1,6 +1,7 @@
 import LoginForm from "@/components/login-form";
 import Image from 'next/image';
 import { Suspense } from 'react';
+import logo from "@/public/images/logo.png";
 
 export default function Page() {
   return (
@@ -12,7 +13,7 @@ export default function Page() {
           <div className="flex-1 flex flex-col justify-center items-center h-full">
             <div className="w-[540px] h-[540px] relative max-lg:w-[360px] max-lg:h-[360px]">
               <Image 
-                src="/images/logo.png"
+                src={logo}
                 alt="Home logo"
                 fill
                 className="object-cover"
