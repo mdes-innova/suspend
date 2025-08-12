@@ -5,93 +5,73 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks: [mdes_network]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+    networks: 
+      - mdes_network_dev
 
   redis:
     image: redis:7-alpine
     restart: always
-    networks: [mdes_network]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+    networks: 
+      - mdes_network_dev
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile   # production
+      dockerfile: Dockerfile.dev
     env_file: .env
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: >
-      sh -c "
-      python manage.py migrate &&
-      gunicorn app.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
-      "
+      - db
+      - redis
     ports:
       - "8009:8000"
     restart: always
-    networks: [mdes_network]
+    networks: 
+      - mdes_network_dev
 
   celery:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     env_file: .env
     depends_on:
-      redis:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - redis
+      - db
     command: celery -A app worker --loglevel=info
     restart: always
-    networks: [mdes_network]
+    networks: 
+      - mdes_network_dev
 
   celery-beat:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     env_file: .env
     depends_on:
-      redis:
-        condition: service_healthy
-      db:
-        condition: service_healthy
-      celery:
-        condition: service_started
+      - redis
+      - db
+      - celery
     command: celery -A app beat --loglevel=info
     restart: always
-    networks: [mdes_network]
+    networks: 
+      - mdes_network_dev
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile   # production
+      dockerfile: Dockerfile.dev
     environment:
-      - NODE_ENV=production
-      # If Next.js needs the API url at runtime:
-      # - NEXT_PUBLIC_API_URL=https://your-domain-or-host:8009
+      - NODE_ENV=development
     depends_on:
-      backend:
-        condition: service_started
-      db:
-        condition: service_healthy
+      - backend
+      - db
     ports:
       - "8010:3000"
     restart: always
-    networks: [mdes_network]
+    networks: 
+      - mdes_network_dev
 
 volumes:
   postgres_data:
 
 networks:
-  mdes_network:
+  mdes_network_dev:
