@@ -13,6 +13,7 @@ export default function MailView({
 }: {
     data: Mail[]
 }) {
+    console.log(data)
     return (
         <div className="w-full h-full flex flex-col gap-y-2">
             <div className="grid grid-cols-2 py-4">

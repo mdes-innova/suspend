@@ -213,6 +213,7 @@ export default function MailTable() {
     getData();
   }, []);
 
+
     return (
     <div className="w-full">
       <div className="flex items-center py-4">

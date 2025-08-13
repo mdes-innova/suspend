@@ -115,7 +115,7 @@ class MailSerializer(serializers.ModelSerializer):
                 style="font-weight: bold; color: blue; font-size: 24px;" 
                 target="_blank">กรุณากดลิงค์นี้เพื่อยืนยันว่าท่านได้รับทราบแล้ว</a>
                 <br />
-                <p style="font-size: 16px;">กระทรวงดิจิหัลเพื่อเศรษฐกิจและสังคม</p>
+                <p style="font-size: 16px;">กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม</p>
             </body>
         </html>
         """
