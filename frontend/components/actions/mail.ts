@@ -3,6 +3,7 @@
 import { type GroupFile } from "@/lib/types";
 import { getAccess } from "./auth";
 import { AuthError } from "../exceptions/auth";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function getMails() {
     const access = await getAccess();
@@ -100,7 +101,6 @@ export async function SendMails(groupId: number) {
 }
 
 export async function confirm(hash: string) {
-  const access = await getAccess();
 
   try {
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
@@ -110,7 +110,6 @@ export async function confirm(hash: string) {
         hash
       }),
       headers: {
-          Authorization: `Bearer ${access}`,
           "Content-Type": "application/json"
         },
     }); 
@@ -194,5 +193,40 @@ export async function downloadFile(fid: number) {
     return response.blob();
   } catch (error) {
     throw error;
+  }
+}
+
+export async function sendIspMail({
+  groupFileId,
+  groupId
+}: {
+  groupFileId: number,
+  groupId: number
+}) {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mails/send-isp/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        groupFileId,
+        groupId
+      }),
+      headers: {
+          "Authorization": `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Send mail fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
   }
 }

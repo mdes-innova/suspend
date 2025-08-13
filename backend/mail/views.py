@@ -1,9 +1,9 @@
 """View module for activity app."""
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets
-from .serializer import MailSerializer, MailFileSerializer
+from .serializer import MailSerializer, MailFileSerializer, MailGroupSerializer
 from user.serializer import UserSerializer
-from core.models import Mail, MailStatus, Group, GroupFile, MailFile
+from core.models import Mail, MailStatus, Group, GroupFile, MailFile, MailGroup
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
@@ -15,6 +15,18 @@ from core.permissions import IsAdminOnlyUser
 from django.utils import timezone
 from django.core.files.base import File
 
+
+class MailGroupViews(viewsets.ModelViewSet):
+    serializer_class = MailGroupSerializer
+    queryset = MailGroup.objects.all().order_by('-created_at')
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return super().get_queryset()
+        else:
+            return Mail.objects.filter(receiver=user,
+                                       statsu=MailStatus.SUCCESSFUL).distinct()
 
 
 class MailViews(viewsets.ModelViewSet):
@@ -178,7 +190,6 @@ class MailViews(viewsets.ModelViewSet):
         
         serializer = MailSerializer(mails, many=True) 
         return Response(serializer.data)
-        
 
     def get_queryset(self):
         user = self.request.user

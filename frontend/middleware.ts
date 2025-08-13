@@ -3,7 +3,8 @@ import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname === '/_not-found')
+  const path = (pathname.split('/'))[1];
+  if (['_not-found', 'confirm-mail'].includes(path))
     return NextResponse.next();
   const access = request.cookies.get('access')?.value;
   const refresh = request.cookies.get('refresh')?.value;

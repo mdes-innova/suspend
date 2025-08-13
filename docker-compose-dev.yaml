@@ -19,6 +19,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     env_file: .env
+    volumes:
+      - ./backend:/app
     depends_on:
       - db
       - redis
@@ -33,6 +35,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     env_file: .env
+    volumes:
+      - ./backend:/app
     depends_on:
       - redis
       - db
@@ -46,6 +50,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     env_file: .env
+    volumes:
+      - ./backend:/app
     depends_on:
       - redis
       - db
@@ -59,15 +65,20 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+    command: npm run dev
     depends_on:
       - backend
       - db
-    ports:
-      - "3000:3000"
     restart: always
-    networks: 
+    networks:
       - mdes_network_dev
 
 volumes:

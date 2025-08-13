@@ -5,7 +5,7 @@ from django.core.validators import (
     FileExtensionValidator, MinValueValidator, MaxValueValidator)
 from django.utils import timezone
 import os
-
+import uuid
 from core.utils import mail_file_path
 from uuid import uuid4
 
@@ -16,12 +16,34 @@ class MailStatus(models.TextChoices):
     IDLE = "idle", "Idle"
 
 
+class MailGroup(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='mailgroups'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+
 class Mail(models.Model):
     subject = models.CharField(max_length=512)
     datetime = models.DateTimeField(null=True)
     document_no = models.CharField(max_length=32, blank=True)
     document_date = models.DateTimeField(null=True)
-    mail_group_id = models.UUIDField(null=True)
+    mail_group = models.ForeignKey(
+        MailGroup,
+        related_name='mails',
+        on_delete=models.CASCADE,
+        default=None
+    )
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
@@ -42,12 +64,6 @@ class Mail(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='mails'
-    )
-    sender = models.ForeignKey(
-        "User",
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='sent_mails'
     )
     receiver = models.ForeignKey(
         "User",

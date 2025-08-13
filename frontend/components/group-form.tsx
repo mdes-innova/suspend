@@ -20,12 +20,14 @@ import { useAppDispatch } from "./store/hooks"
 import { Dialog, DialogContent, DialogTitle} from "./ui/dialog"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { SendMails } from "./actions/mail"
+import { sendIspMail, SendMails } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "./actions/group"
 import DialogLoading from "./loading/dialog"
 import { closeModal, LOADINGUI, openModal } from "./store/features/loading-ui-slice";
 import { useRouter } from 'next/navigation';
+import { GetFilesFromGroup } from "./actions/group-file"
+import { Card } from "./ui/card"
 
 
 const FormSchema = z.object({
@@ -60,6 +62,7 @@ export function GroupForm({
       },
   });
   const router = useRouter();
+  const [progresMails, setProgressMails] = useState<number[]>([]);
 
   useEffect(() => {
     const getData = async() => {
@@ -178,6 +181,22 @@ export function GroupForm({
         kind: 'documentNo',
         value: values.documentNo
       });
+      const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+      if (groupFiles && groupFiles.length){
+        dispatch(closeModal({ui: LOADINGUI.dialog}));
+        setProgressMails(groupFiles.map(() => -1));
+      }
+      for (let i=0; i<groupFiles.length; i++) {
+        if (groupFiles && groupFiles.length && groupFiles[i] && groupFiles[i]?.id != undefined)
+          try {
+            await sendIspMail({
+              groupFileId: groupFiles[i].id as number,
+              groupId
+            });
+          } catch {
+            
+          }
+      }
       const mailGroupId = (await SendMails(groupId)).data;
       setSendText(1)
       setMgId(mailGroupId);
@@ -186,6 +205,7 @@ export function GroupForm({
       console.error(error);
       setSendText(2)
     }
+    setProgressMails([]);
     dispatch(closeModal({ui: LOADINGUI.dialog}));
   }
 
@@ -200,6 +220,31 @@ export function GroupForm({
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
+      {progresMails.length > 0 && 
+      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2
+        -translate-y-1/2 z-50 p-20 flex flex-col gap-x-2">
+        {
+          progresMails.map((pmail: number, idx: number) => {
+            const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
+            return (
+              <>
+                <div key={`mail-progress-${idx}`} className={`rounded-2xl w-16 h-8 ${bg}`}></div>
+              </>
+            );
+          }
+        )
+        }
+        <Button
+          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (mailStatus === 0)
+              router.push(`/mail/${mgId}`);
+            setMailStatus(2);
+          }}
+        >
+          ตกลง
+        </Button>
+      </Card>}
       <DialogLoading />
       <Dialog open={mailStatus != 2} onOpenChange={(open: boolean) => {
         if (!open) setMailStatus(2);

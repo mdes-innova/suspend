@@ -1,6 +1,9 @@
 """Mail serializer module."""
 from rest_framework import serializers
-from core.models import Mail, MailStatus, Group, ISP, MailFile
+from core.models import (
+    Mail, MailStatus, Group, ISP, MailFile,
+    MailGroup
+    )
 from user.serializer import UserSerializer
 from document.serializer import DocumentSerializer
 from group.serializer import GroupSerializer, GroupFileSerializer
@@ -29,6 +32,7 @@ class MailFileSerializer(serializers.ModelSerializer):
         write_only=True
     )
     isp = ISPSerializer(read_only=True)
+
     class Meta:
         model = MailFile
         fields = ['id', 'original_filename',
@@ -44,7 +48,6 @@ class MailSerializer(serializers.ModelSerializer):
         write_only=True
     )
     group = GroupSerializer(read_only=True)
-    sender = UserSerializer(read_only=True)
     receiver_id = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all(),
         write_only=True
@@ -71,14 +74,14 @@ class MailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mail
-        fields = ['id', 'mail_group_id', 'group', 'sender', 'document_no',
+        fields = ['id', 'mail_group_id', 'group', 'document_no',
                   'document_date', 'speed', 'secret', 'group_id',
                   'receiver_id', 'receiver', 'mail_file_id', 'mail_file',
                   'documents', 'subject', 'document_no', 'status',
                   'datetime', 'confirmed', 'confirmed_hash', 'confirmed_date',
                   'created_at',
                   'modified_at']
-        read_only_fields = ['id', 'group', 'sender', 'receiver', 'mail_file',
+        read_only_fields = ['id', 'group', 'receiver', 'mail_file',
                             'documents', 'created_at', 'modified_at',
                             'confirmed_date',
                             'confirmed', 'confirmed_hash', 'status',
@@ -226,7 +229,18 @@ class MailSerializer(serializers.ModelSerializer):
             print(e)
             mail.status = MailStatus.FAIL
 
-
         mail.save(update_fields=['status', 'datetime'])
 
         return mail
+
+
+class MailGroupSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    mails = MailSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = MailGroup
+        fields = ['id', 'mails', 'user', 'created_at', 'modified_at']
+        read_only_fields = ['id', 'mails', 'user', 'created_at',
+                            'modified_at']

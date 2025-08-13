@@ -45,11 +45,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name='users',
         null=True,
         default=None,
-        blank=True
+        blank=True,
+        unique=True
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
