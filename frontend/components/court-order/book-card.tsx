@@ -39,6 +39,7 @@ import {
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
 import { GroupFile, type Isp } from "@/lib/types";
 import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
+import { AuthError } from "../exceptions/auth";
 
 export function BookCard({ispData, fileData, groupId}:
   {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
@@ -158,7 +159,10 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                   link.remove();
                   window.URL.revokeObjectURL(url);
                 } catch (error) {
-                 console.error(error) 
+                 console.error(error);
+                 if (error instanceof AuthError)
+                  if (window)
+                    window.location.reload();
                 }
               }}/>
               <Tooltip>
@@ -185,9 +189,15 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                 <CircleX className='hover:text-red-400' size={24}
                 onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                   evt.preventDefault();
-                  await RemoveFile(e.id as number);
-                  const newData = await GetFilesFromGroup(groupId);
-                  setTableData(newData);
+                  try {
+                    await RemoveFile(e.id as number);
+                    const newData = await GetFilesFromGroup(groupId);
+                    setTableData(newData);
+                  } catch (error) {
+                    if (error instanceof AuthError)
+                      if (window)
+                        window.location.reload();
+                  }
                 }}
                 />
               </div>
@@ -322,18 +332,23 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                       if (!filename || !ispSelected) return;
                       const files = uploadRef?.current?.files;
                       if (!files || !(files.length)) return;
-
-                      const formData = new FormData();
-                      formData.append("file", files[0]);
-                      formData.append("isp", `${ispSelected.id}`);
-                      formData.append("group", `${groupId}`);
-                      await uploadFile({
-                        formData
-                      });
-                      const newData = await GetFilesFromGroup(groupId);
-                      setTableData(newData);
-                      setOpenNew(null);
-
+                      
+                      try {
+                        const formData = new FormData();
+                        formData.append("file", files[0]);
+                        formData.append("isp", `${ispSelected.id}`);
+                        formData.append("group", `${groupId}`);
+                        await uploadFile({
+                          formData
+                        });
+                        const newData = await GetFilesFromGroup(groupId);
+                        setTableData(newData);
+                        setOpenNew(null);
+                      } catch (error) {
+                        if (error instanceof AuthError)  
+                          if (window)
+                            window.location.reload();
+                      }
                     }}>เพิ่ม</Button>
                   }
                   {
@@ -341,25 +356,30 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                     <Button type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.preventDefault();
                       if (!filename || !ispSelected) return;
-                      const files = uploadRef?.current?.files;
-                      if (!files || !(files.length)) {
-                        if (ispSelected != tableData[openNew].isp) {
+                      try {
+                        const files = uploadRef?.current?.files;
+                        if (!files || !(files.length)) {
+                          if (ispSelected != tableData[openNew].isp) {
+                            await Edit({
+                              fid: tableData[openNew].id as number,
+                              isp: `${ispSelected.id}`
+                            });
+                          }
+                        } else {
                           await Edit({
                             fid: tableData[openNew].id as number,
-                            isp: `${ispSelected.id}`
+                            isp: ispSelected.id != tableData[openNew]?.isp?.id? `${ispSelected.id}`: undefined,
+                            file: files[0]
                           });
                         }
-                      } else {
-                        await Edit({
-                          fid: tableData[openNew].id as number,
-                          isp: ispSelected.id != tableData[openNew]?.isp?.id? `${ispSelected.id}`: undefined,
-                          file: files[0]
-                        });
-                    
+                        const newData = await GetFilesFromGroup(groupId);
+                        setTableData(newData);
+                        setOpenNew(null);
+                      } catch (error) {
+                        if (error instanceof AuthError)
+                          if (window)
+                            window.location.reload();
                       }
-                      const newData = await GetFilesFromGroup(groupId);
-                      setTableData(newData);
-                      setOpenNew(null);
                     }}>แก้ไข</Button>
                   }
                 </DialogFooter>

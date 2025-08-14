@@ -28,6 +28,7 @@ import Link from 'next/link';
 import {useEffect} from 'react';
 import { Datetime2Thai } from "@/lib/utils";
 import { getMailGroups } from "./actions/mail";
+import { AuthError } from "./exceptions/auth";
 
 const staffColumns: ColumnDef<MailGroup>[] = [
  {
@@ -248,6 +249,10 @@ export default function MailTable() {
       } catch (error) {
         console.error(error);
         setTableData([]);
+
+        if (error instanceof AuthError)
+          if (window)
+            window.location.reload();
       }
     }
 

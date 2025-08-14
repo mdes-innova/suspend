@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/sheet"
 import { Label } from "./ui/label";
 import { RootState } from "./store";
+import { AuthError } from "./exceptions/auth";
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -181,7 +182,13 @@ function GroupActions({
           onClick={async (e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
               e.stopPropagation();
-              await RemoveGroup(id);
+              try {
+                await RemoveGroup(id);
+              } catch (error) {
+                if (error instanceof AuthError) 
+                  if (window)
+                    window.location.reload();
+              }
               dispatch(toggleDataChanged())
               setUiOpen(false)
             }}
@@ -205,7 +212,13 @@ function GroupActions({
                     <SheetClose asChild onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.preventDefault();
                         if (nameRef?.current)
-                          await RenameGroup({name: nameRef?.current?.value, groupId: rename});
+                          try {
+                            await RenameGroup({name: nameRef?.current?.value, groupId: rename});
+                          } catch (error) {
+                            if (error instanceof AuthError)  
+                              if (window)
+                                window.location.reload();
+                          }
                         dispatch(toggleDataChanged());
                         dispatch(setRename(-1));
                     }}>
@@ -259,6 +272,9 @@ export default function GroupTable() {
       } catch (error) {
         console.error(error);
         setTableData([]);
+        if (error instanceof AuthError)
+          if (window)
+            window.location.reload();
       }
     }
 

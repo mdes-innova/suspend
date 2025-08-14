@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
-import { redirect } from "next/navigation";
 import { AuthError } from '@/components/exceptions/auth';
 import { getMailGroup } from '@/components/actions/mail';
 import MailView from '@/components/mail-view';
@@ -8,20 +7,10 @@ import ReloadPage from '@/components/reload-page';
 import { notFound } from "next/navigation";
 
 
-async function getData(id: string) {
-  try {
-    const data = await getMailGroup(id);
-    return data;
-  } catch (error) {
-    if (error instanceof AuthError) redirect('/login') ;
-    else return [];
-  }
-}
-
 async function MailContent({params}: {params: Promise<{ id: string }>}) {
   try {
     const {id} = await params;
-    const data = await getData(id);
+    const data = await getMailGroup(id);
 
     return (
       <div className='w-full h-full flex flex-col px-2'>

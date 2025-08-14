@@ -22,8 +22,10 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
         createdUntitled.createdAt = currentDate;
         groupData = createdUntitled;
       } catch (err1) {
-        if (err1 instanceof AuthError) throw err1;
+        if (err1 instanceof AuthError)
             return <ReloadPage />;
+        else
+          return notFound();
       }
     } else {
       groupData = await getGroup(parseInt(id));

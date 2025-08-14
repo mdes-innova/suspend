@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
+import { AuthError } from "./exceptions/auth";
 
 export default function MailView({
     mailGroup
@@ -59,17 +60,19 @@ export default function MailView({
                                         const fileName = e.mailFile.originalFilename;
                                         const fileId = e.mailFile.id;
                                         try {
-                                        const blob = await downloadFile(fileId as number);
-                                        const url = window.URL.createObjectURL(blob);
-                                        const link = document.createElement("a");
-                                        link.href = url;
-                                        link.setAttribute("download", `${fileName}`);
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        link.remove();
-                                        window.URL.revokeObjectURL(url);
+                                            const blob = await downloadFile(fileId as number);
+                                            const url = window.URL.createObjectURL(blob);
+                                            const link = document.createElement("a");
+                                            link.href = url;
+                                            link.setAttribute("download", `${fileName}`);
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            link.remove();
+                                            window.URL.revokeObjectURL(url);
                                         } catch (error) {
-                                        console.error(error) 
+                                            if (error instanceof AuthError)
+                                                if (window)
+                                                    window.location.reload();
                                         }
                                     }}/>
                                     <Tooltip>

@@ -20,6 +20,7 @@ import { getDocumentList } from "../actions/document";
 import { Datetime2Thai } from "@/lib/utils";
 import { RootState } from "../store";
 import { type Group, type Document } from "@/lib/types";
+import { AuthError } from "../exceptions/auth";
  
 
 function MyScrollArea({ data }: { data: Group[] }) {
@@ -47,9 +48,11 @@ function MyScrollArea({ data }: { data: Group[] }) {
                   dispatch(closeModal({ui: PLAYLISTUI.list,
                     info: [newPlaylist, ...documentList.map((ee: Document) => ee.orderNo)] }));
                 } catch (error) {
-                  console.error(error);
                   dispatch(closeModal({ui: PLAYLISTUI.new,
                     info: [error as string], err: true }));
+                  if (error instanceof AuthError)
+                    if (window)
+                      window.location.reload();
                 }
               }
             }}>
@@ -83,6 +86,9 @@ export default function PlaylistDialog() {
             console.error(error);
            dispatch(closeModal({ui: PLAYLISTUI.list}));
            dispatch(closeModal({ui: PLAYLISTUI.new, info: ["error"], err: true}));
+           if (error instanceof AuthError)
+            if (window)
+              window.location.reload();
           }
         }
       }

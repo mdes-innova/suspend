@@ -26,6 +26,7 @@ import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
 import { toggleDataChanged } from "../store/features/group-list-ui-slice";
 import { RootState } from "../store";
+import { AuthError } from "../exceptions/auth";
 
 export default function DocumentList({ data, groupId }: { data: Document[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -51,10 +52,16 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
 
     useEffect(() => {
         const updateData = async() => {
-            await addToGroup({
-                docIds: columns.map((e: Document) => e.id),
-                groupId: groupId as number
-            });
+            try {
+                await addToGroup({
+                    docIds: columns.map((e: Document) => e.id),
+                    groupId: groupId as number
+                });
+            } catch (error) {
+                if (error instanceof AuthError)    
+                    if (window)
+                        window.location.reload();
+            }
         }
 
         updateData();
@@ -77,7 +84,9 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     newDocumentIds.includes(doc.id)
                 ));
             } catch (error) {
-               console.error(error);
+                if (error instanceof AuthError)
+                    if (window)
+                        window.location.reload();
             }
         }
 
@@ -268,6 +277,9 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     } catch (error) {
                         console.error(error);
                         setContentData([]);
+                        if (error instanceof AuthError)
+                            if (window)
+                                window.location.reload();
                     }
 
                 }}>
@@ -301,6 +313,9 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                                     setDocData([...columns, ...docs]);
                                 } catch (error) {
                                     console.error(error);
+                                    if (error instanceof AuthError)
+                                        if (window)
+                                            window.location.reload();
                                 }
                                 setOpenContent(false);
                                 dispatch(closeModal({ui: LOADINGUI.dialog}));
@@ -360,14 +375,21 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                                                 <CircleX className="cursor-pointer"
                                                 onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                                                     evt.stopPropagation();
-                                                    await addToGroup({
-                                                        groupId: groupId as number,
-                                                        docIds: [e.id],
-                                                        mode: 'remove'
-                                                    });
-                                                    setDocData(
-                                                        columns.filter((ee) => ee.id != e.id)
-                                                    );
+                                                    try {
+                                                        await addToGroup({
+                                                            groupId: groupId as number,
+                                                            docIds: [e.id],
+                                                            mode: 'remove'
+                                                        });
+                                                        setDocData(
+                                                            columns.filter((ee) => ee.id != e.id)
+                                                        );
+                                                    } catch (error) {
+                                                        console.error(error);
+                                                        if (error instanceof AuthError)
+                                                            if (window)
+                                                                window.location.reload();
+                                                    }
                                                 }}/>
                                             </div>
                                         </Card>

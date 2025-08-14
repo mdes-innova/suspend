@@ -53,6 +53,7 @@ import { getContent } from "../actions/document";
 import { Document } from "@/lib/types";
 import { Date2Thai } from "@/lib/utils";
 import { RootState } from "../store";
+import { AuthError } from "../exceptions/auth";
 
 // function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
 //   return typeof updater === 'function';
@@ -255,6 +256,9 @@ export default function DataTable({ data }: { data: Document[] }) {
       } catch (error) {
         console.error(error);
         setTableData([]);
+        if (error instanceof AuthError)
+          if (window)
+            window.location.reload();
       }
     };
 
@@ -269,6 +273,9 @@ export default function DataTable({ data }: { data: Document[] }) {
       } catch (error) {
         console.error(error);
         setTableData([]);
+        if (error instanceof AuthError)
+          if (window)
+            window.location.reload();
       }
     };
 

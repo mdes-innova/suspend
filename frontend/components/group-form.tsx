@@ -24,6 +24,7 @@ import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumen
 import { useRouter } from 'next/navigation';
 import { GetFilesFromGroup } from "./actions/group-file"
 import { Card } from "./ui/card"
+import { AuthError } from "./exceptions/auth"
 
 
 const FormSchema = z.object({
@@ -69,7 +70,10 @@ export function GroupForm({
             documentNo: group.documentNo || '',
             title: group.title || '',
           });
-      } catch {
+      } catch (error) {
+        if (error instanceof AuthError)
+          if (window)
+            window.location.reload();
       }
     }
 
@@ -78,11 +82,18 @@ export function GroupForm({
 
   useEffect(() => {
     const updateDocumentDate = async() => {
-      if (date != undefined)
-        await updateField({
-          kind: 'documentDate',
-          value: date.toString()
-        });
+      if (date != undefined) {
+        try {
+          await updateField({
+            kind: 'documentDate',
+            value: date.toString()
+          });
+        } catch (error) {
+          if (error instanceof AuthError)
+            if (window)
+              window.location.reload();
+        }
+      }
     }
 
     if (date) updateDocumentDate();
@@ -90,73 +101,88 @@ export function GroupForm({
 
   useEffect(() => {
     const updateSecret = async() => {
-      await updateField({
-        kind: 'secret',
-        value: secret
-      });
+      try {
+        await updateField({
+          kind: 'secret',
+          value: secret
+        });
+      } catch (error) {
+        if (error instanceof AuthError)
+          if(window)
+            window.location.reload();
+      }
     }
     if (secret != '') updateSecret();
-    else {
-
-    }
 
   }, [secret]);
 
 
   useEffect(() => {
     const updateSpeed = async() => {
-      await updateField({
-        kind: 'speed',
-        value: speed
-      });
+      try {
+        await updateField({
+          kind: 'speed',
+          value: speed
+        });
+      } catch (error) {
+        if (error instanceof AuthError)
+          if (window)
+            window.location.reload();
+      }
     }
     if (speed != '') updateSpeed();
   }, [speed]);
 
   const updateField = async({kind, value}: {kind: string, value: string}) => {
-    switch (kind) {
-      case 'documentNo':
-        await setDocumentNo({
-          groupId,
-          documentNo: value
-        }) 
-        break;
+    try {
+      switch (kind) {
+        case 'documentNo':
+          await setDocumentNo({
+            groupId,
+            documentNo: value
+          }) 
+          break;
 
-      case 'documentDate':
-        await setDocumentDate({
-          groupId,
-          documentDate: value
-        }) 
-        break;
+        case 'documentDate':
+          await setDocumentDate({
+            groupId,
+            documentDate: value
+          }) 
+          break;
 
-      case 'title':
-        await setDocumentTitle({
-          groupId,
-          title: value
-        }) 
-        break;
+        case 'title':
+          await setDocumentTitle({
+            groupId,
+            title: value
+          }) 
+          break;
 
-      case 'speed':
-        await setDocumentSpeed({
-          groupId,
-          speed: parseInt(value)
-        }) 
-        break;
+        case 'speed':
+          await setDocumentSpeed({
+            groupId,
+            speed: parseInt(value)
+          }) 
+          break;
 
-      case 'secret':
-        await setDocumentSecret({
-          groupId,
-          secret: parseInt(value)
-        }) 
-        break;
-    
-      default:
-        await setDocumentNo({
-          groupId,
-          documentNo: value
-        }) 
+        case 'secret':
+          await setDocumentSecret({
+            groupId,
+            secret: parseInt(value)
+          }) 
+          break;
+      
+        default:
+          await setDocumentNo({
+            groupId,
+            documentNo: value
+          }) 
 
-        break;
+          break;
+      }
+    } catch (error) {
+      if (error instanceof AuthError)
+        if (window)
+          window.location.reload();
     }
   }
 
@@ -166,7 +192,6 @@ export function GroupForm({
         alert('Cannot send mails.');
         return;
       }
-    //   dispatch(openModal({ui: LOADINGUI.dialog}));
       await updateField({
         kind: 'title',
         value: values.title
@@ -206,13 +231,11 @@ export function GroupForm({
           }
         }
       }
-      setMailStatus(0);
     } catch (error) {
-      console.error(error);
-      setProgressMails([]);
-      setMailStatus(1);
+      if (error instanceof AuthError)
+        if (window)
+          window.location.reload();
     }
-    setMailStatus(2);
   }
 
   useEffect(() => {
@@ -277,10 +300,16 @@ export function GroupForm({
                     }} 
                       onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
                         const documentNo = e.target.value;
-                        await updateField({
-                          kind: 'documentNo',
-                          value: documentNo
-                        })
+                        try {
+                          await updateField({
+                            kind: 'documentNo',
+                            value: documentNo
+                          });
+                        } catch (error) {
+                          if (error instanceof AuthError)
+                            if (window)
+                              window.location.reload();
+                        }
                       }}
                     />
                     </FormControl>
@@ -308,10 +337,16 @@ export function GroupForm({
                     }}
                       onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
                         const title = e.target.value;
-                        await updateField({
-                          kind: 'title',
-                          value: title 
-                        })
+                        try {
+                          await updateField({
+                            kind: 'title',
+                            value: title 
+                          });
+                        } catch (error) {
+                          if (error instanceof AuthError)  
+                            if (window)
+                              window.location.reload();
+                        }
                       }}
                     />
                     </FormControl>

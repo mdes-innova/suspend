@@ -10,6 +10,7 @@ import { RenameGroup } from "./actions/group";
 import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { usePathname, redirect } from 'next/navigation';
+import { AuthError } from "./exceptions/auth";
 
 export default function GroupView(
   { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
@@ -34,10 +35,16 @@ export default function GroupView(
 
     useEffect(() => {
       const updateName = async(name: string) => {
-        await RenameGroup({
-          groupId: groupData?.id as number,
-          name
-        });
+        try {
+          await RenameGroup({
+            groupId: groupData?.id as number,
+            name
+          });
+        } catch (error) {
+          if (error instanceof AuthError)
+            if (window)
+              window.location.reload();
+        }
       };
 
       updateName(title);

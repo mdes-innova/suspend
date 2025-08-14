@@ -92,7 +92,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
     } catch (error) {
       if (error instanceof AuthError)
-        router.push('/login?path=/register');
+        if (window)
+          window.location.reload();
       else{
         setSuccess(false);
         setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');

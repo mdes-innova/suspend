@@ -6,15 +6,6 @@ import { AuthError } from '@/components/exceptions/auth';
 import ReloadPage from '@/components/reload-page';
 import { notFound } from "next/navigation";
 
-// async function getData() {
-//   try {
-//     const data = await getGroups();
-//     return data;
-//   } catch (error) {
-//     if (error instanceof AuthError) redirect('/login') ;
-//     else return [];
-//   }
-// }
 
 async function Components() {
   try {

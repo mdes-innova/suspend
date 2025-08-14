@@ -5,6 +5,7 @@ import { DropdownMenuUser } from './user-dropdown';
 import { useAppDispatch  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
 import { getProfile } from './actions/user';
+import { AuthError } from './exceptions/auth';
 
 
 export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
@@ -12,8 +13,14 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
     
     useEffect(() => {
         const getData = async() => {
-            const user = await getProfile();
-            dispatch(setUser(user)); 
+            try {
+                const user = await getProfile();
+                dispatch(setUser(user)); 
+            } catch (error) {
+                if (error instanceof AuthError)    
+                    if (window)
+                        window.location.reload();
+            }
         }
         getData();
     }, []);
