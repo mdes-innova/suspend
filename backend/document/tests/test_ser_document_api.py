@@ -473,7 +473,6 @@ class FileDownloadUploadTest(TestCase):
 #         self.__document.refresh_from_db()
         url = reverse('document:document-file-download',
                       args=[self.__document.pk])
-        print(url)
 #         res = self.__client.post(url)
 #         self.assertEqual(res.status_code, status.HTTP_200_OK)
 #         # self.assertEqual(res.get('Content-Disposition'),

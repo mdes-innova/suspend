@@ -3,7 +3,6 @@
 import { type GroupFile } from "@/lib/types";
 import { getAccess } from "./auth";
 import { AuthError } from "../exceptions/auth";
-import { v4 as uuidv4 } from 'uuid';
 
 export async function getMails() {
     const access = await getAccess();
@@ -100,14 +99,14 @@ export async function SendMails(groupId: number) {
     }
 }
 
-export async function confirm(hash: string) {
+export async function confirm(confirmed_uuid: string) {
 
   try {
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
     const res = await fetch(`${url}/mail/mails/confirm/`, {
       method: 'POST',
       body: JSON.stringify({
-        hash
+        confirmed_uuid
       }),
       headers: {
           "Content-Type": "application/json"
@@ -151,11 +150,11 @@ export async function getStaffMails() {
   }
 }
 
-export async function getGroupMails(groupMailId: string) {
+export async function getMailGroups() {
     const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
   try {
-    const res = await fetch(`${url}/mail/mails/group-mail/${groupMailId}/`, {
+    const res = await fetch(`${url}/mail/mailgroups/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -165,7 +164,31 @@ export async function getGroupMails(groupMailId: string) {
       if (!res.ok) {
       if (res.status === 401)
           throw new AuthError('Authentication fail.')
-      throw new Error('Get group mails fail.');
+      throw new Error('Get mail groups fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function getMailGroup(id: string) {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+  try {
+    const res = await fetch(`${url}/mail/mailgroups/${id}/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get a mail group fail.');
       }
 
       const content = await res.json();
@@ -197,20 +220,20 @@ export async function downloadFile(fid: number) {
 }
 
 export async function sendIspMail({
-  groupFileId,
-  groupId
+  mailGroupId,
+  groupFileId
 }: {
-  groupFileId: number,
-  groupId: number
+  mailGroupId: string,
+  groupFileId: number
 }) {
   try {
     const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-    const res = await fetch(`${url}/mail/mails/send-isp/`, {
+    const res = await fetch(`${url}/mail/mails/send-mail/`, {
       method: 'POST',
       body: JSON.stringify({
-        groupFileId,
-        groupId
+        mailGroupId,
+        groupFileId 
       }),
       headers: {
           "Authorization": `Bearer ${access}`,
@@ -222,6 +245,38 @@ export async function sendIspMail({
       if (res.status === 401)
           throw new AuthError('Authentication fail.')
       throw new Error('Send mail fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function createMailGroup({
+  groupId
+}: {
+  groupId: number
+}) {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mailgroups/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        groupId
+      }),
+      headers: {
+          "Authorization": `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Create a mail group fail.');
       }
 
       const content = await res.json();

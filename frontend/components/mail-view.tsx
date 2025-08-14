@@ -1,5 +1,5 @@
 'use client';
-import {type Mail, Document } from "@/lib/types"
+import {type Mail, Document, MailGroup } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { Date2Thai, Datetime2Thai } from "@/lib/utils"
 import { ArrowDownToLine} from "lucide-react";
@@ -9,28 +9,27 @@ import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 
 export default function MailView({
-    data
+    mailGroup
 }: {
-    data: Mail[]
+    mailGroup: MailGroup
 }) {
-    console.log(data)
     return (
         <div className="w-full h-full flex flex-col gap-y-2">
             <div className="grid grid-cols-2 py-4">
                 <div className="col-span-2 text-2xl font-bold">
-                    {data[0].documentNo}
+                    {mailGroup.documentNo}
                 </div>
                 <div className="col-span-2 text-lg">
-                    {Date2Thai(data[0].documentDate as string)}
+                    {Date2Thai(mailGroup.documentDate as string)}
                 </div>
                 <div className="col-span-2 text-lg mt-4 italic">
-                    {data[0].subject}
+                    {mailGroup.subject}
                 </div>
                 <div>
-                    ชั้นความเร็ว: {['ปกติ', 'ด่วน', 'ด่วนมาก', 'ด่วนที่สุด'][data[0].speed as number]}
+                    ชั้นความเร็ว: {['ปกติ', 'ด่วน', 'ด่วนมาก', 'ด่วนที่สุด'][mailGroup.speed as number]}
                 </div>
                 <div>
-                    ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][data[0].secret as number]}
+                    ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][mailGroup.secret as number]}
                 </div>
             </div>
             <Card>
@@ -46,8 +45,8 @@ export default function MailView({
                     </TableHeader>
                     <TableBody>
                         {
-                            data && data.length > 0?
-                            data.map((e: Mail, idx: number) => 
+                            mailGroup != undefined && mailGroup?.mails && mailGroup?.mails?.length > 0?
+                            mailGroup?.mails.map((e: Mail, idx: number) => 
                             <TableRow key={`table-row-${idx}`}>
                                 <TableCell>
                                     {idx + 1} 
@@ -120,8 +119,8 @@ export default function MailView({
                     </TableHeader>
                     <TableBody>
                         {
-                            data && data.length > 0 && data[0] && data[0].documents && data[0].documents.length > 0?
-                            data[0].documents.map((e: Document, idx: number) => 
+                            mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0?
+                            mailGroup.documents.map((e: Document, idx: number) => 
                             <TableRow key={`table-row-${idx}`}>
                                 <TableCell>
                                     {idx + 1} 

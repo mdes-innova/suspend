@@ -16,15 +16,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { useEffect, useRef, useState } from "react"
 import { Group, GroupFile, type Isp } from "@/lib/types"
-import { useAppDispatch } from "./store/hooks"
-import { Dialog, DialogContent, DialogTitle} from "./ui/dialog"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { sendIspMail, SendMails } from "./actions/mail"
+import { createMailGroup, sendIspMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "./actions/group"
-import DialogLoading from "./loading/dialog"
-import { closeModal, LOADINGUI, openModal } from "./store/features/loading-ui-slice";
 import { useRouter } from 'next/navigation';
 import { GetFilesFromGroup } from "./actions/group-file"
 import { Card } from "./ui/card"
@@ -50,9 +46,7 @@ export function GroupForm({
     const [secret, setSecret] = useState('');
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
-    const dispatch = useAppDispatch();
     const submitRef = useRef<HTMLButtonElement>(null);
-    const [sendText, setSendText] = useState(0);
     const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
@@ -172,7 +166,7 @@ export function GroupForm({
         alert('Cannot send mails.');
         return;
       }
-      dispatch(openModal({ui: LOADINGUI.dialog}));
+    //   dispatch(openModal({ui: LOADINGUI.dialog}));
       await updateField({
         kind: 'title',
         value: values.title
@@ -181,92 +175,92 @@ export function GroupForm({
         kind: 'documentNo',
         value: values.documentNo
       });
+
+      const mailGroup = await createMailGroup({
+        groupId
+      });
+      setMgId(mailGroup?.id);
+
       const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
-      if (groupFiles && groupFiles.length){
-        dispatch(closeModal({ui: LOADINGUI.dialog}));
+      if (groupFiles && groupFiles.length)
         setProgressMails(groupFiles.map(() => -1));
-      }
       for (let i=0; i<groupFiles.length; i++) {
-        if (groupFiles && groupFiles.length && groupFiles[i] && groupFiles[i]?.id != undefined)
+        if (typeof mailGroup?.id === "string" && typeof groupFiles?.at(i)?.id === "number") {
+          if (mailStatus != 2) break;
           try {
             await sendIspMail({
-              groupFileId: groupFiles[i].id as number,
-              groupId
+              mailGroupId: mailGroup.id,
+              groupFileId: groupFiles[i].id as number
             });
+           setProgressMails((prev: number[]) => {
+            const updated = [...prev];
+            updated[i] = 0;
+            return updated;
+           });
           } catch {
-            
+           setProgressMails((prev: number[]) => {
+            const updated = [...prev];
+            updated[i] = 1;
+            return updated;
+           });
           }
+        }
       }
-      const mailGroupId = (await SendMails(groupId)).data;
-      setSendText(1)
-      setMgId(mailGroupId);
-      
+      setMailStatus(0);
     } catch (error) {
       console.error(error);
-      setSendText(2)
+      setProgressMails([]);
+      setMailStatus(1);
     }
-    setProgressMails([]);
-    dispatch(closeModal({ui: LOADINGUI.dialog}));
+    setMailStatus(2);
   }
 
   useEffect(() => {
-    if (sendText === 1) setMailStatus(0);
-    else if (sendText === 2) setMailStatus(1);
-  }, [sendText]);
-
-  useEffect(() => {
-    if (mailStatus === 2) setSendText(0);
-  }, [mailStatus]);
+    if (mailStatus != 2 && mgId != '') {
+      router.push(`/mail/${mgId}`);
+      setMailStatus(2);
+      setMgId('');
+    }
+  }, [mailStatus, mgId]);
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
-      {progresMails.length > 0 && 
-      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2
-        -translate-y-1/2 z-50 p-20 flex flex-col gap-x-2">
+      {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
+      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
+        -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
+        <div className="flex justify-center gap-x-1">
         {
           progresMails.map((pmail: number, idx: number) => {
             const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
             return (
-              <>
-                <div key={`mail-progress-${idx}`} className={`rounded-2xl w-16 h-8 ${bg}`}></div>
-              </>
+                <div key={`mail-progress-${idx}`} className={`rounded-md w-8 h-2 ${bg}`}></div>
             );
           }
         )
         }
-        <Button
-          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.preventDefault();
-            if (mailStatus === 0)
-              router.push(`/mail/${mgId}`);
-            setMailStatus(2);
-          }}
-        >
-          ตกลง
-        </Button>
+        </div>
+        {
+          progresMails[progresMails.length - 1] != -1?
+          <Button
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.preventDefault();
+              setMailStatus(0);
+              setProgressMails([]);
+            }}
+          >
+            ตกลง
+          </Button>:
+          <Button
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.preventDefault();
+              setMailStatus(1);
+              setProgressMails([]);
+            }}
+          >
+            ยกเลิก
+          </Button>
+        }
       </Card>}
-      <DialogLoading />
-      <Dialog open={mailStatus != 2} onOpenChange={(open: boolean) => {
-        if (!open) setMailStatus(2);
-      }}>
-        <DialogContent>
-          <DialogTitle>
-            {
-              ['', 'ส่งเมลล์สำเร็จ', 'ส่งเมลล์ไม่สำเร็จ'][sendText]
-            }
-          </DialogTitle>
-            <Button variant={mailStatus === 0? 'default': 'destructive'}
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                if (mailStatus === 0)
-                  router.push(`/mail/${mgId}`);
-                setMailStatus(2);
-              }}
-            >
-              ตกลง
-            </Button>
-        </DialogContent>
-      </Dialog>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 w-full">
             <FormField

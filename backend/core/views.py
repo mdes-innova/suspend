@@ -19,7 +19,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
     def get_permissions(self):
-        print(super().get_permissions())
         return super().get_permissions()
 
     # def post(self, request, *args, **kwargs):

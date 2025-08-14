@@ -124,3 +124,14 @@ export type StaffMail = {
   sends: string,
   confirms: string
 }
+
+export type MailGroup = {
+  id?: number,
+  documentNo: string,
+  documentDate: string,
+  speed: number,
+  secret: number,
+  subject: string,
+  mails: Mail[],
+  documents: Document[]
+}

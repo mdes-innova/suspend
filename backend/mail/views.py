@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 from django.http import FileResponse
 import uuid
 import urllib.parse
@@ -27,7 +28,15 @@ class MailGroupViews(viewsets.ModelViewSet):
         else:
             return Mail.objects.filter(receiver=user,
                                        statsu=MailStatus.SUCCESSFUL).distinct()
+    
+    def perform_update(self, serializer):
+        mail_group = serializer.instance
+        user = self.request.user
 
+        if user != mail_group.user or not user.is_superuser:
+            raise PermissionDenied("You are not allowed to update this mail group.")
+
+        serializer.save() 
 
 class MailViews(viewsets.ModelViewSet):
     serializer_class = MailSerializer
@@ -50,13 +59,12 @@ class MailViews(viewsets.ModelViewSet):
         url_path='confirm'
     )
     def confirm(self, request):
-        hcode = request.data.get('hash', None)
-        if not hcode:
-            Response({'error': 'No hash code found.'})
+        confirmed_uuid = request.data.get('confirmed_uuid', None)
+        if not confirmed_uuid:
+            Response({'error': 'No confirmed uuid code found.'})
 
         try:
-            decoded_hash = urllib.parse.unquote(hcode)
-            mail = self.queryset.get(confirmed_hash=decoded_hash)
+            mail = self.queryset.get(confirmed_uuid=confirmed_uuid)
             if not mail.confirmed:
                 mail.confirmed = True
                 mail.confirmed_date = timezone.now()
@@ -117,25 +125,56 @@ class MailViews(viewsets.ModelViewSet):
                         serializer.save()
                 except:
                     pass
-        # data = request.data.copy()
-        # isp_id = data.pop('isp_id', None)
-        # if not isp_id:
-        #     return Response({'error': 'Isp not found.'})
-
-        # isp = ISP.objects.get(id=isp_id)
-        # if not receivers or len(receivers) == 0:
-        #     return Response({'error': 'Recievers not found.'})
-
-        # for receiver in receivers:
-        #     data['receiver_id'] = receiver.id
-        #     serializer = MailSerializer(data=data)
-        #     print(data)
-        #     if serializer.is_valid():
-        #         serializer.save
-
         return Response({
             'data': str(mail_group_id)
         })
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        url_path='send-mail'
+    )
+    def send_mail(self, request):
+        mail_group_id = request.data.get('mail_group_id', None)
+        group_file_id = request.data.get('group_file_id', None)
+        if not mail_group_id or not group_file_id:
+            return Response({'error': 'No mail group or group file id input.'})
+        try:
+            mail_group = MailGroup.objects.get(id=mail_group_id)
+            group_file = GroupFile.objects.get(id=group_file_id)
+        except GroupFile.DoesNotExist:
+            return Response({'error': 'Group file not found.'})
+        except MailGroup.DoesNotExist:
+            return Response({'error': 'Mail group not found.'})
+
+        try:
+            mail_file = MailFile.objects.create(
+                isp=group_file.isp,
+                original_filename =group_file.original_filename
+            )
+            gf_file = group_file.file
+            with gf_file.open('rb') as f:
+                mail_file.file.save(gf_file.name.split('/')[-1], File(f))
+                mail_file.save()
+
+            isp = mail_file.isp
+            receiver = isp.users
+            data = {
+                'receiver_id': receiver.id,
+                'mail_file_id': mail_file.id,
+                'mail_group_id': mail_group.id
+            }
+            print(data)
+            serializer = MailSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+
+                mail = serializer.instance
+                print(mail)
+            else:
+                return Response({'error': 'Bad request.'})
+        except Exception as e:
+            return Response({'error': 'Send mail fail.'})
 
     @action(
         detail=False,

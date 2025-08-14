@@ -7,7 +7,6 @@ from django.utils import timezone
 import os
 import uuid
 from core.utils import mail_file_path
-from uuid import uuid4
 
 
 class MailStatus(models.TextChoices):
@@ -23,27 +22,7 @@ class MailGroup(models.Model):
         editable=False,
         unique=True
     )
-    user = models.ForeignKey(
-        "User",
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='mailgroups'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
-
-
-class Mail(models.Model):
-    subject = models.CharField(max_length=512)
-    datetime = models.DateTimeField(null=True)
-    document_no = models.CharField(max_length=32, blank=True)
-    document_date = models.DateTimeField(null=True)
-    mail_group = models.ForeignKey(
-        MailGroup,
-        related_name='mails',
-        on_delete=models.CASCADE,
-        default=None
-    )
+    subject = models.CharField(max_length=512, blank=True)
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
@@ -59,12 +38,38 @@ class Mail(models.Model):
          null=True,
     )
 
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='mailgroups'
+    )
+    documents = models.ManyToManyField(
+        "Document",
+        related_name='mailgroups',
+        editable=False
+    )
     group = models.ForeignKey(
         "Group",
         on_delete=models.SET_NULL,
         null=True,
-        related_name='mails'
+        related_name='mailgroups'
     )
+    document_no = models.CharField(max_length=32, blank=True)
+    document_date = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+
+class Mail(models.Model):
+    datetime = models.DateTimeField(null=True)
+    mail_group = models.ForeignKey(
+        MailGroup,
+        related_name='mails',
+        on_delete=models.CASCADE,
+        default=None
+    )
+  
     receiver = models.ForeignKey(
         "User",
         on_delete=models.SET_NULL,
@@ -79,19 +84,10 @@ class Mail(models.Model):
         related_name='mails',
         editable=False
     )
-    documents = models.ManyToManyField(
-        "Document",
-        related_name='mails',
-        editable=False
-    )
 
     confirmed = models.BooleanField(default=False)
-    confirmed_hash = models.CharField(
-        max_length=64,
-        db_index=True,
-        unique=True,
-        null=True,
-        blank=True
+    confirmed_uuid = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True
     )
     confirmed_date = models.DateTimeField(null=True)
     status = models.CharField(

@@ -17,7 +17,7 @@ class GroupFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupFile
-        fields = ['id', 'isp_id', 'isp', 'file', 'original_filename',
+        fields = ['id', 'isp_id', 'isp', 'original_filename',
                   'created_at', 'modified_at']
         read_only_fields = ['id', 'isp', 'file', 'created_at',
                             'modified_at']

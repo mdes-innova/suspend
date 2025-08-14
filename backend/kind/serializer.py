@@ -13,7 +13,6 @@ class KindSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create new kind."""
-        print(validated_data)
         if Kind.objects.filter(
                 name__iexact=validated_data.get('name')).exists():
             raise serializers.ValidationError("Duplicate entry.")

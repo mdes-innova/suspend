@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from core.models import (
     Mail, MailStatus, Group, ISP, MailFile,
-    MailGroup
+    MailGroup, Document
     )
 from user.serializer import UserSerializer
 from document.serializer import DocumentSerializer
@@ -37,17 +37,12 @@ class MailFileSerializer(serializers.ModelSerializer):
         model = MailFile
         fields = ['id', 'original_filename',
                   'isp_id', 'isp', 'created_at', 'mail']
-        read_only_fields = ['id', 'file', 'original_filename',
+        read_only_fields = ['id', 'original_filename',
                             'isp', 'created_at']
 
 
 class MailSerializer(serializers.ModelSerializer):
     """Serializer class"""
-    group_id = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(),
-        write_only=True
-    )
-    group = GroupSerializer(read_only=True)
     receiver_id = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all(),
         write_only=True
@@ -58,49 +53,41 @@ class MailSerializer(serializers.ModelSerializer):
         write_only=True
     )
     mail_file = MailFileSerializer(read_only=True)
-    documents = DocumentSerializer(
-        read_only=True,
-        many=True
-    )
     confirmed = serializers.BooleanField(
         read_only=True
     )
-    confirmed_hash = serializers.CharField(
+    confirmed_uuid = serializers.CharField(
         read_only=True
     )
     confirmed_date = serializers.DateTimeField(
         read_only=True
     )
+    mail_group_id = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = Mail
-        fields = ['id', 'mail_group_id', 'group', 'document_no',
-                  'document_date', 'speed', 'secret', 'group_id',
-                  'receiver_id', 'receiver', 'mail_file_id', 'mail_file',
-                  'documents', 'subject', 'document_no', 'status',
-                  'datetime', 'confirmed', 'confirmed_hash', 'confirmed_date',
-                  'created_at',
-                  'modified_at']
-        read_only_fields = ['id', 'group', 'receiver', 'mail_file',
-                            'documents', 'created_at', 'modified_at',
-                            'confirmed_date',
-                            'confirmed', 'confirmed_hash', 'status',
+        fields = ['id', 'receiver_id', 'receiver', 'mail_file_id', 'mail_file',
+                  'status', 'datetime', 'confirmed', 'confirmed_uuid',
+                  'confirmed_date', 'created_at', 'modified_at', 'mail_group_id']
+        read_only_fields = ['id', 'receiver', 'mail_file', 'created_at',
+                            'modified_at', 'confirmed_date',
+                            'confirmed', 'confirmed_uuid', 'status',
                             'datetime']
 
-    def send_email(self, receiver, mail_file, group, confirmed_hash):
+    def send_email(self, receiver, mail_file, mail_group, confirmed_uuid):
         # SMTP server connection
         server = smtplib.SMTP(os.environ.get('MAIL_SMTP_SERVER'), os.environ.get('MAIL_PORT'))
         server.starttls()
         server.login(os.environ.get('MAIL_USER'), os.environ.get('MAIL_PASSWORD'))
 
         # Email subject and body with non-ASCII characters (Thai in this case)
-        subject = group.title
-        documents = group.documents.all()
+        subject = mail_group.subject
+        documents = mail_group.documents.all()
         content = f"""เรียน ผู้ให้บริการอินเทอร์เน็ต<br>
         ด้วย กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม ได้ตรวจพบเนื้อหาที่ไม่เหมาะสมในอินเทอร์เน็ต<br>
         ซึ่งเนื้อหาดังกล่าวเข้าข่ายผิดตามพระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์<br>
         มีผลกระทบต่อประชาชนที่หากล่าช้าอาจทำให้มีการเผยแพร่ในวงกว้าง<br>
-        ตามหนังสือเลขที่ {group.document_no} ตามเอกสารแนบ และตามคำสั่งศาล<br><br>
+        ตามหนังสือเลขที่ {mail_group.document_no} ตามเอกสารแนบ และตามคำสั่งศาล<br><br>
         {'<br>'.join([doc.order_no for doc in documents])}<br><br>
         จึงขอความอนุเคราะห์ท่านโปรดดำเนินการปิดกั้นให้โดยด่วน<br><br>
 
@@ -114,7 +101,7 @@ class MailSerializer(serializers.ModelSerializer):
             <body>
                 <p style="font-size: 16px;">{content}</p>
                 <br />
-                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/confirm-mail/{confirmed_hash}" 
+                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/confirm-mail/{confirmed_uuid}" 
                 style="font-weight: bold; color: blue; font-size: 24px;" 
                 target="_blank">กรุณากดลิงค์นี้เพื่อยืนยันว่าท่านได้รับทราบแล้ว</a>
                 <br />
@@ -200,29 +187,23 @@ class MailSerializer(serializers.ModelSerializer):
         server.quit()
 
     def create(self, validated_data):
-        user = self.context['request'].user
-        group = validated_data.pop('group_id')
         mail_file = validated_data.pop('mail_file_id')
         receiver = validated_data.pop('receiver_id')
+        mail_group_id = validated_data.pop('mail_group_id')
+        mail_group = MailGroup.objects.get(id=mail_group_id)
         mail = Mail.objects.create(
-            sender=user,
-            group=group,
             receiver=receiver,
             mail_file=mail_file,
             confirmed=False,
+            mail_group=mail_group, 
             **validated_data
         )
-        mail.documents.set(group.documents.all())
         mail_file.mail = mail
         mail_file.save(update_fields=['mail'])
 
-        h = hashlib.sha256((str(mail.id)).encode()).digest()  # type: ignore
-        mail.confirmed_hash = base64.urlsafe_b64encode(h).decode()
-        mail.save(update_fields=['confirmed_hash'])
-
         try:
-            self.send_email(receiver, mail_file, group,
-                            mail.confirmed_hash)
+            self.send_email(receiver, mail_file, mail_group,
+                            mail.confirmed_uuid)
             mail.status = MailStatus.SUCCESSFUL
             mail.datetime = timezone.now()
         except Exception as e:
@@ -238,9 +219,34 @@ class MailGroupSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     mails = MailSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
+    group_id = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+        write_only=True
+    )
+    group = GroupSerializer(read_only=True)
+    documents = DocumentSerializer(
+        many=True,
+        read_only=True
+    )
 
     class Meta:
         model = MailGroup
-        fields = ['id', 'mails', 'user', 'created_at', 'modified_at']
+        fields = ['id', 'mails', 'user', 'group_id', 'documents',
+                  'created_at', 'modified_at', 'subject', 'speed',
+                  'secret', 'document_no', 'document_date', 'group']
         read_only_fields = ['id', 'mails', 'user', 'created_at',
-                            'modified_at']
+                            'modified_at', 'group', 'documents']
+    
+    def create(self, validated_data):
+        group = validated_data.pop('group_id')
+
+        created_mailgroup = MailGroup.objects.create(
+                user=group.user, group=group, subject=group.title,
+                speed=group.speed, secret=group.secret,
+                document_no=group.document_no,
+                document_date=group.document_date,
+                **validated_data 
+            )
+        created_mailgroup.documents.set(group.documents.all())
+
+        return created_mailgroup
