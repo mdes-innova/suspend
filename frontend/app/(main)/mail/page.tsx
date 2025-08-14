@@ -1,23 +1,32 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
 import MailTable from '@/components/mail-table';
+import { getProfile } from '@/components/actions/user';
+import { AuthError } from '@/components/exceptions/auth';
+import ReloadPage from '@/components/reload-page';
+import { notFound } from "next/navigation";
 
-// async function getData() {
-//   try {
-//     const data: User = await getProfile();
-//     return data;
-//   } catch (error) {
-//     if (error instanceof AuthError) redirect('/login') ;
-//     else return [];
-//   }
-// }
 
 async function PlaylistContent() {
-  return (
-    <div className='w-full h-full flex flex-col px-2'>
-      <MailTable />
-    </div>
-  );
+  try {
+    await getProfile();
+
+    return (
+      <div className='w-full h-full flex flex-col px-2'>
+        <MailTable />
+      </div>
+    );
+
+  } catch (error) {
+    console.error(error);
+    if (error instanceof AuthError) {
+      return (
+        <ReloadPage />
+      );
+    } else {
+      return notFound();
+    }
+  }
 }
 
 export default function Page() {

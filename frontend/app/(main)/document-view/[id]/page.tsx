@@ -2,7 +2,8 @@ import { getDocument } from "@/components/actions/document";
 import { getGroupFromDocument } from "@/components/actions/group";
 import DocumentView from "@/components/document-view";
 import { AuthError } from "@/components/exceptions/auth";
-import { redirect, notFound } from "next/navigation";
+import ReloadPage from "@/components/reload-page";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 async function Components({ params }: { params: Promise<{ id: string }> }) {
@@ -14,9 +15,9 @@ async function Components({ params }: { params: Promise<{ id: string }> }) {
     return <DocumentView docData={docData} groupData={Object.keys(groupData).length === 0? null: groupData} />;
   } catch (error) {
     if (error instanceof AuthError) {
-      redirect(`/login?path=/document-view/${id}/`);
+      return <ReloadPage />;
     } else {
-      notFound(); // or return <div>Error</div>;
+      notFound();
     }
   }
 }

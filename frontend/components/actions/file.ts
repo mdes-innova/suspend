@@ -4,8 +4,8 @@ import { getAccess } from "./auth";
 import { AuthError } from "../exceptions/auth";
 
 export async function deleteUploadedFile(fid: number) {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const res = await fetch(
       `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/file-delete/${fid}/`,
       {
@@ -28,8 +28,8 @@ export async function deleteUploadedFile(fid: number) {
 }
 
 export async function downloadPdf(fid: number) {
-  const access = await getAccess();
   try {
+  const access = await getAccess();
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/pdf-download/${fid}/`, {
       method: "GET",
       headers: {
@@ -49,9 +49,8 @@ export async function downloadPdf(fid: number) {
 }
 
 export async function uploadFile({formData, kind = 'pdf'}: {formData: FormData, kind?: string}) {
-  const access = await getAccess();
-  
   try {
+    const access = await getAccess();
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/${kind}-upload/`, {
       method: "POST",
       body: formData,
@@ -73,8 +72,8 @@ export async function uploadFile({formData, kind = 'pdf'}: {formData: FormData, 
 }
 
 export async function getFileUrls(fid: number) {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const res = await fetch(
       `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/file-urls/${fid}/`,
       {

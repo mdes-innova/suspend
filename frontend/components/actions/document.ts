@@ -4,9 +4,8 @@ import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 
 export async function getContent() {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/content/`, {
       headers: {
           Authorization: `Bearer ${access}`
@@ -27,9 +26,9 @@ export async function getContent() {
 }
 
 export async function clearSelections() {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/clear-selection/`, {
       method: 'POST',
       headers: {
@@ -51,9 +50,8 @@ export async function clearSelections() {
 }
 
 export async function getDocument(docId: number) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/${docId}/`, {
       method: 'GET',
       headers: {
@@ -75,9 +73,8 @@ export async function getDocument(docId: number) {
 }
 
 export async function getDocumentList(ids: number[]) {
-  const access = await getAccess(); 
-
   try {
+    const access = await getAccess(); 
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/document-list/`, {
       method: 'POST',
       headers: {

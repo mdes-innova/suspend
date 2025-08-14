@@ -4,9 +4,8 @@ import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 
 export async function getGroups() {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'GET',
       headers: {
@@ -28,9 +27,8 @@ export async function getGroups() {
 }
 
 export async function getGroupList() {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/group-list/`, {
       method: 'GET',
       headers: {
@@ -52,9 +50,8 @@ export async function getGroupList() {
 }
 
 export async function getGroup(groupId: number) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'GET',
       headers: {
@@ -76,9 +73,8 @@ export async function getGroup(groupId: number) {
 }
 
 export async function postGroup(name: string) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'POST',
       body: JSON.stringify({
@@ -104,9 +100,8 @@ export async function postGroup(name: string) {
 }
 
 export async function RemoveGroup(groupId: number) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'DELETE',
       headers: {
@@ -129,9 +124,9 @@ export async function RemoveGroup(groupId: number) {
 export async function addToGroup({ docIds, mode, groupId }: {
     docIds: number[], mode?: string, groupId: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -160,9 +155,9 @@ export async function addToGroup({ docIds, mode, groupId }: {
 export async function RenameGroup({ name, groupId }: {
     name: string, groupId: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -190,9 +185,9 @@ export async function RenameGroup({ name, groupId }: {
 export async function removeDocumentFromGroup({ docIds, groupId }: {
     docIds: number[], groupId: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -219,9 +214,9 @@ export async function removeDocumentFromGroup({ docIds, groupId }: {
 }
 
 export async function getGroupFromDocument(docId: number) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/by-document/${docId}/`, {
       method: 'GET',
       headers: {
@@ -243,9 +238,9 @@ export async function getGroupFromDocument(docId: number) {
 }
 
 export async function getUntilted() {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/by-name/ไม่มีชื่อ/`, {
       method: 'GET',
       headers: {
@@ -272,9 +267,9 @@ export async function setDocumentNo({
   groupId: number,
   documentNo: string
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -306,9 +301,9 @@ export async function setDocumentDate({
   groupId: number,
   documentDate: string | Date
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const d = new Date(documentDate)
     const isoUtc = d.toISOString()
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
@@ -342,9 +337,9 @@ export async function setDocumentTitle({
   groupId: number,
   title: string
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -376,9 +371,9 @@ export async function setDocumentSpeed({
   groupId: number,
   speed: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -409,9 +404,9 @@ export async function setDocumentSecret({
   groupId: number,
   secret: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',

@@ -4,8 +4,9 @@ import { getIsps } from "@/components/actions/isp";
 import { getCurrentDate } from "@/components/actions/utils";
 import { AuthError } from "@/components/exceptions/auth";
 import GroupView from "@/components/group-view";
+import ReloadPage from "@/components/reload-page";
 import { type Group} from "@/lib/types";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 async function Components({ params }: { params: Promise<{ id: string }>}) {
@@ -22,7 +23,7 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
         groupData = createdUntitled;
       } catch (err1) {
         if (err1 instanceof AuthError) throw err1;
-            return <></>;
+            return <ReloadPage />;
       }
     } else {
       groupData = await getGroup(parseInt(id));
@@ -37,9 +38,9 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
 
   } catch (error) {
     if (error instanceof AuthError) {
-      redirect(`/login?path=/document-view/${id}/`)
+      return <ReloadPage />;
     } else {
-      return <></>;
+      return notFound();
     }
   }
 }

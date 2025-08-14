@@ -4,9 +4,9 @@ import { getAccess } from "./auth";
 import { AuthError } from "../exceptions/auth";
 
 export async function getIsps() {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(
       `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/isp/isps/`,
       {
