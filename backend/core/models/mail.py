@@ -23,6 +23,7 @@ class MailGroup(models.Model):
         unique=True
     )
     subject = models.CharField(max_length=512, blank=True)
+    name = models.CharField(max_length=256, blank=True)
     body = models.TextField(blank=True, default='')
     speed = models.IntegerField(
          validators=[
@@ -37,6 +38,14 @@ class MailGroup(models.Model):
             MaxValueValidator(3)
             ],
          null=True,
+    )
+    section = models.IntegerField(
+         validators=[
+            MinValueValidator(0),
+            MaxValueValidator(3)
+            ],
+         null=True,
+         default=0
     )
 
     user = models.ForeignKey(

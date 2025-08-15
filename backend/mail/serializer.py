@@ -67,7 +67,8 @@ class MailSerializer(serializers.ModelSerializer):
     mail_group_id = serializers.UUIDField(write_only=True)
     document_id = serializers.PrimaryKeyRelatedField(
         queryset=Document.objects.all(),
-        write_only=True
+        write_only=True,
+        allow_null=True
     )
     document = DocumentSerializer(
         read_only=True
@@ -77,8 +78,8 @@ class MailSerializer(serializers.ModelSerializer):
         model = Mail
         fields = ['id', 'receiver_id', 'receiver', 'mail_file_id', 'mail_file',
                   'status', 'datetime', 'confirmed', 'confirmed_uuid',
-                  'confirmed_date', 'created_at', 'modified_at',
-                  'mail_group_id', 'document_id', 'document']
+                  'confirmed_date', 'created_at', 'modified_at', 
+                  'mail_group_id', 'document_id', 'document', 'section']
         read_only_fields = ['id', 'receiver', 'mail_file', 'created_at',
                             'modified_at', 'confirmed_date',
                             'confirmed', 'confirmed_uuid', 'status',
@@ -202,7 +203,7 @@ class MailSerializer(serializers.ModelSerializer):
         mail_file = validated_data.pop('mail_file_id')
         receiver = validated_data.pop('receiver_id')
         mail_group_id = validated_data.pop('mail_group_id')
-        document = validated_data.pop('document_id')
+        document = validated_data.pop('document_id', None)
         mail_group = MailGroup.objects.get(id=mail_group_id)
         mail = Mail.objects.create(
             receiver=receiver,
@@ -236,6 +237,9 @@ class MailGroupSerializer(serializers.ModelSerializer):
         queryset=Group.objects.all(),
         write_only=True
     )
+    name = serializers.CharField(
+        required=False
+    )
     group = GroupSerializer(read_only=True)
     documents = DocumentSerializer(
         many=True,
@@ -245,9 +249,9 @@ class MailGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = MailGroup
         fields = ['id', 'mails', 'user', 'group_id', 'documents', 'body',
-                  'created_at', 'modified_at', 'subject', 'speed',
+                  'created_at', 'modified_at', 'subject', 'speed', 'name',
                   'secret', 'document_no', 'document_date', 'group']
-        read_only_fields = ['id', 'mails', 'user', 'created_at',
+        read_only_fields = ['id', 'mails', 'user', 'created_at', 'name',
                             'modified_at', 'group', 'documents']
     
     def create(self, validated_data):
@@ -259,6 +263,7 @@ class MailGroupSerializer(serializers.ModelSerializer):
                 document_no=group.document_no,
                 document_date=group.document_date,
                 body=group.body,
+                name=group.name,
                 **validated_data 
             )
         created_mailgroup.documents.set(group.documents.all())

@@ -164,7 +164,7 @@ class MailViews(viewsets.ModelViewSet):
                 'receiver_id': receiver.id,
                 'mail_file_id': mail_file.id,
                 'mail_group_id': mail_group.id,
-                'document_id': document_id
+                'document_id': document_id,
             }
             serializer = MailSerializer(data=data)
             if serializer.is_valid():

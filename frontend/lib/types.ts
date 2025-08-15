@@ -35,7 +35,8 @@ export type Group = {
     documentDate?: string,
     speed?: number,
     secret?: number,
-    groupFiles?: GroupFile[]
+    groupFiles?: GroupFile[],
+    section: string
 }
 
 export type User = {
@@ -134,5 +135,17 @@ export type MailGroup = {
   secret: number,
   subject: string,
   mails: Mail[],
-  documents: Document[]
+  documents: Document[],
+  section: string
+}
+
+export type GroupUpdate = {
+    name?: string,
+    title?: string,
+    documentNo?: string,
+    documentDate?: string | null,
+    speed?: number | null,
+    secret?: number | null,
+    section?: number | null,
+    body?: string
 }

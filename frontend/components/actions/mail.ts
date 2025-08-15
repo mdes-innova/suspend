@@ -221,13 +221,15 @@ export async function downloadFile(fid: number) {
 }
 
 export async function sendIspMail({
+  section,
   mailGroupId,
   groupFileId,
   documentId
 }: {
+  section: number,
   mailGroupId: string,
   groupFileId: number,
-  documentId: number
+  documentId?: number
 }) {
   try {
     const access = await getAccess();
@@ -235,6 +237,7 @@ export async function sendIspMail({
     const res = await fetch(`${url}/mail/mails/send-mail/`, {
       method: 'POST',
       body: JSON.stringify({
+        section,
         mailGroupId,
         groupFileId,
         documentId
