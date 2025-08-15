@@ -307,33 +307,8 @@ export function GroupForm({
               }
               break;
           }
-
-
-          }
         }
-
-    //   for (let i=0; i<groupFiles.length; i++) {
-    //     if (typeof mailGroup?.id === "string" && typeof groupFiles?.at(i)?.id === "number") {
-    //       if (mailStatus != 2) break;
-    //       try {
-    //         await sendIspMail({
-    //           mailGroupId: mailGroup.id,
-    //           groupFileId: groupFiles[i].id as number
-    //         });
-    //        setProgressMails((prev: number[]) => {
-    //         const updated = [...prev];
-    //         updated[i] = 0;
-    //         return updated;
-    //        });
-    //       } catch {
-    //        setProgressMails((prev: number[]) => {
-    //         const updated = [...prev];
-    //         updated[i] = 1;
-    //         return updated;
-    //        });
-    //       }
-    //     }
-    //   }
+      }
     } catch (error) {
       if (isAuthError(error))
         redirectToLogin();
