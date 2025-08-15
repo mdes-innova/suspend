@@ -40,6 +40,7 @@ import { useRef, useState,  ChangeEvent, useEffect } from "react";
 import { GroupFile, type Isp } from "@/lib/types";
 import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "../reload-page";
 
 export function BookCard({ispData, fileData, groupId}:
   {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
@@ -161,8 +162,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                 } catch (error) {
                  console.error(error);
                  if (isAuthError(error))
-                  if (window)
-                    window.location.reload();
+                  redirectToLogin(); 
                 }
               }}/>
               <Tooltip>
@@ -195,8 +195,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                     setTableData(newData);
                   } catch (error) {
                     if (isAuthError(error))
-                      if (window)
-                        window.location.reload();
+                      redirectToLogin(); 
                   }
                 }}
                 />
@@ -346,8 +345,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         setOpenNew(null);
                       } catch (error) {
                         if (isAuthError(error))  
-                          if (window)
-                            window.location.reload();
+                          redirectToLogin(); 
                       }
                     }}>เพิ่ม</Button>
                   }
@@ -377,8 +375,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         setOpenNew(null);
                       } catch (error) {
                         if (isAuthError(error))
-                          if (window)
-                            window.location.reload();
+                          redirectToLogin(); 
                       }
                     }}>แก้ไข</Button>
                   }

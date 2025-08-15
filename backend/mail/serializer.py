@@ -24,6 +24,8 @@ from email.header import Header
 import httpx
 import io
 import tempfile
+from datetime import datetime
+from babel.dates import format_date
 
 
 class MailFileSerializer(serializers.ModelSerializer):
@@ -63,18 +65,26 @@ class MailSerializer(serializers.ModelSerializer):
         read_only=True
     )
     mail_group_id = serializers.UUIDField(write_only=True)
+    document_id = serializers.PrimaryKeyRelatedField(
+        queryset=Document.objects.all(),
+        write_only=True
+    )
+    document = DocumentSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = Mail
         fields = ['id', 'receiver_id', 'receiver', 'mail_file_id', 'mail_file',
                   'status', 'datetime', 'confirmed', 'confirmed_uuid',
-                  'confirmed_date', 'created_at', 'modified_at', 'mail_group_id']
+                  'confirmed_date', 'created_at', 'modified_at',
+                  'mail_group_id', 'document_id', 'document']
         read_only_fields = ['id', 'receiver', 'mail_file', 'created_at',
                             'modified_at', 'confirmed_date',
                             'confirmed', 'confirmed_uuid', 'status',
-                            'datetime']
+                            'datetime', 'document']
 
-    def send_email(self, receiver, mail_file, mail_group, confirmed_uuid):
+    def send_email(self, mail, mail_group):
         # SMTP server connection
         server = smtplib.SMTP(os.environ.get('MAIL_SMTP_SERVER'), os.environ.get('MAIL_PORT'))
         server.starttls()
@@ -83,29 +93,31 @@ class MailSerializer(serializers.ModelSerializer):
         # Email subject and body with non-ASCII characters (Thai in this case)
         subject = mail_group.subject
         documents = mail_group.documents.all()
-        content = f"""เรียน ผู้ให้บริการอินเทอร์เน็ต<br>
-        ด้วย กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม ได้ตรวจพบเนื้อหาที่ไม่เหมาะสมในอินเทอร์เน็ต<br>
-        ซึ่งเนื้อหาดังกล่าวเข้าข่ายผิดตามพระราชบัญญัติว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์<br>
-        มีผลกระทบต่อประชาชนที่หากล่าช้าอาจทำให้มีการเผยแพร่ในวงกว้าง<br>
-        ตามหนังสือเลขที่ {mail_group.document_no} ตามเอกสารแนบ และตามคำสั่งศาล<br><br>
-        {'<br>'.join([doc.order_no for doc in documents])}<br><br>
-        จึงขอความอนุเคราะห์ท่านโปรดดำเนินการปิดกั้นให้โดยด่วน<br><br>
-
-        ทั้งนี้ กระทรวงฯ อยู่ระหว่างยื่นขอให้ศาลมีคำสั่งระงับการทำให้แพร่หลายซึ่งข้อมูลคอมพิวเตอร์<br>
-        หากศาลมีคำสั่งแล้วจะแจ้งให้ทราบในภายหลังต่อไป<br><br>
-
-        เมื่อท่านรับทราบแล้ว กรุณากดยืนยันตามลิงค์ด้านล่าง
+        document_ids = list(mail_group.documents.values_list('id', flat=True))
+        document_id_index = document_ids.index(mail.document.id)
+        content = f"""เรื่อง {subject}<br><br>
+        กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม ขอส่งคำสั่งศาล ที่ {document_id_index + 1}/{len(document_ids)}
+        คดีหมายเลข {mail.document.order_no} ตามหนังสือเลขที่ {mail_group.document_no} 
+        ลงวันที่ {format_date(mail_group.document_date, format='full', locale='th_TH')} 
+        รายละเอียดตามไฟล์แนบ<br><br>
+        หากได้รับแล้วโปรดกดลิงก์ด้านล่างนี้เพื่อยืนยัน และดำเนินการตามคำสั่งศาลต่อไป<br><br>
         """
         body = f"""
         <html>
             <body>
                 <p style="font-size: 16px;">{content}</p>
-                <br />
-                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/confirm-mail/{confirmed_uuid}" 
+                <a href="{os.environ.get('NEXT_PUBLIC_FRONTEND')}/confirm-mail/{mail.confirmed_uuid}"
                 style="font-weight: bold; color: blue; font-size: 24px;" 
-                target="_blank">กรุณากดลิงค์นี้เพื่อยืนยันว่าท่านได้รับทราบแล้ว</a>
-                <br />
-                <p style="font-size: 16px;">กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม</p>
+                target="_blank">{os.environ.get('NEXT_PUBLIC_FRONTEND')}/confirm-mail/{mail.confirmed_uuid}</a>
+                <br /><br />
+                <p style="font-size: 16px;">ติดต่อสอบถาม กระทรวงดิจิทัลเพื่อเศรษฐกิจและสังคม</p>
+                <p style="font-size: 16px;">
+                    อีเมล 
+                    <a href="mailto:saraban@mdes.go.th" style="color: blue; text-decoration: underline;">
+                        saraban@mdes.go.th
+                    </a> 
+                    โทร 06 4208 6657
+                </p>
             </body>
         </html>
         """
@@ -113,7 +125,7 @@ class MailSerializer(serializers.ModelSerializer):
         # Create MIME message
         msg = MIMEMultipart()
         msg['From'] = os.environ.get('MAIL_USER')
-        msg['To'] = receiver.email
+        msg['To'] = mail.receiver.email
         msg['Subject'] = subject
 
         # Attach the body as a MIMEText part (use utf-8 encoding)
@@ -122,13 +134,13 @@ class MailSerializer(serializers.ModelSerializer):
 
         msg.attach(body_part)
 
-        if mail_file.file:
-            file_path = mail_file.file.path
+        if mail.mail_file.file:
+            file_path = mail.mail_file.file.path
             with open(file_path, 'rb') as attachment:
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload(attachment.read())
                 encoders.encode_base64(part)
-                filename = mail_file.original_filename or\
+                filename = mail.mail_file.original_filename or\
                     os.path.basename(file_path)
                 encoded_filename = Header(filename, 'utf-8').encode()
                 part.add_header('Content-Disposition',
@@ -179,7 +191,7 @@ class MailSerializer(serializers.ModelSerializer):
                         msg.attach(part)
 
         server.sendmail(os.environ.get('MAIL_USER'),
-                        receiver.email,
+                        mail.receiver.email,
                         msg.as_string())
         # server.sendmail(os.environ.get('MAIL_USER'),
         #                 os.environ.get('MAIL_USER'),
@@ -190,20 +202,21 @@ class MailSerializer(serializers.ModelSerializer):
         mail_file = validated_data.pop('mail_file_id')
         receiver = validated_data.pop('receiver_id')
         mail_group_id = validated_data.pop('mail_group_id')
+        document = validated_data.pop('document_id')
         mail_group = MailGroup.objects.get(id=mail_group_id)
         mail = Mail.objects.create(
             receiver=receiver,
             mail_file=mail_file,
             confirmed=False,
-            mail_group=mail_group, 
+            mail_group=mail_group,
+            document=document,
             **validated_data
         )
         mail_file.mail = mail
         mail_file.save(update_fields=['mail'])
 
         try:
-            self.send_email(receiver, mail_file, mail_group,
-                            mail.confirmed_uuid)
+            self.send_email(mail, mail_group)
             mail.status = MailStatus.SUCCESSFUL
             mail.datetime = timezone.now()
         except Exception as e:
@@ -231,7 +244,7 @@ class MailGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MailGroup
-        fields = ['id', 'mails', 'user', 'group_id', 'documents',
+        fields = ['id', 'mails', 'user', 'group_id', 'documents', 'body',
                   'created_at', 'modified_at', 'subject', 'speed',
                   'secret', 'document_no', 'document_date', 'group']
         read_only_fields = ['id', 'mails', 'user', 'created_at',
@@ -245,6 +258,7 @@ class MailGroupSerializer(serializers.ModelSerializer):
                 speed=group.speed, secret=group.secret,
                 document_no=group.document_no,
                 document_date=group.document_date,
+                body=group.body,
                 **validated_data 
             )
         created_mailgroup.documents.set(group.documents.all())

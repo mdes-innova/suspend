@@ -34,7 +34,8 @@ export type Group = {
     documentNo: string,
     documentDate?: string,
     speed?: number,
-    secret?: number
+    secret?: number,
+    groupFiles?: GroupFile[]
 }
 
 export type User = {

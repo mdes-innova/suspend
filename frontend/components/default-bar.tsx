@@ -6,6 +6,7 @@ import { useAppDispatch  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
 import { getProfile } from './actions/user';
 import { isAuthError } from './exceptions/auth';
+import { redirectToLogin } from './reload-page';
 
 
 export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
@@ -18,8 +19,7 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
                 dispatch(setUser(user)); 
             } catch (error) {
                 if (isAuthError(error)) {
-                    if (window)
-                        window.location.reload();
+                    redirectToLogin();
                 }
             }
         }

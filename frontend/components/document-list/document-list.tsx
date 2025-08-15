@@ -27,6 +27,7 @@ import { addToGroup, getGroup } from "../actions/group";
 import { toggleDataChanged } from "../store/features/group-list-ui-slice";
 import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "../reload-page";
 
 export default function DocumentList({ data, groupId }: { data: Document[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -59,8 +60,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                 });
             } catch (error) {
                 if (isAuthError(error))    
-                    if (window)
-                        window.location.reload();
+                    redirectToLogin();
             }
         }
 
@@ -85,8 +85,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                 ));
             } catch (error) {
                 if (isAuthError(error))
-                    if (window)
-                        window.location.reload();
+                    redirectToLogin();
             }
         }
 
@@ -277,9 +276,9 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     } catch (error) {
                         console.error(error);
                         setContentData([]);
-                        if (isAuthError(error))
-                            if (window)
-                                window.location.reload();
+                        if (isAuthError(error)) {
+                            redirectToLogin();
+                        }
                     }
 
                 }}>
@@ -314,8 +313,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                                 } catch (error) {
                                     console.error(error);
                                     if (isAuthError(error))
-                                        if (window)
-                                            window.location.reload();
+                                       redirectToLogin(); 
                                 }
                                 setOpenContent(false);
                                 dispatch(closeModal({ui: LOADINGUI.dialog}));
@@ -387,8 +385,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                                                     } catch (error) {
                                                         console.error(error);
                                                         if (isAuthError(error))
-                                                            if (window)
-                                                                window.location.reload();
+                                                           redirectToLogin(); 
                                                     }
                                                 }}/>
                                             </div>

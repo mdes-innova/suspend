@@ -19,6 +19,7 @@ import {useRouter} from 'next/navigation';
 import { addToGroup, postGroup } from '../actions/group';
 import { RootState } from "../store"
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "../reload-page"
 
 
 export function NewPlaylistSheet({main}: {main?: boolean}) {
@@ -65,8 +66,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
                       if (isAuthError(error))
-                        if (window)
-                          window.location.reload();
+                        redirectToLogin();
                     }
                   } else {
                     try {
@@ -80,8 +80,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
                       if (isAuthError(error))
-                        if (window)
-                          window.location.reload();
+                        redirectToLogin();
                     }
                   }
                 }}>Save</Button>

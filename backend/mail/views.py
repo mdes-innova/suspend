@@ -137,6 +137,7 @@ class MailViews(viewsets.ModelViewSet):
     def send_mail(self, request):
         mail_group_id = request.data.get('mail_group_id', None)
         group_file_id = request.data.get('group_file_id', None)
+        document_id = request.data.get('document_id', None)
         if not mail_group_id or not group_file_id:
             return Response({'error': 'No mail group or group file id input.'})
         try:
@@ -150,7 +151,7 @@ class MailViews(viewsets.ModelViewSet):
         try:
             mail_file = MailFile.objects.create(
                 isp=group_file.isp,
-                original_filename =group_file.original_filename
+                original_filename=group_file.original_filename
             )
             gf_file = group_file.file
             with gf_file.open('rb') as f:
@@ -162,15 +163,14 @@ class MailViews(viewsets.ModelViewSet):
             data = {
                 'receiver_id': receiver.id,
                 'mail_file_id': mail_file.id,
-                'mail_group_id': mail_group.id
+                'mail_group_id': mail_group.id,
+                'document_id': document_id
             }
-            print(data)
             serializer = MailSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
 
                 mail = serializer.instance
-                print(mail)
             else:
                 return Response({'error': 'Bad request.'})
         except Exception as e:

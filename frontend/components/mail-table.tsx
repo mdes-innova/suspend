@@ -29,6 +29,7 @@ import {useEffect} from 'react';
 import { Datetime2Thai } from "@/lib/utils";
 import { getMailGroups } from "./actions/mail";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
 const staffColumns: ColumnDef<MailGroup>[] = [
  {
@@ -251,8 +252,7 @@ export default function MailTable() {
         setTableData([]);
 
         if (isAuthError(error))
-          if (window)
-            window.location.reload();
+          redirectToLogin(); 
       }
     }
 

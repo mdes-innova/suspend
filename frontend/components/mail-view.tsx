@@ -8,6 +8,7 @@ import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
 export default function MailView({
     mailGroup
@@ -71,8 +72,7 @@ export default function MailView({
                                             window.URL.revokeObjectURL(url);
                                         } catch (error) {
                                             if (isAuthError(error))
-                                                if (window)
-                                                    window.location.reload();
+                                                redirectToLogin();
                                         }
                                     }}/>
                                     <Tooltip>

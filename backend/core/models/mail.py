@@ -23,6 +23,7 @@ class MailGroup(models.Model):
         unique=True
     )
     subject = models.CharField(max_length=512, blank=True)
+    body = models.TextField(blank=True, default='')
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
@@ -69,7 +70,11 @@ class Mail(models.Model):
         on_delete=models.CASCADE,
         default=None
     )
-  
+    document = models.ForeignKey(
+        'Document',
+        null=True,
+        on_delete=models.SET_NULL
+    )
     receiver = models.ForeignKey(
         "User",
         on_delete=models.SET_NULL,

@@ -29,17 +29,18 @@ export async function getMails() {
 }
 
 export async function SendMail({
-    groupId, groupFile
+    groupId, groupFile, documentId
 }: {
     groupId: number,
-    groupFile: GroupFile
+    groupFile: GroupFile,
+    documentId: number
 }) {
 
     try {
       const access = await getAccess();
       const res = await fetch(
       `${process.env.NODE_ENV === "development"?
-          process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send/`,
+          process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send-mail/`,
       {
           headers: {
               Authorization: `Bearer ${access}`,
@@ -49,7 +50,8 @@ export async function SendMail({
           body: JSON.stringify({
               groupId,
               groupFileId: groupFile.id,
-              isp_id: groupFile.isp?.id
+              ispId: groupFile.isp?.id,
+              documentId
           })
       }
       );
@@ -220,10 +222,12 @@ export async function downloadFile(fid: number) {
 
 export async function sendIspMail({
   mailGroupId,
-  groupFileId
+  groupFileId,
+  documentId
 }: {
   mailGroupId: string,
-  groupFileId: number
+  groupFileId: number,
+  documentId: number
 }) {
   try {
     const access = await getAccess();
@@ -232,7 +236,8 @@ export async function sendIspMail({
       method: 'POST',
       body: JSON.stringify({
         mailGroupId,
-        groupFileId 
+        groupFileId,
+        documentId
       }),
       headers: {
           "Authorization": `Bearer ${access}`,

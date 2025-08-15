@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { GetFilesFromGroup } from "./actions/group-file"
 import { Card } from "./ui/card";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page"
 
 
 const FormSchema = z.object({
@@ -47,6 +48,7 @@ export function GroupForm({
     const [secret, setSecret] = useState('');
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
+    const [loadingGrid, setLoadingGrid] = useState(['grid-rows-1', 'grid-cols-1']);
     const submitRef = useRef<HTMLButtonElement>(null);
     const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -72,8 +74,7 @@ export function GroupForm({
           });
       } catch (error) {
         if (isAuthError(error))
-          if (window)
-            window.location.reload();
+          redirectToLogin();
       }
     }
 
@@ -90,8 +91,7 @@ export function GroupForm({
           });
         } catch (error) {
           if (isAuthError(error))
-            if (window)
-              window.location.reload();
+            redirectToLogin();
         }
       }
     }
@@ -108,8 +108,7 @@ export function GroupForm({
         });
       } catch (error) {
         if (isAuthError(error))
-          if(window)
-            window.location.reload();
+          redirectToLogin();
       }
     }
     if (secret != '') updateSecret();
@@ -126,8 +125,7 @@ export function GroupForm({
         });
       } catch (error) {
         if (isAuthError(error))
-          if (window)
-            window.location.reload();
+          redirectToLogin();
       }
     }
     if (speed != '') updateSpeed();
@@ -181,8 +179,7 @@ export function GroupForm({
       }
     } catch (error) {
       if (isAuthError(error))
-        if (window)
-          window.location.reload();
+        redirectToLogin();
     }
   }
 
@@ -206,35 +203,69 @@ export function GroupForm({
       });
       setMgId(mailGroup?.id);
 
-      const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
-      if (groupFiles && groupFiles.length)
-        setProgressMails(groupFiles.map(() => -1));
-      for (let i=0; i<groupFiles.length; i++) {
-        if (typeof mailGroup?.id === "string" && typeof groupFiles?.at(i)?.id === "number") {
+      const group: Group = await getGroup(groupId);
+
+      const groupFiles = group?.groupFiles?? [];
+      const documents = group?.documents?? [];
+      if (groupFiles.length && documents.length) {
+        setLoadingGrid([
+          `grid-rows-${groupFiles.length}`,
+          `grid-cols-${documents.length}`
+        ]);
+        setProgressMails(Array.from({length: (groupFiles.length) * (documents.length)}).map(() => -1));
+
+        for (let i=0; i<groupFiles.length; i++) {
           if (mailStatus != 2) break;
-          try {
-            await sendIspMail({
-              mailGroupId: mailGroup.id,
-              groupFileId: groupFiles[i].id as number
-            });
-           setProgressMails((prev: number[]) => {
-            const updated = [...prev];
-            updated[i] = 0;
-            return updated;
-           });
-          } catch {
-           setProgressMails((prev: number[]) => {
-            const updated = [...prev];
-            updated[i] = 1;
-            return updated;
-           });
+          for (let j=0; j<documents.length; j++) {
+            if (mailStatus != 2) break;
+            try {
+              await sendIspMail({
+                mailGroupId: mailGroup.id,
+                groupFileId: groupFiles[i].id as number,
+                documentId: documents[j].id as number
+              });
+              setProgressMails((prev: number[]) => {
+                const updated = [...prev];
+                updated[i] = 0;
+                return updated;
+              });
+            } catch {
+              setProgressMails((prev: number[]) => {
+                const updated = [...prev];
+                updated[i] = 1;
+                return updated;
+              });
+            }
+
           }
         }
+
       }
+    //   for (let i=0; i<groupFiles.length; i++) {
+    //     if (typeof mailGroup?.id === "string" && typeof groupFiles?.at(i)?.id === "number") {
+    //       if (mailStatus != 2) break;
+    //       try {
+    //         await sendIspMail({
+    //           mailGroupId: mailGroup.id,
+    //           groupFileId: groupFiles[i].id as number
+    //         });
+    //        setProgressMails((prev: number[]) => {
+    //         const updated = [...prev];
+    //         updated[i] = 0;
+    //         return updated;
+    //        });
+    //       } catch {
+    //        setProgressMails((prev: number[]) => {
+    //         const updated = [...prev];
+    //         updated[i] = 1;
+    //         return updated;
+    //        });
+    //       }
+    //     }
+    //   }
     } catch (error) {
       if (isAuthError(error))
-        if (window)
-          window.location.reload();
+        redirectToLogin();
     }
   }
 
@@ -251,7 +282,7 @@ export function GroupForm({
       {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
       <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
         -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
-        <div className="flex justify-center gap-x-1">
+        <div className={`grid gap-2 ${loadingGrid[0]} ${loadingGrid[1]}`}>
         {
           progresMails.map((pmail: number, idx: number) => {
             const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
@@ -307,8 +338,7 @@ export function GroupForm({
                           });
                         } catch (error) {
                           if (isAuthError(error))
-                            if (window)
-                              window.location.reload();
+                            redirectToLogin(); 
                         }
                       }}
                     />
@@ -344,8 +374,7 @@ export function GroupForm({
                           });
                         } catch (error) {
                           if (isAuthError(error))  
-                            if (window)
-                              window.location.reload();
+                            redirectToLogin();
                         }
                       }}
                     />

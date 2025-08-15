@@ -42,6 +42,7 @@ import {
 import { Label } from "./ui/label";
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -186,8 +187,7 @@ function GroupActions({
                 await RemoveGroup(id);
               } catch (error) {
                 if (isAuthError(error)) 
-                  if (window)
-                    window.location.reload();
+                  redirectToLogin(); 
               }
               dispatch(toggleDataChanged())
               setUiOpen(false)
@@ -216,8 +216,7 @@ function GroupActions({
                             await RenameGroup({name: nameRef?.current?.value, groupId: rename});
                           } catch (error) {
                             if (isAuthError(error))  
-                              if (window)
-                                window.location.reload();
+                              redirectToLogin();
                           }
                         dispatch(toggleDataChanged());
                         dispatch(setRename(-1));
@@ -273,8 +272,7 @@ export default function GroupTable() {
         console.error(error);
         setTableData([]);
         if (isAuthError(error))
-          if (window)
-            window.location.reload();
+          redirectToLogin();
       }
     }
 

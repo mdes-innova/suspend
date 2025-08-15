@@ -34,19 +34,22 @@ class GroupSerializer(serializers.ModelSerializer):
     document_no = serializers.CharField(allow_blank=True, required=False)
     document_date = serializers.DateTimeField(allow_null=True, required=False)
     title = serializers.CharField(allow_blank=True, required=False)
+    body = serializers.CharField(allow_blank=True, required=False)
     speed = serializers.IntegerField(allow_null=True, required=False)
     secret = serializers.IntegerField(allow_null=True, required=False)
     documents = DocumentSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
+    group_files = GroupFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = Group
         fields = [
-            'id', 'name', 'documents', 'document_ids', 'user',
+            'id', 'name', 'documents', 'document_ids', 'user', 'body',
             'document_no', 'document_date', 'title', 'speed', 'secret',
-            'created_at', 'modified_at'
+            'created_at', 'modified_at', 'group_files'
             ]
-        read_only_fields = ['documents', 'user', 'created_at', 'modified_at']
+        read_only_fields = ['documents', 'user', 'created_at', 'modified_at',
+                            'group_files']
 
     def create(self, validated_data):
         user = self.context['request'].user

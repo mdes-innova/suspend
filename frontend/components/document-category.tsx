@@ -25,6 +25,7 @@ import { toggleDataChanged as toggleDataChangedDocumentList} from "./store/featu
 import { toggleDataChanged as toggleDataChangedGroupList } from "./store/features/group-list-ui-slice";
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
 export default function CategoryGroup({ doc, group }:
     { doc: Document, group: Group }) {
@@ -68,8 +69,7 @@ export default function CategoryGroup({ doc, group }:
                 setGroupData(Object.keys(fetchGroup).length === 0? null: fetchGroup);
             } catch (error) {
                 if (isAuthError(error)) {
-                    if (window)
-                        window?.location?.reload();
+                    redirectToLogin();
                 }
                 else
                     setGroupData(null);
@@ -141,8 +141,7 @@ export default function CategoryGroup({ doc, group }:
                                         setGroupData(null);
                                     } catch (error) {
                                         if (isAuthError(error))
-                                            if (window)
-                                                window.location.reload();
+                                            redirectToLogin();
                                        console.error(error);
                                     }
                                    

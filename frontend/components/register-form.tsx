@@ -31,6 +31,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { isAuthError } from '@/components/exceptions/auth';
 import { registerUser } from "./actions/user";
 import { type UserRegister, type Isp } from "@/lib/types";
+import { redirectToLogin } from "./reload-page";
 
 type TheUser = {
   username: string,
@@ -90,8 +91,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
     } catch (error) {
       if (isAuthError(error)) {
-        if (window)
-          window.location.reload();
+        redirectToLogin();
       }
       else {
         setSuccess(false);

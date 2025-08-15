@@ -21,6 +21,7 @@ import { Datetime2Thai } from "@/lib/utils";
 import { RootState } from "../store";
 import { type Group, type Document } from "@/lib/types";
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "../reload-page";
  
 
 function MyScrollArea({ data }: { data: Group[] }) {
@@ -51,8 +52,7 @@ function MyScrollArea({ data }: { data: Group[] }) {
                   dispatch(closeModal({ui: PLAYLISTUI.new,
                     info: [error as string], err: true }));
                   if (isAuthError(error))
-                    if (window)
-                      window.location.reload();
+                    redirectToLogin();
                 }
               }
             }}>
@@ -87,8 +87,7 @@ export default function PlaylistDialog() {
            dispatch(closeModal({ui: PLAYLISTUI.list}));
            dispatch(closeModal({ui: PLAYLISTUI.new, info: ["error"], err: true}));
            if (isAuthError(error))
-            if (window)
-              window.location.reload();
+            redirectToLogin();
           }
         }
       }

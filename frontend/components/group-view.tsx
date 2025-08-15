@@ -11,6 +11,7 @@ import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { usePathname, redirect } from 'next/navigation';
 import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
 export default function GroupView(
   { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
@@ -42,8 +43,7 @@ export default function GroupView(
           });
         } catch (error) {
           if (isAuthError(error))
-            if (window)
-              window.location.reload();
+            redirectToLogin();
         }
       };
 

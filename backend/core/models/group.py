@@ -30,6 +30,7 @@ class Group(models.Model):
     document_no = models.CharField(max_length=32, blank=True)
     document_date = models.DateTimeField(null=True)
     title = models.CharField(max_length=256, blank=True)
+    body = models.TextField(blank=True, default='')
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
