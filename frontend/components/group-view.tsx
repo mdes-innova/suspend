@@ -10,7 +10,7 @@ import { RenameGroup } from "./actions/group";
 import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { usePathname, redirect } from 'next/navigation';
-import { AuthError } from "./exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 
 export default function GroupView(
   { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
@@ -41,7 +41,7 @@ export default function GroupView(
             name
           });
         } catch (error) {
-          if (error instanceof AuthError)
+          if (isAuthError(error))
             if (window)
               window.location.reload();
         }

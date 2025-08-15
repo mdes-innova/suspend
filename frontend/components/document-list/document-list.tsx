@@ -26,7 +26,7 @@ import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
 import { toggleDataChanged } from "../store/features/group-list-ui-slice";
 import { RootState } from "../store";
-import { AuthError } from "../exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 
 export default function DocumentList({ data, groupId }: { data: Document[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -58,7 +58,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     groupId: groupId as number
                 });
             } catch (error) {
-                if (error instanceof AuthError)    
+                if (isAuthError(error))    
                     if (window)
                         window.location.reload();
             }
@@ -84,7 +84,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     newDocumentIds.includes(doc.id)
                 ));
             } catch (error) {
-                if (error instanceof AuthError)
+                if (isAuthError(error))
                     if (window)
                         window.location.reload();
             }
@@ -277,7 +277,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     } catch (error) {
                         console.error(error);
                         setContentData([]);
-                        if (error instanceof AuthError)
+                        if (isAuthError(error))
                             if (window)
                                 window.location.reload();
                     }
@@ -313,7 +313,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                                     setDocData([...columns, ...docs]);
                                 } catch (error) {
                                     console.error(error);
-                                    if (error instanceof AuthError)
+                                    if (isAuthError(error))
                                         if (window)
                                             window.location.reload();
                                 }
@@ -386,7 +386,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                                                         );
                                                     } catch (error) {
                                                         console.error(error);
-                                                        if (error instanceof AuthError)
+                                                        if (isAuthError(error))
                                                             if (window)
                                                                 window.location.reload();
                                                     }

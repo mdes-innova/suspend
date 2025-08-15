@@ -23,8 +23,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "./actions/group"
 import { useRouter } from 'next/navigation';
 import { GetFilesFromGroup } from "./actions/group-file"
-import { Card } from "./ui/card"
-import { AuthError } from "./exceptions/auth"
+import { Card } from "./ui/card";
+import { isAuthError } from '@/components/exceptions/auth';
 
 
 const FormSchema = z.object({
@@ -71,7 +71,7 @@ export function GroupForm({
             title: group.title || '',
           });
       } catch (error) {
-        if (error instanceof AuthError)
+        if (isAuthError(error))
           if (window)
             window.location.reload();
       }
@@ -89,7 +89,7 @@ export function GroupForm({
             value: date.toString()
           });
         } catch (error) {
-          if (error instanceof AuthError)
+          if (isAuthError(error))
             if (window)
               window.location.reload();
         }
@@ -107,7 +107,7 @@ export function GroupForm({
           value: secret
         });
       } catch (error) {
-        if (error instanceof AuthError)
+        if (isAuthError(error))
           if(window)
             window.location.reload();
       }
@@ -125,7 +125,7 @@ export function GroupForm({
           value: speed
         });
       } catch (error) {
-        if (error instanceof AuthError)
+        if (isAuthError(error))
           if (window)
             window.location.reload();
       }
@@ -180,7 +180,7 @@ export function GroupForm({
           break;
       }
     } catch (error) {
-      if (error instanceof AuthError)
+      if (isAuthError(error))
         if (window)
           window.location.reload();
     }
@@ -232,7 +232,7 @@ export function GroupForm({
         }
       }
     } catch (error) {
-      if (error instanceof AuthError)
+      if (isAuthError(error))
         if (window)
           window.location.reload();
     }
@@ -306,7 +306,7 @@ export function GroupForm({
                             value: documentNo
                           });
                         } catch (error) {
-                          if (error instanceof AuthError)
+                          if (isAuthError(error))
                             if (window)
                               window.location.reload();
                         }
@@ -343,7 +343,7 @@ export function GroupForm({
                             value: title 
                           });
                         } catch (error) {
-                          if (error instanceof AuthError)  
+                          if (isAuthError(error))  
                             if (window)
                               window.location.reload();
                         }

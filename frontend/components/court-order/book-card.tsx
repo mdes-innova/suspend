@@ -39,7 +39,7 @@ import {
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
 import { GroupFile, type Isp } from "@/lib/types";
 import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
-import { AuthError } from "../exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 
 export function BookCard({ispData, fileData, groupId}:
   {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
@@ -160,7 +160,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                   window.URL.revokeObjectURL(url);
                 } catch (error) {
                  console.error(error);
-                 if (error instanceof AuthError)
+                 if (isAuthError(error))
                   if (window)
                     window.location.reload();
                 }
@@ -194,7 +194,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                     const newData = await GetFilesFromGroup(groupId);
                     setTableData(newData);
                   } catch (error) {
-                    if (error instanceof AuthError)
+                    if (isAuthError(error))
                       if (window)
                         window.location.reload();
                   }
@@ -345,7 +345,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         setTableData(newData);
                         setOpenNew(null);
                       } catch (error) {
-                        if (error instanceof AuthError)  
+                        if (isAuthError(error))  
                           if (window)
                             window.location.reload();
                       }
@@ -376,7 +376,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         setTableData(newData);
                         setOpenNew(null);
                       } catch (error) {
-                        if (error instanceof AuthError)
+                        if (isAuthError(error))
                           if (window)
                             window.location.reload();
                       }

@@ -67,6 +67,8 @@ export async function registerUser(userRegisterParams: UserRegister) {
         if (!res.ok) {
             if (res.status === 401)
                 throw new AuthError('Authentication fail.')
+            else
+                throw new Error("Register new user fail.");
         }
         const profile = await res.json();
         return profile;

@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
-import { AuthError } from "./exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 
 export default function MailView({
     mailGroup
@@ -70,7 +70,7 @@ export default function MailView({
                                             link.remove();
                                             window.URL.revokeObjectURL(url);
                                         } catch (error) {
-                                            if (error instanceof AuthError)
+                                            if (isAuthError(error))
                                                 if (window)
                                                     window.location.reload();
                                         }

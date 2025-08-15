@@ -24,7 +24,7 @@ import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged as toggleDataChangedDocumentList} from "./store/features/document-list-ui-slice";
 import { toggleDataChanged as toggleDataChangedGroupList } from "./store/features/group-list-ui-slice";
 import { RootState } from "./store";
-import { AuthError } from "./exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 
 export default function CategoryGroup({ doc, group }:
     { doc: Document, group: Group }) {
@@ -67,7 +67,7 @@ export default function CategoryGroup({ doc, group }:
                 const fetchGroup = await getGroupFromDocument(doc.id);
                 setGroupData(Object.keys(fetchGroup).length === 0? null: fetchGroup);
             } catch (error) {
-                if (error instanceof AuthError) {
+                if (isAuthError(error)) {
                     if (window)
                         window?.location?.reload();
                 }
@@ -140,7 +140,7 @@ export default function CategoryGroup({ doc, group }:
                                         });
                                         setGroupData(null);
                                     } catch (error) {
-                                        if (error instanceof AuthError)
+                                        if (isAuthError(error))
                                             if (window)
                                                 window.location.reload();
                                        console.error(error);

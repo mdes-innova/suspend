@@ -1,69 +1,48 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getAccess } from './components/actions/auth';
+
+const publicBases = ['/login', '/confirm', '/_not-found'];
+
+function isPublicPath(pathname: string) {
+  return publicBases.some((base: string) => pathname === base || pathname.startsWith(base + '/'));
+}
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const path = (pathname.split('/'))[1];
-  if (['_not-found', 'confirm-mail'].includes(path))
+  const { pathname, href, search, hash } = request.nextUrl;
+  const returnTo = pathname + search + hash;
+  const dest = request.headers.get('sec-fetch-dest') ?? 'unknown';
+  console.log('[MW] HIT', pathname, '| dest:', dest, '| href:', href);
+
+  // Early skips
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/.well-known') ||
+    pathname === '/favicon.ico' ||
+    /\.(?:png|jpe?g|gif|webp|svg|ico|css|js|map|txt|xml|woff2?|ttf|eot)$/.test(pathname)
+  ) {
+    console.log('[MW] SKIP static/internal:', pathname);
     return NextResponse.next();
-  const access = request.cookies.get('access')?.value;
-  const refresh = request.cookies.get('refresh')?.value;
-  const isLoginPage = pathname === '/login';
-
-  const publicPaths = ['/login'];
-  const isPublic = publicPaths.includes(pathname);
-
-  // If no refresh and not public, redirect to login
-  if (!refresh && !isPublic) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('pathname', pathname);
-    return NextResponse.redirect(loginUrl);
   }
 
-  // If refresh exists but access is missing, try to refresh
-  if (!access && refresh) {
-    try {
-      const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-
-      const tokenRes = await fetch(`${baseUrl}/token/refresh/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh }),
-      });
-
-      if (tokenRes.ok) {
-        const data = await tokenRes.json();
-        const response = isLoginPage
-          ? NextResponse.redirect(new URL('/', request.url))
-          : NextResponse.next();
-
-        response.cookies.set('access', data.access, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 5,
-        });
-
-        return response;
-      }
-    } catch (err) {
-      console.error('Token refresh failed:', err);
-    }
+  if (isPublicPath(pathname)) {
+    console.log('[MW] SKIP /login');
+    return NextResponse.next();
   }
 
-  // If already has access token
-  if (access) {
-    return isLoginPage
-      ? NextResponse.redirect(new URL('/', request.url))
-      : NextResponse.next();
+  try {
+    await getAccess();
+  } catch {
+    const url = new URL('/login', request.nextUrl);
+    url.searchParams.set('pathname', returnTo);
+    console.log('[MW] REDIRECT ->', url.href);
+    return NextResponse.redirect(url);
   }
 
+  console.log('[MW] NEXT:', pathname);
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: ['/((?!api|_next|static|favicon.ico).*)'],
-};
+
+export const config = { matcher: '/:path*' };

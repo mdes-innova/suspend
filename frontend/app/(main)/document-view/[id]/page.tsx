@@ -1,10 +1,10 @@
 import { getDocument } from "@/components/actions/document";
 import { getGroupFromDocument } from "@/components/actions/group";
 import DocumentView from "@/components/document-view";
-import { AuthError } from "@/components/exceptions/auth";
 import ReloadPage from "@/components/reload-page";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { isAuthError } from '@/components/exceptions/auth';
 
 async function Components({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,7 +14,7 @@ async function Components({ params }: { params: Promise<{ id: string }> }) {
     const groupData = await getGroupFromDocument(parseInt(id));
     return <DocumentView docData={docData} groupData={Object.keys(groupData).length === 0? null: groupData} />;
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (isAuthError(error)) {
       return <ReloadPage />;
     } else {
       notFound();

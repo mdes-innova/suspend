@@ -53,19 +53,18 @@ export async function getAccess() {
               });
 
               return data.access;
-            } catch (error) {
-              console.error(error);
+            } catch {
               throw new AuthError('No cookie found.');
             }
           } else {
             throw new AuthError('No refresh found.');
           }
         } else {
-          throw new Error('Cannot get access token.');
+          throw new AuthError('Cannot get access token.');
         }
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
+      throw new AuthError('Cannot get access token.');
     }
   } else {
     if (cookieStore.has('refresh')) {

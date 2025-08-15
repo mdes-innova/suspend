@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
-import { AuthError } from '@/components/exceptions/auth';
+import { isAuthError } from '@/components/exceptions/auth';
 import { getMailGroup } from '@/components/actions/mail';
 import MailView from '@/components/mail-view';
 import ReloadPage from '@/components/reload-page';
@@ -18,7 +18,7 @@ async function MailContent({params}: {params: Promise<{ id: string }>}) {
       </div>
     );
   } catch (error) {
-    if (error instanceof AuthError)
+    if (isAuthError(error))
       return <ReloadPage />;
     else
       return notFound();

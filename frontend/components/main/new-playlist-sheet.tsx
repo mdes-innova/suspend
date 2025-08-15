@@ -18,7 +18,7 @@ import { type Document } from "@/lib/types";
 import {useRouter} from 'next/navigation';
 import { addToGroup, postGroup } from '../actions/group';
 import { RootState } from "../store"
-import { AuthError } from "../exceptions/auth"
+import { isAuthError } from '@/components/exceptions/auth';
 
 
 export function NewPlaylistSheet({main}: {main?: boolean}) {
@@ -64,7 +64,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
-                      if (error instanceof AuthError)
+                      if (isAuthError(error))
                         if (window)
                           window.location.reload();
                     }
@@ -79,7 +79,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                       }
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));
-                      if (error instanceof AuthError)
+                      if (isAuthError(error))
                         if (window)
                           window.location.reload();
                     }

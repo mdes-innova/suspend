@@ -26,10 +26,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { AuthError } from "./exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 import { registerUser } from "./actions/user";
 import { type UserRegister, type Isp } from "@/lib/types";
 
@@ -61,7 +60,6 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
   const [userType, setUserType]= useState('user');
   const [success, setSuccess] = useState(false);
   const [isp, setIsp] = useState("")
-  const router = useRouter();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -86,15 +84,16 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
     try {
       await registerUser(extendedValues);
-      router.refresh();
+      // router.refresh();
       setErrorMessage('');
       setSuccess(true);
 
     } catch (error) {
-      if (error instanceof AuthError)
+      if (isAuthError(error)) {
         if (window)
           window.location.reload();
-      else{
+      }
+      else {
         setSuccess(false);
         setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
       }
@@ -114,6 +113,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                 <FormControl>
                   <Input placeholder="Username" {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setErrorMessage('');
+                    setSuccess(false);
                     field.onChange(e);
                   }}/>
                 </FormControl>
@@ -132,7 +132,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                     placeholder="••••••••"
                     {...field}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setErrorMessage('')
+                      setErrorMessage('');
+                      setSuccess(false);
                       field.onChange(e)
                     }}
                   />
@@ -152,8 +153,9 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                     placeholder="••••••••"
                     {...field}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setErrorMessage('')
-                      field.onChange(e)
+                      setErrorMessage('');
+                      setSuccess(false);
+                      field.onChange(e);
                     }}
                   />
                 </FormControl>
@@ -162,6 +164,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
             )}
           /> 
             <RadioGroup value={userType} onValueChange={(value) => {
+                setErrorMessage('');
+                setSuccess(false);
                 setUserType(value);
               }}>
                 <div className="flex items-center space-x-2">
@@ -188,6 +192,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                   required
                   value={isp}
                   onValueChange={(value: string) => {
+                    setErrorMessage('');
+                    setSuccess(false);
                     setIsp(value);
                   }}
                 >
@@ -220,6 +226,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                       <FormControl>
                         <Input placeholder="isp@example.com" {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           setErrorMessage('');
+                          setSuccess(false);
                           field.onChange(e);
                         }}/>
                       </FormControl>

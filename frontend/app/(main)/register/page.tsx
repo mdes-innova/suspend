@@ -1,4 +1,4 @@
-import { AuthError } from "@/components/exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 import { notFound } from "next/navigation";
 import RegisterForm from "@/components/register-form"
 import { Suspense } from 'react';
@@ -13,7 +13,7 @@ async function Components() {
       <RegisterForm ispData={ispData} />
       );
   } catch (error) {
-    if (error instanceof AuthError)
+    if (isAuthError(error))
       return <ReloadPage />;
     else
       return notFound();

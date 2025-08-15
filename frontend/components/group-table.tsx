@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/sheet"
 import { Label } from "./ui/label";
 import { RootState } from "./store";
-import { AuthError } from "./exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -185,7 +185,7 @@ function GroupActions({
               try {
                 await RemoveGroup(id);
               } catch (error) {
-                if (error instanceof AuthError) 
+                if (isAuthError(error)) 
                   if (window)
                     window.location.reload();
               }
@@ -215,7 +215,7 @@ function GroupActions({
                           try {
                             await RenameGroup({name: nameRef?.current?.value, groupId: rename});
                           } catch (error) {
-                            if (error instanceof AuthError)  
+                            if (isAuthError(error))  
                               if (window)
                                 window.location.reload();
                           }
@@ -272,7 +272,7 @@ export default function GroupTable() {
       } catch (error) {
         console.error(error);
         setTableData([]);
-        if (error instanceof AuthError)
+        if (isAuthError(error))
           if (window)
             window.location.reload();
       }

@@ -2,7 +2,7 @@ import { getGroup, postGroup } from "@/components/actions/group";
 import { GetFilesFromGroup } from "@/components/actions/group-file";
 import { getIsps } from "@/components/actions/isp";
 import { getCurrentDate } from "@/components/actions/utils";
-import { AuthError } from "@/components/exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 import GroupView from "@/components/group-view";
 import ReloadPage from "@/components/reload-page";
 import { type Group} from "@/lib/types";
@@ -22,7 +22,7 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
         createdUntitled.createdAt = currentDate;
         groupData = createdUntitled;
       } catch (err1) {
-        if (err1 instanceof AuthError)
+        if (isAuthError(err1))
             return <ReloadPage />;
         else
           return notFound();
@@ -39,7 +39,7 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
     );
 
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (isAuthError(error)) {
       return <ReloadPage />;
     } else {
       return notFound();

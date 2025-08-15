@@ -4,9 +4,9 @@ import ContentLoading from "@/components/loading/content";
 import DataTable from '@/components/main/content';
 import PlaylistDialog from '@/components/main/playlist-dialog';
 import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
-import { getContent } from '@/components/actions/document';
-import { AuthError } from '@/components/exceptions/auth';
 import ReloadPage from '@/components/reload-page';
+import { isAuthError } from '@/components/exceptions/auth';
+import { getContent } from '@/components/actions/document';
 
 
 async function Content() {
@@ -18,7 +18,7 @@ async function Content() {
       </div>
     );
   } catch (error) {
-    if (error instanceof AuthError)  
+    if (isAuthError(error))  
       return <ReloadPage />;
     else
       return notFound();
