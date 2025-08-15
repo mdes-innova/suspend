@@ -233,6 +233,11 @@ export function GroupForm({
         value: values.documentNo
       });
 
+      await updateField({
+        kind: 'body',
+        value: textareaValue
+      });
+
       const mailGroup = await createMailGroup({
         groupId
       });
