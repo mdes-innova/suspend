@@ -17,14 +17,14 @@ from .utils import send_email
 
 
 class MailFileSerializer(serializers.ModelSerializer):
-    group_file_id = serializers.PrimaryRelatedField(
+    group_file_id = serializers.PrimaryKeyRelatedField(
         queryset=GroupFile.objects.all(),
         write_only=True
     )
     group_file = GroupFileSerializer(
         read_only=True
     )
-    mail_group_id = serializers.PrimaryRelatedField(
+    mail_group_id = serializers.PrimaryKeyRelatedField(
         queryset=MailGroup.objects.all(),
         write_only=True,
     )

@@ -89,13 +89,5 @@ class GroupFile(models.Model):
         null=True
     )
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['group', 'isp'],
-                name='unique_isp_per_group'
-            )
-        ]
-
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

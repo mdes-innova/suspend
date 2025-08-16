@@ -111,7 +111,7 @@ class Mail(models.Model):
 class MailFile(models.Model):
     mail_group = models.ForeignKey(
         MailGroup,
-        related_name='mails',
+        related_name='mail_files',
         on_delete=models.CASCADE,
         default=None
     )

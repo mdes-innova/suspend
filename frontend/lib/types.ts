@@ -88,7 +88,7 @@ export type Mail = {
   receiver: User,
   sender: User,
   group?: Group,
-  mailFile: MailFile,
+  mailFiles: MailFile[],
   createdAt: string,
   confirmed?: boolean,
   confirmedHash?: string,

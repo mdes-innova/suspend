@@ -260,15 +260,17 @@ export function GroupForm({
             .filter((id): id is number => id != null)
         ));
 
-        await Promise.all(uniqueIspIds.map(async (id) => {
-          const groupFilesIsp = groupFiles.filter((e) => e?.isp?.id === id);
-          await Promise.all(groupFilesIsp.map(async(ee) => {
+        for (const ispId of uniqueIspIds) {
+          const groupFilesIsp = groupFiles
+            .filter((gf): gf is GroupFile & { id: number } => gf?.isp?.id === ispId && gf?.id != null);
+
+          for (const gf of groupFilesIsp) {
             await createMailFile({
-              groupFileId: ee.id as number,
-              mailGroupId: mailGroup.id
+              groupFileId: gf.id,              // now guaranteed number
+              mailGroupId: mailGroup.id as number
             });
-          }));
-        }));
+          }
+        }
 
         for (let i=0; i<uniqueIspIds.length; i++) {
           if (mailStatus != 2) break;
