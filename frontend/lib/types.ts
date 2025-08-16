@@ -71,7 +71,7 @@ export type UserRegister = {
   password: string,
   email?: string,
   isStaff: boolean,
-  ispId?: number
+  ispId?: number,
 }
 
 export type IspFile = {

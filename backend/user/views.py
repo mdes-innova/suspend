@@ -1,6 +1,7 @@
 """View module for user app."""
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from core.permissions import IsAdminOnlyUser
 from core.models import User
 from .serializer import UserSerializer
 from rest_framework.decorators import action

@@ -55,14 +55,42 @@ const FormSchema = z.object({
   message: "รหัสผ่านไม่ตรงกัน",
 });
 
+
 export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
   const [errorMessage, setErrorMessage] = useState('');
   const [userType, setUserType]= useState('user');
   const [success, setSuccess] = useState(false);
-  const [isp, setIsp] = useState("")
+  const [isp, setIsp] = useState("");
 
-  const form = useForm<z.infer<typeof FormSchema>>({
+  const FormSchema = userType === 'user'? z.object({
+    username: z.string().min(2, {
+      message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+    }),
+    password: z.string().min(6, {
+      message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    }),
+    confirmPassword: z.string(),
+    email: z.string().email({
+      message: "กรุณากรอกอีเมลที่ถูกต้อง",
+    }),
+  }).refine((data: TheUser) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "รหัสผ่านไม่ตรงกัน",
+  }): z.object({
+    username: z.string().min(2, {
+      message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+    }),
+    password: z.string().min(6, {
+      message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    }),
+    confirmPassword: z.string(),
+  }).refine((data: TheUser) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "รหัสผ่านไม่ตรงกัน",
+  });
+
+  const form = userType === 'user'? useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       username: "",
@@ -70,14 +98,26 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
       confirmPassword: "",
       email: ""
     },
-  })
+  }): useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      confirmPassword: "",
+      email: ""
+    },
+  });
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    const extendedValues: UserRegister = {
+    const extendedValues: UserRegister = userType === 'user'? {
       username: values.username,
       password: values.password,
       email: values.email,
-      isStaff: userType === 'user'? false: true
+      isStaff: false
+    }: {
+      username: values.username,
+      password: values.password,
+      isStaff: true
     };
 
     if (isp != "")
@@ -175,10 +215,6 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="staff" id="r2" />
                     <Label htmlFor="r2">Staff</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admin" id="r3" />
-                    <Label htmlFor="r3">Admin</Label>
                 </div>
             </RadioGroup>
             {

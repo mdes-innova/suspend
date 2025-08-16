@@ -1,16 +1,33 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
-import { isAuthError } from '@/components/exceptions/auth';
+import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { getMailGroup } from '@/components/actions/mail';
 import MailView from '@/components/mail-view';
 import ReloadPage from '@/components/reload-page';
 import { notFound } from "next/navigation";
+import { getAccess } from '../../page';
 
 
 async function MailContent({params}: {params: Promise<{ id: string }>}) {
   try {
     const {id} = await params;
-    const data = await getMailGroup(id);
+    const access = await getAccess();
+
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mailgroups/${id}/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+    if (!res.ok) {
+    if (res.status === 401)
+        throw new AuthError('Authentication fail.')
+    throw new Error('Get a mail group fail.');
+    }
+
+    const data = await res.json();
 
     return (
       <div className='w-full h-full flex flex-col px-2'>
