@@ -86,14 +86,14 @@ export async function postGroup(name: string) {
         },
     }); 
 
-      if (!res.ok) {
-      if (res.status === 401)
-          throw new AuthError('Authentication fail.')
-      throw new Error('Create a new group fail.');
-      }
+    if (!res.ok) {
+    if (res.status === 401)
+        throw new AuthError('Authentication fail.')
+    throw new Error('Create a new group fail.');
+    }
 
-      const content = await res.json();
-      return content;
+    const content = await res.json();
+    return content;
   } catch (error) {
       throw error; 
   }
