@@ -3,7 +3,10 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets
 from .serializer import MailSerializer, MailFileSerializer, MailGroupSerializer
 from user.serializer import UserSerializer
-from core.models import Mail, MailStatus, Group, GroupFile, MailFile, MailGroup
+from core.models import (
+        Mail, MailStatus, Group, GroupFile, MailFile, MailGroup,
+        ISP
+    )
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
@@ -136,41 +139,33 @@ class MailViews(viewsets.ModelViewSet):
     )
     def send_mail(self, request):
         mail_group_id = request.data.get('mail_group_id', None)
-        group_file_id = request.data.get('group_file_id', None)
         document_id = request.data.get('document_id', None)
-        if not mail_group_id or not group_file_id:
-            return Response({'error': 'No mail group or group file id input.'})
+        isp_id = request.data.get('isp_id', None)
+        section = request.data.get('section', 0)
         try:
             mail_group = MailGroup.objects.get(id=mail_group_id)
-            group_file = GroupFile.objects.get(id=group_file_id)
-        except GroupFile.DoesNotExist:
-            return Response({'error': 'Group file not found.'})
+            isp = ISP.objects.get(id=isp_id)
+            mail_files = MailFile.objects.filter(isp=isp, mail_group=mail_group)
         except MailGroup.DoesNotExist:
             return Response({'error': 'Mail group not found.'})
+        except ISP.DoesNotExist:
+            return Response({'error': 'ISP not found.'})
+        except:
+            return Response({'error': 'Inputs fail.'})
 
         try:
-            mail_file = MailFile.objects.create(
-                isp=group_file.isp,
-                original_filename=group_file.original_filename
-            )
-            gf_file = group_file.file
-            with gf_file.open('rb') as f:
-                mail_file.file.save(gf_file.name.split('/')[-1], File(f))
-                mail_file.save()
-
-            isp = mail_file.isp
+            mail_file_ids = mail_files.values_list('id', flat=True)
             receiver = isp.users
             data = {
                 'receiver_id': receiver.id,
-                'mail_file_id': mail_file.id,
+                'mail_file_ids': mail_file_ids,
                 'mail_group_id': mail_group.id,
                 'document_id': document_id,
+                'section': section
             }
             serializer = MailSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
-
-                mail = serializer.instance
             else:
                 return Response({'error': 'Bad request.'})
         except Exception as e:

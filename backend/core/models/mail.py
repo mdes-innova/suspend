@@ -90,14 +90,6 @@ class Mail(models.Model):
         null=True,
         related_name='received_mails'
     )
-    mail_file = models.ForeignKey(
-        "MailFile",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='mails',
-        editable=False
-    )
 
     confirmed = models.BooleanField(default=False)
     confirmed_uuid = models.UUIDField(
@@ -117,6 +109,12 @@ class Mail(models.Model):
 
 
 class MailFile(models.Model):
+    mail_group = models.ForeignKey(
+        MailGroup,
+        related_name='mails',
+        on_delete=models.CASCADE,
+        default=None
+    )
     isp = models.ForeignKey('ISP', on_delete=models.SET_NULL,
                             null=True, default=None)
     mail = models.ForeignKey('Mail', on_delete=models.SET_NULL,

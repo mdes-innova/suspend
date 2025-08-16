@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react"
 import { Group, GroupFile, type Isp } from "@/lib/types"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { createMailGroup, sendIspMail } from "./actions/mail"
+import { createMailFile, createMailGroup, sendIspMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret, 
   updateDocumentSection, updateDocumentSpeed, updateDocumentTitle, updateBody } from "./actions/group"
@@ -254,7 +254,23 @@ export function GroupForm({
         ]);
         setProgressMails(Array.from({length: (groupFiles.length) * (documents.length)}).map(() => -1));
 
-        for (let i=0; i<groupFiles.length; i++) {
+        const uniqueIspIds = Array.from(new Set(
+          groupFiles
+            .map((e) => e?.isp?.id)
+            .filter((id): id is number => id != null)
+        ));
+
+        await Promise.all(uniqueIspIds.map(async (id) => {
+          const groupFilesIsp = groupFiles.filter((e) => e?.isp?.id === id);
+          await Promise.all(groupFilesIsp.map(async(ee) => {
+            await createMailFile({
+              groupFileId: ee.id as number,
+              mailGroupId: mailGroup.id
+            });
+          }));
+        }));
+
+        for (let i=0; i<uniqueIspIds.length; i++) {
           if (mailStatus != 2) break;
           switch (section) {
             case '1':
@@ -262,7 +278,7 @@ export function GroupForm({
                 await sendIspMail({
                   section: parseInt(section),
                   mailGroupId: mailGroup.id,
-                  groupFileId: groupFiles[i].id as number
+                  ispId: uniqueIspIds[i]
                 });
                 setProgressMails((prev: number[]) => {
                   const updated = [...prev];
@@ -290,8 +306,8 @@ export function GroupForm({
                   await sendIspMail({
                     section: parseInt(section),
                     mailGroupId: mailGroup.id,
-                    groupFileId: groupFiles[i].id as number,
-                    documentId: documents[j].id as number
+                    documentId: documents[j].id as number,
+                    ispId: uniqueIspIds[i]
                   });
                   setProgressMails((prev: number[]) => {
                     const updated = [...prev];
