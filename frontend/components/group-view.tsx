@@ -8,23 +8,20 @@ import {useState, useRef, useEffect} from 'react';
 import { RenameGroup } from "./actions/group";
 import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged } from "./store/features/group-list-ui-slice";
-import { usePathname, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
 import { Date2Thai, Text2Thai } from "@/lib/client/utils";
 
 export default function GroupView(
-  { groupData, isps}: { groupData: Group | null, isps: Isp[] }) {
+  { groupData, isps, idParam}: { groupData: Group | null, isps: Isp[], idParam: string }) {
     const [title, setTitle] = useState(groupData?.name?? 'ไม่มีชื่อ');
     const [onTitleChange, setOnTitleChange] = useState(false);
     const titleRef = useRef<HTMLInputElement>(null);
     const dispatch = useAppDispatch();
-    const pathname = usePathname();
 
     useEffect(() => {
-      const pathnameSplits = pathname.split('/');
-      const groupId = pathnameSplits[pathnameSplits.length - 1];
-      if (groupId === '-1')
+      if (idParam === '-1')
         redirect(`/document-groups/${groupData?.id}`);
     }, []);
 
