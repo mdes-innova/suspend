@@ -54,9 +54,6 @@ async function getTableData(
 
     const groupFilesData: GroupFile[] = (await GetFilesFromGroup(groupId)) ?? [];
 
-    for (const f of groupFilesData) size += (f?.size ?? 0);
-    for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
-
     const ispIds = Array.from(
       new Set(
         groupFilesData
@@ -64,10 +61,13 @@ async function getTableData(
           .filter((id): id is number => id != null)
       )
     );
+    for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
 
     // Build rows; flatMap avoids returning [] inside map (no union with never[])
     const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
       const isp = ispData.find(e => e.id === ispId);
+      const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
+      for (const f of groupFilesIsp) size += (f?.size ?? 0);
       if (!isp) return [];
       return [{
         isp,
