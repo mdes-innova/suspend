@@ -12,22 +12,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
+import {closeModal, LOADINGUI, openModal} from './store/features/loading-ui-slice';
 import { Input } from "@/components/ui/input"
 import { useEffect, useRef, useState } from "react"
-import { Group, GroupFile, type Isp } from "@/lib/types"
+import { type Group, type Mail, type Isp } from "@/lib/types"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { createMailFile, createMailGroup, sendIspMail } from "./actions/mail"
+import { createMailGroup, sendIspMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret, 
   updateDocumentSection, updateDocumentSpeed, updateDocumentTitle, updateBody } from "./actions/group"
 import { useRouter } from 'next/navigation';
-import { GetFilesFromGroup } from "./actions/group-file"
 import { Card } from "./ui/card";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page"
 import { Textarea } from "./ui/textarea"
+import { useAppDispatch } from "./store/hooks"
 
 
 const FormSchema = z.object({
@@ -39,19 +40,16 @@ export function GroupForm({
   children,
   isps,
   groupId,
-  fileData
 }: Readonly<{
   children?: React.ReactNode,
   isps: Isp[],
   groupId: number,
-  fileData: GroupFile[]
 }>) {
     const [speed, setSpeed] = useState('');
     const [secret, setSecret] = useState('');
     const [section, setSection] = useState('');
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
-    const [loadingGrid, setLoadingGrid] = useState(['grid-rows-1', 'grid-cols-1']);
     const submitRef = useRef<HTMLButtonElement>(null);
     const [textareaValue, setTextareaValue] = useState("");
     const [mgId, setMgId] = useState('');
@@ -64,6 +62,7 @@ export function GroupForm({
   });
   const router = useRouter();
   const [progresMails, setProgressMails] = useState<number[]>([]);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const getData = async() => {
@@ -224,6 +223,9 @@ export function GroupForm({
         alert('Cannot send mails.');
         return;
       }
+
+      dispatch(openModal({ui: LOADINGUI.dialog}));
+
       await updateField({
         kind: 'title',
         value: values.title
@@ -241,98 +243,51 @@ export function GroupForm({
       const mailGroup = await createMailGroup({
         groupId
       });
+      dispatch(closeModal({ui: LOADINGUI.dialog}));
       setMgId(mailGroup?.id);
 
       const group: Group = await getGroup(groupId);
 
       const groupFiles = group?.groupFiles?? [];
-      const documents = group?.documents?? [];
-      if (groupFiles.length && documents.length) {
-        setLoadingGrid([
-          `grid-rows-${groupFiles.length}`,
-          `grid-cols-${documents.length}`
-        ]);
-        setProgressMails(Array.from({length: (groupFiles.length) * (documents.length)}).map(() => -1));
+      if (groupFiles.length) {
+        const ispIds = [...new Set(groupFiles.map((e) => e.isp?.id)
+          .filter((e) => typeof e === 'number'))];
+        setProgressMails(Array.from({length: ispIds.length}).map(() => -1));
 
-        const uniqueIspIds = Array.from(new Set(
-          groupFiles
-            .map((e) => e?.isp?.id)
-            .filter((id): id is number => id != null)
-        ));
-
-        for (const ispId of uniqueIspIds) {
-          const groupFilesIsp = groupFiles
-            .filter((gf): gf is GroupFile & { id: number } => gf?.isp?.id === ispId && gf?.id != null);
-
-          for (const gf of groupFilesIsp) {
-            await createMailFile({
-              groupFileId: gf.id,              // now guaranteed number
-              mailGroupId: mailGroup.id as number
-            });
-          }
-        }
-
-        for (let i=0; i<uniqueIspIds.length; i++) {
+        for (let ispIndex=0; ispIndex<ispIds.length; ispIndex++) {
           if (mailStatus != 2) break;
-          switch (section) {
-            case '1':
-              try {
-                await sendIspMail({
-                  section: parseInt(section),
-                  mailGroupId: mailGroup.id,
-                  ispId: uniqueIspIds[i]
-                });
-                setProgressMails((prev: number[]) => {
-                  const updated = [...prev];
-                  updated[i] = 0;
-                  return updated;
-                });
-              } catch (error0) {
-                if (isAuthError(error0)) {
-                  redirectToLogin();
-                } else {
-                  setProgressMails((prev: number[]) => {
-                    const updated = [...prev];
-                    updated[i] = 1;
-                    return updated;
-                  });
-                }
-              }
-              
-              break;
-          
-            default:
-              for (let j=0; j<documents.length; j++) {
-                if (mailStatus != 2) break;
-                try {
-                  await sendIspMail({
-                    section: parseInt(section),
-                    mailGroupId: mailGroup.id,
-                    documentId: documents[j].id as number,
-                    ispId: uniqueIspIds[i]
-                  });
-                  setProgressMails((prev: number[]) => {
-                    const updated = [...prev];
-                    updated[i*documents.length + j] = 0;
-                    return updated;
-                  });
-                } catch (error0) {
-                  if (isAuthError(error0)) {
-                    redirectToLogin();
-                  } else {
-                    setProgressMails((prev: number[]) => {
-                      const updated = [...prev];
-                      updated[i*documents.length + j] = 1;
-                      return updated;
-                    });
-                  }
-                }
-              }
-              break;
+          try {
+            const ispMail: Mail = await sendIspMail({
+              section: parseInt(section),
+              mailGroupId: mailGroup.id,
+              ispId: ispIds[ispIndex]
+            });
+
+            if (ispMail.status != 'successful')
+              throw new Error("Fail to send a mail.");
+
+            setProgressMails((prev: number[]) => {
+              const updated = [...prev];
+              updated[ispIndex] = 0;
+              return updated;
+            });
+          } catch (error0) {
+            setProgressMails((prev: number[]) => {
+              const updated = [...prev];
+              updated[ispIndex] = 1;
+              return updated;
+            });
+            if (isAuthError(error0)) {
+              redirectToLogin();
+            }
           }
         }
       }
+      dispatch(closeModal({ui: LOADINGUI.dialog}));
     } catch (error) {
+      setMailStatus(2);
+      setMgId('');
+      setProgressMails([]);
       if (isAuthError(error))
         redirectToLogin();
     }
@@ -343,7 +298,7 @@ export function GroupForm({
       router.push(`/mail/${mgId}`);
       setMailStatus(2);
       setMgId('');
-    }
+    } 
   }, [mailStatus, mgId]);
 
   return (
@@ -351,7 +306,7 @@ export function GroupForm({
       {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
       <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
         -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
-        <div className={`grid gap-2 ${loadingGrid[0]} ${loadingGrid[1]}`}>
+        <div className={`w-full h-full flex justify-center items-center gap-x-2`}>
         {
           progresMails.map((pmail: number, idx: number) => {
             const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
@@ -373,7 +328,7 @@ export function GroupForm({
           >
             ตกลง
           </Button>:
-          <Button
+          <Button variant="destructive"
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setMailStatus(1);
@@ -399,7 +354,7 @@ export function GroupForm({
                         field.onChange(e)
                     }} 
                       onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
-                        const documentNo = e.target.value;
+                        const documentNo = e.currentTarget.value;
                         if (e.key === "Enter") {
                           e.preventDefault();
                           try {
@@ -411,7 +366,7 @@ export function GroupForm({
                             if (isAuthError(error))
                               redirectToLogin();
                           }
-                          e.target.blur();
+                          e.currentTarget.blur();
                         }
                       }}
                       onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
@@ -451,7 +406,7 @@ export function GroupForm({
                         field.onChange(e)
                     }}
                       onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
-                        const title = e.target.value;
+                        const title = e.currentTarget.value;
                         if (e.key === "Enter") {
                           e.preventDefault();
                           try {
@@ -463,7 +418,7 @@ export function GroupForm({
                             if (isAuthError(error))
                               redirectToLogin();
                           }
-                          e.target.blur();
+                          e.currentTarget.blur();
                         }
                       }}
                       onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
@@ -580,7 +535,7 @@ export function GroupForm({
             <Button type="submit" className="hidden" ref={submitRef}>Submit</Button>
         </form>
     </Form>
-      <BookCard ispData={isps} groupId={groupId} fileData={fileData}/>
+      <BookCard ispData={isps} groupId={groupId}/>
       { section != '1'? children: <></> }
       { section === '1' && <Textarea className='h-64' placeholder="กรอกข้อความเพื่อส่งเมล..."
         value={textareaValue}
@@ -589,14 +544,14 @@ export function GroupForm({
           if (e.key === "Tab") {
             // Handle tab insertion
             e.preventDefault();
-            const { selectionStart, selectionEnd } = e.target;
+            const { selectionStart, selectionEnd } = e.currentTarget;
             const newValue =
               textareaValue.substring(0, selectionStart) +
               "\t" +
               textareaValue.substring(selectionEnd);
             setTextareaValue(newValue);
             setTimeout(() => {
-              e.target.selectionStart = e.target.selectionEnd = selectionStart + 1;
+              e.currentTarget.selectionStart = e.currentTarget.selectionEnd = selectionStart + 1;
             }, 0);
           } 
           else if (e.key === "Enter" && !e.shiftKey) {
@@ -611,19 +566,19 @@ export function GroupForm({
               if (isAuthError(error))
                 redirectToLogin();
             }
-            e.target.blur();
+            e.currentTarget.blur();
           } 
           else if (e.key === "Enter" && e.shiftKey) {
             // Shift + Enter → newline
             e.preventDefault();
-            const { selectionStart, selectionEnd } = e.target;
+            const { selectionStart, selectionEnd } = e.currentTarget;
             const newValue =
               textareaValue.substring(0, selectionStart) +
               "\n" +
               textareaValue.substring(selectionEnd);
             setTextareaValue(newValue);
             setTimeout(() => {
-              e.target.selectionStart = e.target.selectionEnd = selectionStart + 1;
+              e.currentTarget.selectionStart = e.currentTarget.selectionEnd = selectionStart + 1;
             }, 0);
           }
         }}

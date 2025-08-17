@@ -249,9 +249,9 @@ export async function sendIspMail({
     }); 
 
       if (!res.ok) {
-      if (res.status === 401)
-          throw new AuthError('Authentication fail.')
-      throw new Error('Send mail fail.');
+        if (res.status === 401)
+            throw new AuthError('Authentication fail.')
+        throw new Error('Send mail fail.');
       }
 
       const content = await res.json();

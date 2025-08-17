@@ -1,10 +1,9 @@
 'use client';
 
 import { Input } from "@/components/ui/input";
-import { type Isp, type Group, type GroupFile } from "@/lib/types";
+import { type Isp, type Group } from "@/lib/types";
 import DocumentList from "./document-list/document-list";
 import { GroupForm } from "./group-form";
-import { Date2Thai, Text2Thai } from "@/lib/utils";
 import {useState, useRef, useEffect} from 'react';
 import { RenameGroup } from "./actions/group";
 import { useAppDispatch } from "./store/hooks";
@@ -12,9 +11,10 @@ import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { usePathname, redirect } from 'next/navigation';
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
+import { Date2Thai, Text2Thai } from "@/lib/client/utils";
 
 export default function GroupView(
-  { groupData, isps, fileData}: { groupData: Group | null, isps: Isp[], fileData: GroupFile[] }) {
+  { groupData, isps}: { groupData: Group | null, isps: Isp[] }) {
     const [title, setTitle] = useState(groupData?.name?? 'ไม่มีชื่อ');
     const [onTitleChange, setOnTitleChange] = useState(false);
     const titleRef = useRef<HTMLInputElement>(null);
@@ -85,7 +85,7 @@ export default function GroupView(
             groupData && groupData?.createdAt? Text2Thai(Date2Thai(groupData.createdAt)): '-'
             }</div>
           </div>
-        <GroupForm isps={isps} groupId={(groupData as Group).id} fileData={fileData}>
+        <GroupForm isps={isps} groupId={(groupData as Group).id}>
           <DocumentList data={groupData?.documents} groupId={groupData?.id}/>
         </GroupForm>
         {/* <DragDrop /> */}

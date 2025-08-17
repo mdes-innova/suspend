@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
-import { getMailGroup } from '@/components/actions/mail';
 import MailView from '@/components/mail-view';
 import ReloadPage from '@/components/reload-page';
 import { notFound } from "next/navigation";

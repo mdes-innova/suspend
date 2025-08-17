@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Plus } from "lucide-react";
 import { addToGroup, getGroups } from "../actions/group";
 import { getDocumentList } from "../actions/document";
-import { Datetime2Thai } from "@/lib/utils";
+import { Datetime2Thai } from "@/lib/client/utils";
 import { RootState } from "../store";
 import { type Group, type Document } from "@/lib/types";
 import { isAuthError } from '@/components/exceptions/auth';

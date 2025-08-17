@@ -1,5 +1,3 @@
-import { getDocument } from "@/components/actions/document";
-import { getGroupFromDocument } from "@/components/actions/group";
 import DocumentView from "@/components/document-view";
 import ReloadPage from "@/components/reload-page";
 import { notFound } from "next/navigation";

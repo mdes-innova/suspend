@@ -12,3 +12,4 @@ def create_user_group(sender, instance, created, **kwargs):
     else:
         if created:
             Group.objects.create(name='default', user=instance)
+

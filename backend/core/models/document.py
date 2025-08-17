@@ -4,17 +4,6 @@ from django.core.validators import FileExtensionValidator
 from core.utils import document_file_path
 
 
-# class DocumentCounter(models.Model):
-#     total = models.PositiveIntegerField(default=0)
-
-#     @classmethod
-#     def increment(cls):
-#         counter, created = cls.objects.get_or_create(pk=1)
-#         counter.total += 1
-#         counter.save()
-#         return counter.total
-
-
 class Document(models.Model):
     """Document model class."""
     order_id = models.PositiveIntegerField(editable=False,
@@ -46,11 +35,6 @@ class Document(models.Model):
     kind_name = models.CharField(max_length=128, editable=False,
                                  null=True, default=None)
 
-    # order_number = models.CharField(max_length=32, null=True)
-    # order_date = models.DateField(null=True)
-    # orderred_number = models.CharField(max_length=32, null=True)
-    # orderred_date = models.DateField(null=True)
-
     createdate = models.DateTimeField(null=True, editable=False, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -61,7 +45,13 @@ class Document(models.Model):
 
 
 class DocumentFile(models.Model):
-    original_name = models.CharField(max_length=2000, blank=True, null=True)
+    original_filename = models.CharField(max_length=2000, blank=True, null=True)
+    document = models.OneToOneField(
+        'Document',
+        on_delete=models.CASCADE,
+        related_name='document_file',
+        default=None
+    )
     file = models.FileField(
         upload_to=document_file_path,
         validators=[

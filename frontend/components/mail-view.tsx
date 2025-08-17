@@ -1,7 +1,7 @@
 'use client';
 import {type Mail, Document, MailGroup } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
-import { Date2Thai, Datetime2Thai } from "@/lib/utils"
+import { Date2Thai, Datetime2Thai } from "@/lib/client/utils"
 import { ArrowDownToLine} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { downloadFile } from "./actions/mail";
@@ -33,6 +33,9 @@ export default function MailView({
                 <div>
                     ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][mailGroup.secret as number]}
                 </div>
+                <div>
+                    มาตรา: {['ปกติ', 'มาตรา 15'][mailGroup.section as number]}
+                </div>
             </div>
             <Card>
                 <Table className='overflow-y-hidden px-2'>
@@ -53,13 +56,15 @@ export default function MailView({
                                 <TableCell>
                                     {idx + 1} 
                                 </TableCell>
-                                <TableCell className='max-w-[400px]'>
-                                    <div className='w-full h-full flex'>
-                                    <ArrowDownToLine size={16} className='cursor-pointer'
-                                    onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                                <TableCell className='max-w-[400px] flex flex-col items-start'>
+                                {
+                                    e.mailFiles.map((ee, idx2) => 
+                                    <div className='w-full h-full flex' key={`isp-file-${idx}-${idx2}`}>
+                                        <ArrowDownToLine size={16} className='cursor-pointer'
+                                        onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                                         evt.preventDefault();
-                                        const fileName = e.mailFile.originalFilename;
-                                        const fileId = e.mailFile.id;
+                                        const fileName = ee.originalFilename;
+                                        const fileId = ee.id;
                                         try {
                                             const blob = await downloadFile(fileId as number);
                                             const url = window.URL.createObjectURL(blob);
@@ -71,25 +76,27 @@ export default function MailView({
                                             link.remove();
                                             window.URL.revokeObjectURL(url);
                                         } catch (error) {
-                                            if (isAuthError(error))
-                                                redirectToLogin();
+                                        console.error(error);
+                                        if (isAuthError(error))
+                                            redirectToLogin(); 
                                         }
-                                    }}/>
-                                    <Tooltip>
+                                        }}/>
+                                        <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <p className='w-full truncate'>
-                                            {e.mailFile.originalFilename}
-                                        </p>
+                                            <p className='w-full truncate'>
+                                            {ee.originalFilename}
+                                            </p>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                        <p>{e.mailFile.originalFilename}</p>
+                                            <p>{ee.originalFilename}</p>
                                         </TooltipContent>
-                                    </Tooltip>
-
+                                        </Tooltip>
                                     </div>
-                                    </TableCell>
+                                    )
+                                }
+                                </TableCell>
                                 <TableCell>
-                                    {e.mailFile.isp.name} 
+                                    {e?.isp?.name} 
                                 </TableCell>
                                 <TableCell>
                                     {e.status === "successful"? Datetime2Thai(e.datetime as string): '-'} 

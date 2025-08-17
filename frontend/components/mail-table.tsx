@@ -26,7 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import {useState} from 'react';
 import Link from 'next/link';
 import {useEffect} from 'react';
-import { Datetime2Thai } from "@/lib/utils";
+import { Datetime2Thai } from "@/lib/client/utils";
 import { getMailGroups } from "./actions/mail";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";

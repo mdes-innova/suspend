@@ -28,7 +28,10 @@ services:
     build:
       context: ./backend
     working_dir: /app
-    env_file: .env
+    env_file:
+      - ./.env  
+    environment:
+      DJANGO_ENV: production 
     depends_on:
       db:
         condition: service_healthy

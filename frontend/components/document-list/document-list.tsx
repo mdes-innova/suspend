@@ -28,6 +28,7 @@ import { toggleDataChanged } from "../store/features/group-list-ui-slice";
 import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "../reload-page";
+import { setDocuments } from "../store/features/group-ui-slice";
 
 export default function DocumentList({ data, groupId }: { data: Document[] | undefined, groupId: number | undefined}) {
     const [edit, setEdit] = useState(false);
@@ -46,7 +47,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
     const dataChanged = useAppSelector((state: RootState) => state.documentListUi.dataChanged);
     const docIds = useAppSelector((state: RootState) => state.dialogListUi.docIds)
     const [columns, setColumns] = useState<Document[]>([]);
-    
+
     useEffect(() => {
         setColumns(docData);
     }, [docData]);
@@ -54,10 +55,13 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
     useEffect(() => {
         const updateData = async() => {
             try {
+                const docIds = columns.map((e: Document) => e.id);
                 await addToGroup({
-                    docIds: columns.map((e: Document) => e.id),
+                    docIds,
                     groupId: groupId as number
                 });
+                const updateDocuments = await getDocumentList(docIds);
+                dispatch(setDocuments(updateDocuments));
             } catch (error) {
                 if (isAuthError(error))    
                     redirectToLogin();

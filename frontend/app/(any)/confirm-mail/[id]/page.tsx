@@ -1,5 +1,3 @@
-import { confirm } from '@/components/actions/mail';
-import {type Mail } from '@/lib/types';
 import { Suspense } from 'react';
 import { CircleX, CheckCircle2Icon } from "lucide-react"
 import {
@@ -8,7 +6,6 @@ import {
   AlertTitle,
 } from "@/components/ui/alert"
 import ConfirmLoading from '@/components/loading/confirm';
-import { isAuthError } from '@/components/exceptions/auth';
 
 async function Content({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -18,7 +15,7 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
         const res = await fetch(`${baseUrl}/mail/mails/confirm/`, {
         method: 'POST',
         body: JSON.stringify({
-            id
+            confirmed_uuid: id
         }),
         headers: {
             "Content-Type": "application/json"

@@ -6,7 +6,7 @@ from core.models import (Document, Group,
                          GroupDocument, DocumentFile)
 from .serializer import (
     DocumentSerializer,
-    FileSerializer
+    DocumentFileSerializer
     )
 from rest_framework import (
     viewsets
@@ -88,7 +88,7 @@ class DocumentView(viewsets.ModelViewSet):
                 return Response({"error": "Empty urls."}, status=400)
             else:
                 return Response({"error": "Invalid PDF"}, status=400)
-        serializer = FileSerializer(data=request.data)
+        serializer = DocumentFileSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save(document=document)
@@ -107,7 +107,7 @@ class DocumentView(viewsets.ModelViewSet):
                 original_name=file_obj.name,
                 file=file_obj
             )
-            serializer_data = FileSerializer(document_file).data
+            serializer_data = DocumentFileSerializer(document_file).data
             return Response({
                 'id': serializer_data['id'],
                 'name': serializer_data['original_name'],

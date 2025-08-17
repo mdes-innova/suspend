@@ -48,7 +48,7 @@ class MailViews(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'confirm':
             return [AllowAny()]
-        elif self.action == 'send_mails':
+        elif self.action in ['send_mails', 'send_mail']:
             return super().get_permissions()
         else:
             if self.request.method == 'GET':
@@ -64,7 +64,8 @@ class MailViews(viewsets.ModelViewSet):
     def confirm(self, request):
         confirmed_uuid = request.data.get('confirmed_uuid', None)
         if not confirmed_uuid:
-            Response({'error': 'No confirmed uuid code found.'})
+            Response({'error': 'No confirmed uuid code found.'},
+                     status=status.HTTP_400_BAD_REQUEST)
 
         try:
             mail = self.queryset.get(confirmed_uuid=confirmed_uuid)
@@ -74,7 +75,8 @@ class MailViews(viewsets.ModelViewSet):
                 mail.save(update_fields=['confirmed', 'confirmed_date'])
             return Response(MailSerializer(mail).data)
         except Exception as e:
-            return Response({'error': 'Confirm mail fail.'})
+            return Response({'error': 'Confirm mail fail.'},
+                            status=status.HTTP_400_BAD_REQUEST)
     
     @action(
         detail=False,
@@ -84,11 +86,13 @@ class MailViews(viewsets.ModelViewSet):
     def send_mails(self, request):
         group_id = request.data.get('group_id', None)
         if not group_id:
-            return Response({'error': 'No group id input.'})
+            return Response({'error': 'No group id input.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         try:
             group = Group.objects.get(id=group_id)
         except Group.DoesNotExist:
-            return Response({'error': 'Group not found.'})
+            return Response({'error': 'Group not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         mail_group_id = uuid.uuid4()
         document_no = group.document_no
@@ -139,37 +143,40 @@ class MailViews(viewsets.ModelViewSet):
     )
     def send_mail(self, request):
         mail_group_id = request.data.get('mail_group_id', None)
-        document_id = request.data.get('document_id', None)
         isp_id = request.data.get('isp_id', None)
         section = request.data.get('section', 0)
         try:
             mail_group = MailGroup.objects.get(id=mail_group_id)
             isp = ISP.objects.get(id=isp_id)
-            mail_files = MailFile.objects.filter(isp=isp, mail_group=mail_group)
         except MailGroup.DoesNotExist:
-            return Response({'error': 'Mail group not found.'})
+            return Response({'error': 'Mail group not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         except ISP.DoesNotExist:
-            return Response({'error': 'ISP not found.'})
+            return Response({'error': 'ISP not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({'error': 'Inputs fail.'})
+            return Response({'error': 'Inputs fail.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            mail_file_ids = mail_files.values_list('id', flat=True)
             receiver = isp.users
             data = {
                 'receiver_id': receiver.id,
-                'mail_file_ids': mail_file_ids,
+                'isp_id': isp_id,
                 'mail_group_id': mail_group.id,
-                'document_id': document_id,
                 'section': section
             }
             serializer = MailSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
+                return Response(serializer.data)
             else:
-                return Response({'error': 'Bad request.'})
+                return Response({'error': 'Bad request.'},
+                                status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': 'Send mail fail.'})
+            print(e)
+            return Response({'error': 'Send mail fail.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -214,13 +221,13 @@ class MailViews(viewsets.ModelViewSet):
         if not gmid:
             return Response({
                 'error': 'Mail group id not found.'
-            })
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         mails = Mail.objects.filter(mail_group_id=gmid)
         if not mails or not len(mails):
             return Response({
                 'error': 'Empty mails.'
-            })
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = MailSerializer(mails, many=True) 
         return Response(serializer.data)

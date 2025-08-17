@@ -29,7 +29,7 @@ export async function getGroups() {
 export async function getGroupList() {
   try {
     const access = await getAccess();
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/group-list/`, {
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`

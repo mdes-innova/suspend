@@ -1,6 +1,6 @@
 'use client';
 
-import { type Group } from "@/lib/types";
+import { User, type Group } from "@/lib/types";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -30,7 +30,7 @@ import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slic
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect, useRef} from 'react';
 import { getGroupList, RemoveGroup, RenameGroup } from "./actions/group";
-import { Datetime2Thai } from "@/lib/utils";
+import { Datetime2Thai } from "@/lib/client/utils";
 import { setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
 import {
   Sheet,
@@ -126,7 +126,39 @@ const columns: ColumnDef<Group>[] = [
       const docs = row.getValue('จำนวนคำสั่งศาล') as unknown[] | undefined;
       return <div>{docs?.length ?? '-'}</div>;
     },
-  }, {
+  },
+  {
+    id: 'ผู้ใช้งาน',
+    accessorKey: "user",
+    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
+      const usernameA = rowA.getValue<User | null>(columnId)?.username ?? '-';
+      const usernameB = rowB.getValue<User | null>(columnId)?.username ?? '-';
+      return usernameA < usernameB ? -1 : usernameA > usernameB ? 1 : 0;
+    },
+    header: ({ column }: { column: Column<Group> }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          ผู้ใช้งาน 
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }: { row: Row<Group> }) => {
+      const original = row.original;
+      const username = original?.user?.username?? '-';
+      return (
+        <div>
+          {username}
+          </div>
+      );
+    },
+  },
+  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }: { row: Row<Group> }) => {
@@ -244,9 +276,12 @@ export default function GroupTable() {
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
+    const user = useAppSelector((state: RootState) => state.userAuth.user);
     const table = useReactTable({
         data: tableData,
-        columns,
+        columns: user?.isSuperuser?
+          columns:
+          columns?.filter((_, idx: number) => idx != columns.length - 2),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),

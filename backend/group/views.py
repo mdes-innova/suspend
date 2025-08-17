@@ -19,13 +19,16 @@ class GroupView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get group object data."""
-        data = self.queryset.filter(user=self.request.user)
-        return data
+        user = self.request.user
+        if user.is_superuser:
+            return self.queryset.filter()
+        else:
+            return self.queryset.filter(user=user)
 
     def perform_update(self, serializer):
         group = serializer.instance
         user = self.request.user
-        if user != group.user or not user.is_superuser:
+        if user != group.user and not user.is_superuser:
             raise PermissionDenied("You are not allowed to update this group.")
         serializer.save()
 
@@ -224,7 +227,7 @@ class GroupFileView(viewsets.ModelViewSet):
         except Exception as e:
             return Response({
                 'error': str(e)
-            })
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     def get_permissions(self):
         if self.action == 'confirm':

@@ -1,7 +1,3 @@
-import { getGroup, postGroup } from "@/components/actions/group";
-import { GetFilesFromGroup } from "@/components/actions/group-file";
-import { getIsps } from "@/components/actions/isp";
-import { getCurrentDate } from "@/components/actions/utils";
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import GroupView from "@/components/group-view";
 import ReloadPage from "@/components/reload-page";
@@ -93,25 +89,12 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
 
     const isps = await resIsps.json();
 
-    const resGFs = await fetch(`${baseUrl}/group/files/by-group/${gid}/`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${access}`
-      }
-    }); 
-    if (!resGFs.ok) {
-      if (resGFs.status === 401)
-        throw new AuthError('Authenticatioin fail.');
-      throw new Error('Get files from a group failed');
-    }
-
-    const fileData = await resGFs.json();
-
     return (
-      <GroupView groupData={groupData} isps={isps} fileData={fileData}/>
+      <GroupView groupData={groupData} isps={isps} />
     );
 
   } catch (error) {
+    console.log(error)
     if (isAuthError(error)) {
       return <ReloadPage />;
     } else {

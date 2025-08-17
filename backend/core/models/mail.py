@@ -73,16 +73,17 @@ class MailGroup(models.Model):
 
 class Mail(models.Model):
     datetime = models.DateTimeField(null=True)
+    isp = models.ForeignKey(
+        'ISP',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='mails'  
+    )
     mail_group = models.ForeignKey(
         MailGroup,
         related_name='mails',
         on_delete=models.CASCADE,
         default=None
-    )
-    document = models.ForeignKey(
-        'Document',
-        null=True,
-        on_delete=models.SET_NULL
     )
     receiver = models.ForeignKey(
         "User",

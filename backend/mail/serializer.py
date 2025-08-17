@@ -31,6 +31,9 @@ class MailFileSerializer(serializers.ModelSerializer):
     mail_group = GroupSerializer(
         read_only=True
     )
+    isp = ISPSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = MailFile
@@ -63,13 +66,6 @@ class MailSerializer(serializers.ModelSerializer):
         write_only=True
     )
     receiver = UserSerializer(read_only=True)
-    mail_file_ids = serializers.PrimaryKeyRelatedField(
-        queryset=MailFile.objects.all(),
-        write_only=True,
-        many=True,
-        required=False,
-        allow_null=True
-    )
     mail_files = MailFileSerializer(
         read_only=True,
         many=True
@@ -84,51 +80,66 @@ class MailSerializer(serializers.ModelSerializer):
         read_only=True
     )
     mail_group_id = serializers.UUIDField(write_only=True)
-    document_id = serializers.PrimaryKeyRelatedField(
-        queryset=Document.objects.all(),
+    isp_id = serializers.PrimaryKeyRelatedField(
         write_only=True,
-        allow_null=True
+        queryset=ISP.objects.all()
     )
-    document = DocumentSerializer(
+    isp = ISPSerializer(
         read_only=True
     )
-    section = serializers.IntegerField()
 
     class Meta:
         model = Mail
-        fields = ['id', 'receiver_id', 'receiver',
+        fields = ['id', 'receiver_id', 'receiver', 'isp_id', 'isp',
                   'status', 'datetime', 'confirmed', 'confirmed_uuid',
                   'confirmed_date', 'created_at', 'modified_at', 'mail_files',
-                  'mail_group_id', 'document_id', 'document', 'section']
+                  'mail_group_id']
         read_only_fields = ['id', 'receiver', 'mail_file', 'created_at',
                             'modified_at', 'confirmed_date', 'mail_files',
                             'confirmed', 'confirmed_uuid', 'status',
-                            'datetime', 'document']
+                            'datetime', 'isp']
 
     def create(self, validated_data):
-        mail_files = validated_data.pop('mail_file_ids', None)
         receiver = validated_data.pop('receiver_id')
         mail_group_id = validated_data.pop('mail_group_id')
-        document = validated_data.pop('document_id', None)
-        section = validated_data.data.pop('section', 0)
+        isp = validated_data.pop('isp_id', None)
         mail_group = MailGroup.objects.get(id=mail_group_id)
+        group = mail_group.group
         mail = Mail.objects.create(
             receiver=receiver,
             confirmed=False,
             mail_group=mail_group,
-            document=document,
+            isp=isp,
             **validated_data
         )
-        if mail_files:
-            for mail_file in mail_files.objects.all():
-                mail_file.mail = mail
-                mail_file.save(update_fields=['mail'])
+
+        mail_files = []
+        group_files_isp = group.group_files.filter(isp=isp)
+        if group:
+            for group_file in group_files_isp:
+                if group_file:
+                    filename = group_file.original_filename
+                    mail_file = MailFile.objects.create(
+                        mail_group=mail_group,
+                        mail=mail,
+                        isp=isp,
+                        original_filename=filename
+                    )
+
+                    gf_file = group_file.file
+                    if gf_file:
+                        mail_file.file.save(
+                            filename,
+                            gf_file.file,
+                            save=True
+                        )
+                    mail_files.append(mail_file)
 
         try:
-            if (section == 0):
-                send_email(mail, mail_group, mail_files)
+            if (mail_group.section == 0):
+                send_email(mail, mail_group)
             else:
-                send_email(mail, mail_group, mail_files)
+                send_email(mail, mail_group)
             mail.status = MailStatus.SUCCESSFUL
             mail.datetime = timezone.now()
         except Exception as e:
@@ -161,9 +172,9 @@ class MailGroupSerializer(serializers.ModelSerializer):
         model = MailGroup
         fields = ['id', 'mails', 'user', 'group_id', 'documents', 'body',
                   'created_at', 'modified_at', 'subject', 'speed', 'name',
-                  'secret', 'document_no', 'document_date', 'group']
+                  'secret', 'document_no', 'document_date', 'group', 'section']
         read_only_fields = ['id', 'mails', 'user', 'created_at', 'name',
-                            'modified_at', 'group', 'documents']
+                            'modified_at', 'group', 'documents', 'section']
     
     def create(self, validated_data):
         group = validated_data.pop('group_id')
@@ -175,6 +186,7 @@ class MailGroupSerializer(serializers.ModelSerializer):
                 document_date=group.document_date,
                 body=group.body,
                 name=group.name,
+                section=group.section,
                 **validated_data 
             )
         created_mailgroup.documents.set(group.documents.all())

@@ -6,6 +6,7 @@ from core.models import Group, Document, GroupDocument, GroupFile, ISP
 from document.serializer import DocumentSerializer
 from user.serializer import UserSerializer
 from isp.serializer import ISPSerializer
+from .utils import create_document_file
 
 
 class GroupFileSerializer(serializers.ModelSerializer):
@@ -14,13 +15,21 @@ class GroupFileSerializer(serializers.ModelSerializer):
         write_only=True
     )
     isp = ISPSerializer(read_only=True)
+    size = serializers.SerializerMethodField()
 
     class Meta:
         model = GroupFile
         fields = ['id', 'isp_id', 'isp', 'original_filename',
-                  'created_at', 'modified_at']
+                  'created_at', 'modified_at', 'size']
         read_only_fields = ['id', 'isp', 'file', 'created_at',
-                            'modified_at']
+                            'modified_at', 'size']
+    
+    
+    def get_size(self, obj):
+        if obj.file:
+            return obj.file.size
+        return None
+
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -42,6 +51,7 @@ class GroupSerializer(serializers.ModelSerializer):
     documents = DocumentSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
     group_files = GroupFileSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Group
@@ -72,6 +82,9 @@ class GroupSerializer(serializers.ModelSerializer):
         if documents:
             try:
                 if mode == 'append':
+                    for document in documents:
+                        if not hasattr(document, 'document_file'):
+                            create_document_file(document)
                     had_doc_ids = set(
                         GroupDocument.objects
                         .filter(group=instance)
@@ -84,9 +97,15 @@ class GroupSerializer(serializers.ModelSerializer):
                     ])
 
                 elif mode == 'remove':
+                    for document in documents:
+                        if hasattr(document, 'document_file'):
+                            document.document_file.delete()
                     GroupDocument.objects.filter(group=instance, document__in=documents).delete()
 
-                else:  # reset
+                else:
+                    for document in documents:
+                        if not hasattr(document, 'document_file'):
+                            create_document_file(document)
                     GroupDocument.objects.filter(group=instance).delete()
                     GroupDocument.objects.bulk_create([
                         GroupDocument(group=instance, document=doc, user=user)

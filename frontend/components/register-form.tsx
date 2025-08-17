@@ -30,30 +30,15 @@ import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { isAuthError } from '@/components/exceptions/auth';
 import { registerUser } from "./actions/user";
-import { type UserRegister, type Isp } from "@/lib/types";
+import { type Isp } from "@/lib/types";
 import { redirectToLogin } from "./reload-page";
+import { useEffect } from 'react';
 
 type TheUser = {
   username: string,
   password: string,
   confirmPassword: string
 }
-
-const FormSchema = z.object({
-  username: z.string().min(2, {
-    message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
-  }),
-  password: z.string().min(6, {
-    message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
-  }),
-  confirmPassword: z.string(),
-  email: z.string().email({
-    message: "กรุณากรอกอีเมลที่ถูกต้อง",
-  }),
-}).refine((data: TheUser) => data.password === data.confirmPassword, {
-  path: ["confirmPassword"],
-  message: "รหัสผ่านไม่ตรงกัน",
-});
 
 
 export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
@@ -63,7 +48,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
   const [success, setSuccess] = useState(false);
   const [isp, setIsp] = useState("");
 
-  const FormSchema = userType === 'user'? z.object({
+  const UserFormSchema = z.object({
     username: z.string().min(2, {
       message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
     }),
@@ -77,7 +62,9 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
   }).refine((data: TheUser) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],
     message: "รหัสผ่านไม่ตรงกัน",
-  }): z.object({
+  });
+
+  const StaffFormSchema = z.object({
     username: z.string().min(2, {
       message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
     }),
@@ -90,38 +77,42 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
     message: "รหัสผ่านไม่ตรงกัน",
   });
 
-  const form = userType === 'user'? useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
+  const FormSchema = z.union([UserFormSchema, StaffFormSchema]);
+  type FormValues = z.infer<typeof FormSchema>;
+
+  const userDefaults = {
       username: "",
       password: "",
       confirmPassword: "",
       email: ""
-    },
-  }): useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
+  };
+
+  const staffDefaults = {
       username: "",
       password: "",
       confirmPassword: "",
-      email: ""
-    },
+  }
+  const form = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: userType === 'user'? staffDefaults : userDefaults,
   });
 
-  const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    const extendedValues: UserRegister = userType === 'user'? {
-      username: values.username,
-      password: values.password,
-      email: values.email,
-      isStaff: false
-    }: {
-      username: values.username,
-      password: values.password,
-      isStaff: true
-    };
+  useEffect(() => {
+    form.reset(userType === 'user'? staffDefaults : userDefaults as FormValues);
+  }, [userType]);
 
-    if (isp != "")
-      extendedValues['ispId'] = parseInt(isp);
+  const onSubmit = async (values: FormValues) => {
+    const email = 'email' in values ? values.email : undefined;
+    const extendedValues  = {
+      username: values.username,
+      password: values.password,
+      email,
+      ispId: isp != ""? parseInt(isp): undefined,
+      isStaff: userType === 'user'? false: true
+    }
+
+    // if (isp != "")
+    //   extendedValues['ispId'] = parseInt(isp);
 
     try {
       await registerUser(extendedValues);

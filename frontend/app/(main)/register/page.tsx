@@ -2,7 +2,6 @@ import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { notFound } from "next/navigation";
 import RegisterForm from "@/components/register-form"
 import { Suspense } from 'react';
-import { getIsps } from "@/components/actions/isp";
 import ReloadPage from "@/components/reload-page";
 import { getAccess } from '../page';
 

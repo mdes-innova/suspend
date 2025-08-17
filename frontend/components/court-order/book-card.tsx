@@ -37,62 +37,80 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
-import { type GroupFile, type Isp } from "@/lib/types";
-import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
+import {  type GroupFile, type Isp, type GroupFileTable, type Document } from "@/lib/types";
+import { downloadFile, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "../reload-page";
+import { useAppSelector } from "../store/hooks";
+import { RootState } from "../store";
 
-type TableType = {
-  isp: Isp,
-  groupFiles: GroupFile[]
-}
-
-async function getTableData (groupId: number, ispData: Isp[]){
+async function getTableData(
+  groupId: number,
+  ispData: Isp[],
+  groupDocuments: Document[]
+): Promise<GroupFileTable[]> {
   try {
-    const data: GroupFile[] = await GetFilesFromGroup(groupId);
-    const ispIds = [...new Set(data.map((e) => e.isp?.id))];
-    const modData = ispIds.map((ispId) => {
-      const isp = ispData.find((e) => e.id === ispId);
+    let size = 0;
+
+    const groupFilesData: GroupFile[] = (await GetFilesFromGroup(groupId)) ?? [];
+
+    for (const f of groupFilesData) size += (f?.size ?? 0);
+    for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
+
+    const ispIds = Array.from(
+      new Set(
+        groupFilesData
+          .map(e => e.isp?.id)
+          .filter((id): id is number => id != null)
+      )
+    );
+
+    // Build rows; flatMap avoids returning [] inside map (no union with never[])
+    const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
+      const isp = ispData.find(e => e.id === ispId);
       if (!isp) return [];
-      return (
-        {
-          isp,
-          groupFiles: data.filter((ee) => ee.isp?.id === ispId)
-        }
-      );
+      return [{
+        isp,
+        groupFiles: groupFilesData.filter(ee => ee.isp?.id === ispId),
+        size,
+      }];
     });
-    return modData;
+
+    return rows;
   } catch (error) {
-    if (isAuthError(error)) redirectToLogin();
+    if (isAuthError(error)) {
+      redirectToLogin();
+    }
+    // Always return an array to satisfy Promise<GroupFileTable[]>
+    return [];
   }
 }
 
-export function BookCard({ispData, fileData, groupId}:
-  {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
+export function BookCard({ispData, groupId}:
+  {ispData: Isp[], groupId: number}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const [ispSelected, setIspSelected] = useState<Isp | null>(null);
   const [selectedIsps, setSelectedIsps] = useState<Isp[]>([]);
-  const [tableData, setTableData] = useState<TableType[]>([]);
+  const [tableData, setTableData] = useState<GroupFileTable[]>([]);
   const [openNew, setOpenNew] = useState<number | null>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [filename, setFilename] = useState<string | null>(null);
 
+  const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
 
   useEffect(() => {
     const getData = async() => {
-      const data = await getTableData(groupId, ispData);
-      setTableData(data);
+      const data: GroupFileTable[] = await getTableData(groupId, ispData, groupDocuments);
+      setTableData((data ?? []) as GroupFileTable[]);
     }
 
     getData();
-  }, []);
+  }, [groupDocuments]);
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
-      setFilename(null);
       setIspSelected(null);
       const ispList = tableData
-        ?.map((e: TableType) => e?.isp)
+        ?.map((e: GroupFileTable) => e?.isp)
         .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
 
       if (ispList && ispList.length > 0) {
@@ -102,13 +120,11 @@ export function BookCard({ispData, fileData, groupId}:
       const currentRow = tableData?.[openNew];
       if (!currentRow) return;
       const currentIsp = currentRow.isp;
-      const currentFile = currentRow.originalFilename;
       setIspSelected(currentIsp?? null);
       if (currentIsp)
         setSelectedIsps((prev: Isp[]) => {
           return prev.filter((isp) => isp.id !== currentIsp.id);
         });
-      setFilename(currentFile?? "");
       setNewFiles([]);
     }
 
@@ -117,7 +133,7 @@ export function BookCard({ispData, fileData, groupId}:
 
   useEffect(() => {
     const ispList = tableData
-      ?.map((e: TableType) => e.isp)
+      ?.map((e: GroupFileTable) => e.isp)
       .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
 
     setSelectedIsps(ispList ?? []);
@@ -130,8 +146,8 @@ export function BookCard({ispData, fileData, groupId}:
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full items-start justify-center gap-4">
-          <EditDialog groupId={groupId} filename={filename??""} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
-            selectedIsps={selectedIsps} setFilename={setFilename} setIspSelected={setIspSelected} 
+          <EditDialog groupId={groupId} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
+            selectedIsps={selectedIsps} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
             tableData={tableData} uploadRef={uploadRef}
             newFiles={newFiles} setNewFiles={setNewFiles}
@@ -149,17 +165,18 @@ export function BookCard({ispData, fileData, groupId}:
                 <TableHead className="w-[20px]">#</TableHead>
                 <TableHead className="w-[400px]">ชื่อเอกสาร</TableHead>
                 <TableHead className='w-[200px]'>ISP</TableHead>
+                <TableHead className='w-[50px]'>ขนาดไฟล์</TableHead>
                 <TableHead className="w-[50px] text-right">แก้ไข</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-                {tableData.length > 0 ? (
+                {tableData?.length > 0 ? (
                   <TableData tableData={tableData} setTableData={setTableData} setOpenNew={setOpenNew} 
                      groupId={groupId} ispData={ispData}
                   />
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-4">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
                       No data to display
                     </TableCell>
                   </TableRow>
@@ -174,14 +191,16 @@ export function BookCard({ispData, fileData, groupId}:
 
 function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
   {
-    tableData: TableType[], setTableData: React.Dispatch<React.SetStateAction<TableType[]>>,
+    tableData: GroupFileTable[], setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
     setOpenNew: React.Dispatch<React.SetStateAction<number | null>>, groupId: number,
     ispData: Isp[]
   }) {
+    const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
+
   return (
     <>
       {
-        tableData.map((e: TableType, idx: number) => {
+        tableData.map((e: GroupFileTable, idx: number) => {
           return <TableRow key={`table-cell-${idx}`}>
             <TableCell className='w-[20px]'>
               {idx + 1}
@@ -226,6 +245,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
               }
             </TableCell>
             <TableCell className='w-[200px]'>{e?.isp?.name?? '-'}</TableCell>
+            <TableCell className='w-[200px]'>{e?.size? (e.size/(1024 * 1024)).toFixed(2): '-'} MB</TableCell>
             <TableCell className='w-[200px]'>
               <div className="flex gap-x-1 justify-end">
                 <FilePenLine size={24} className='cursor-pointer'
@@ -241,7 +261,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
                     for (const gf of gfs) {
                       await RemoveFile(gf.id as number);
                     }
-                    const newData = await getTableData(groupId, ispData);
+                    const newData = await getTableData(groupId, ispData, groupDocuments);
                     setTableData(newData);
                   } catch (error) {
                     if (isAuthError(error))
@@ -260,7 +280,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
 }
 
 function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
-  ispData, selectedIsps, filename, setFilename, uploadRef, tableData, setTableData,
+  ispData, selectedIsps, uploadRef, tableData, setTableData,
   newFiles, setNewFiles
 }:
   {
@@ -272,14 +292,13 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
     ispData: Isp[],
     selectedIsps: Isp[],
     setSelectedIsps: React.Dispatch<React.SetStateAction<Isp[]>>,
-    filename: string,
-    setFilename: React.Dispatch<React.SetStateAction<string | null>>,
     uploadRef: React.RefObject<HTMLInputElement | null>,
-    tableData: TableType[],
-    setTableData: React.Dispatch<React.SetStateAction<TableType[]>>,
+    tableData: GroupFileTable[],
+    setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
     newFiles: File[],
     setNewFiles: React.Dispatch<React.SetStateAction<File[]>>
   }) {
+    const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
       if (!open) setOpenNew(null);
@@ -327,7 +346,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                   </div>
                   <div className="grid gap-3">
                     {
-                      openNew === -1?
+                      openNew === -1 || !tableData ?
                       <></>
                       :
                       tableData[openNew as number]?.groupFiles?.map((gf, gfIdx) => {
@@ -362,7 +381,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             <CircleX className='hover:text-red-400' size={24}
                               onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
                               evt.preventDefault();
-                              setTableData((prev: TableType[]) => {
+                              setTableData((prev: GroupFileTable[]) => {
                                 const idx = typeof openNew === "number" ? openNew : -1;
                                 if (idx < 0 || idx >= prev.length) return prev;
                                 
@@ -430,12 +449,11 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                       accept="application/pdf"
                       multiple
                       onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
-                        if (e?.target?.files && e?.target?.files.length > 0) {
-                          setNewFiles((prev: File[]) => {
-                            const updated = [...prev, ...e?.target?.files];
-                            return updated;
-                          });
-                        }
+                        const files = e.currentTarget.files;
+                        if (!files || files.length === 0) return;
+
+                        const selected = Array.from(files);
+                        setNewFiles((prev: File[]) =>  [...prev, ...selected]);
                       }}
                       className="hidden"
                     />
@@ -486,7 +504,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             formData
                           });
                         }
-                        const newData = await getTableData(groupId, ispData);
+                        const newData = await getTableData(groupId, ispData, groupDocuments);
                         setTableData(newData);
                         setOpenNew(null);
                       } catch (error) {
@@ -526,7 +544,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                           });
                         }
 
-                        const newData = await getTableData(groupId, ispData);
+                        const newData = await getTableData(groupId, ispData, groupDocuments);
                         setTableData(newData);
                         setOpenNew(null);
                       } catch (error) {
