@@ -12,18 +12,6 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
   try {
     const access = await getAccess();
     const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-    const resDate = await fetch(`${baseUrl}/current-time/`, {
-      headers: {
-        Authorization: `Bearer ${access}`
-      },
-    });
-      
-    if (!resDate.ok) {
-        if (resDate.status === 401)
-            throw new AuthError('Authentication fail.')
-    }
-
-    const currentDate = await resDate.json();
 
     let groupData: Group | null = null;
 
@@ -47,7 +35,7 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
         }
 
         const createdUntitled = await resUntitled.json();
-        createdUntitled.createdAt = currentDate;
+        createdUntitled.createdAt = new Date().toISOString();
         groupData = createdUntitled;
       } catch (err1) {
         if (isAuthError(err1))
