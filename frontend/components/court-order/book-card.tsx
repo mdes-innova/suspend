@@ -37,22 +37,24 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
-import {  type GroupFile, type Isp, type GroupFileTable, type Document } from "@/lib/types";
+import {  type GroupFile, type Isp, type GroupFileTable, type Group } from "@/lib/types";
 import { downloadFile, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "../reload-page";
 import { useAppSelector } from "../store/hooks";
 import { RootState } from "../store";
+import { getGroup } from "../actions/group";
 
 async function getTableData(
   groupId: number,
   ispData: Isp[],
-  groupDocuments: Document[]
 ): Promise<GroupFileTable[]> {
   try {
     let size = 0;
 
-    const groupFilesData: GroupFile[] = (await GetFilesFromGroup(groupId)) ?? [];
+    const group: Group = await getGroup(groupId);
+    const groupFilesData = group?.groupFiles?? [];
+    const groupDocuments = group?.documents?? [];
 
     const ispIds = Array.from(
       new Set(
@@ -99,7 +101,7 @@ export function BookCard({ispData, groupId}:
 
   useEffect(() => {
     const getData = async() => {
-      const data: GroupFileTable[] = await getTableData(groupId, ispData, groupDocuments);
+      const data: GroupFileTable[] = await getTableData(groupId, ispData);
       setTableData((data ?? []) as GroupFileTable[]);
     }
 
@@ -195,7 +197,6 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
     setOpenNew: React.Dispatch<React.SetStateAction<number | null>>, groupId: number,
     ispData: Isp[]
   }) {
-    const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
 
   return (
     <>
@@ -261,8 +262,8 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
                     for (const gf of gfs) {
                       await RemoveFile(gf.id as number);
                     }
-                    const newData = await getTableData(groupId, ispData, groupDocuments);
-                    setTableData(newData);
+                    const newData: GroupFileTable[] = await getTableData(groupId, ispData);
+                    setTableData((newData?? []) as GroupFileTable[]);
                   } catch (error) {
                     if (isAuthError(error))
                       redirectToLogin(); 
@@ -298,7 +299,6 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
     newFiles: File[],
     setNewFiles: React.Dispatch<React.SetStateAction<File[]>>
   }) {
-    const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
       if (!open) setOpenNew(null);
@@ -504,8 +504,8 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             formData
                           });
                         }
-                        const newData = await getTableData(groupId, ispData, groupDocuments);
-                        setTableData(newData);
+                        const newData: GroupFileTable[] = await getTableData(groupId, ispData);
+                        setTableData((newData?? []) as GroupFileTable[]);
                         setOpenNew(null);
                       } catch (error) {
                         if (isAuthError(error))  
@@ -544,8 +544,8 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                           });
                         }
 
-                        const newData = await getTableData(groupId, ispData, groupDocuments);
-                        setTableData(newData);
+                        const newData: GroupFileTable[] = await getTableData(groupId, ispData);
+                        setTableData((newData?? []) as GroupFileTable[]);
                         setOpenNew(null);
                       } catch (error) {
                         if (isAuthError(error))

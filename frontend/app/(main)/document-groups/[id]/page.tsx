@@ -10,22 +10,27 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
 
   try {
     const access = await getAccess();
-    const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-    const groupEndpoint = id === '-1'? `${baseUrl}/group/groups/`:
-      `${baseUrl}/group/groups/${id}/`;
-    const groupMethod = id === '-1'? 'POST': 'GET';
-    const resGroup = await fetch(groupEndpoint, {
-      method: groupMethod,
-      headers: {
-          Authorization: `Bearer ${access}`
-        },
-    }); 
+    const baseUrl = process.env.NODE_ENV === "development" 
+      ? process.env.BACKEND_URL_DEV 
+      : process.env.BACKEND_URL_PROD;
 
-    if (!resGroup.ok) {
-      if (resGroup.status === 401)
-          throw new AuthError('Authentication fail.')
-        throw new Error('Get a group fail.');
-    }
+    const isNew = id === '-1';
+    const groupEndpoint = isNew 
+      ? `${baseUrl}/group/groups/` 
+      : `${baseUrl}/group/groups/${id}/`;
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${access}`,
+      ...(isNew ? { "Content-Type": "application/json" } : {}),
+    };
+
+    const resGroup = await fetch(groupEndpoint, {
+      method: isNew ? "POST" : "GET",
+      headers,
+      ...(isNew && { body: JSON.stringify({ name: "ไม่มีชื่อ" }) }),
+    });
+
+    if (!resGroup.ok) throw new Error(`Error ${resGroup.status}`);
 
     const groupData = await resGroup.json();
 

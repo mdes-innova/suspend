@@ -9,6 +9,8 @@ import hashlib, base64
 import smtplib, ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
+from io import BytesIO
+from openpyxl import Workbook
 from email import encoders
 from email.header import Header
 import os
@@ -16,6 +18,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Flowable
 from reportlab.lib.styles import getSampleStyleSheet
 from zoneinfo import ZoneInfo
 from decouple import config
+import xml.etree.ElementTree as ET
+import fitz
+from pathlib import Path
 
 
 THAI_DIGITS = str.maketrans('0123456789', '๐๑๒๓๔๕๖๗๘๙')
@@ -137,8 +142,63 @@ def send_email(mail, mail_group):
             part.add_header('Content-Disposition',
                             f'attachment; filename={encoded_filename}')
             msg.attach(part)
-    
+
+        urls = get_urls(file_path)
+        urls_bytes = gen_xlsx_bytes(urls)
+        part = MIMEBase('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        part.set_payload(urls_bytes)
+        encoders.encode_base64(part)
+        filename = '_'.join(['urls', filename])
+        p = Path(filename)
+        xlsx_filename = '.'.join([p.stem, 'xlsx'])
+        encoded_filename = Header(xlsx_filename, 'utf-8').encode()
+        part.add_header('Content-Disposition',
+                        f'attachment; filename={encoded_filename}')
+        msg.attach(part)
+
     server.sendmail(os.environ.get('MAIL_USER'),
                     mail.receiver.email,
                     msg.as_string())
     server.quit()
+
+
+def get_urls(pdf_path):
+    with open(pdf_path, 'rb') as f:
+        pdf_bytes = f.read()
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+
+    file_data = doc.embfile_get(0)
+    xml_string = file_data.decode("utf-8")
+    ns = {'ns': 'https://www.w3schools.com'}
+    root = ET.fromstring(xml_string)
+    order_data = root.find('ns:OrderData', ns)
+
+    domain_list = order_data.find('ns:DomainList', ns)
+    domains = [d.text for d in domain_list.findall('ns:Domain', ns)]
+
+    if not len(domains):
+        raise Exception("Empty urls.")
+
+    return domains
+
+
+def gen_xlsx_bytes(urls):
+    data = [
+        [idx + 1, url] for idx, url in enumerate(urls)
+    ]
+
+    headers = ["ID", "Domain"]
+
+    wb = Workbook()
+    ws = wb.active
+
+    if ws:
+        ws.title = 'Sheet 1'
+        ws.append(headers)
+        for row in data:
+            ws.append(row)
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf.getvalue()

@@ -99,6 +99,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
   useEffect(() => {
     form.reset(userType === 'user'? staffDefaults : userDefaults as FormValues);
+    setIsp('');
   }, [userType]);
 
   const onSubmit = async (values: FormValues) => {
@@ -107,7 +108,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
       username: values.username,
       password: values.password,
       email,
-      ispId: isp != ""? parseInt(isp): undefined,
+      ispId: (isp != "" && userType === 'user')? parseInt(isp): undefined,
       isStaff: userType === 'user'? false: true
     }
 
