@@ -39,14 +39,11 @@ class MailGroup(models.Model):
             ],
          null=True,
     )
-    section = models.IntegerField(
-         validators=[
-            MinValueValidator(0),
-            MaxValueValidator(3)
-            ],
-         null=True,
-         default=0
-    )
+    section = models.ForeignKey(
+        "Section",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='mailgroups')
 
     user = models.ForeignKey(
         "User",

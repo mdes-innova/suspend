@@ -144,7 +144,7 @@ class MailViews(viewsets.ModelViewSet):
     def send_mail(self, request):
         mail_group_id = request.data.get('mail_group_id', None)
         isp_id = request.data.get('isp_id', None)
-        section = request.data.get('section', 0)
+
         try:
             mail_group = MailGroup.objects.get(id=mail_group_id)
             isp = ISP.objects.get(id=isp_id)
@@ -164,7 +164,6 @@ class MailViews(viewsets.ModelViewSet):
                 'receiver_id': receiver.id,
                 'isp_id': isp_id,
                 'mail_group_id': mail_group.id,
-                'section': section
             }
             serializer = MailSerializer(data=data)
             if serializer.is_valid():

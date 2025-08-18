@@ -48,7 +48,7 @@ import { getGroup } from "../actions/group";
 async function getTableData(
   groupId: number,
   ispData: Isp[],
-  section?: string
+  sectionName?: string
 ): Promise<GroupFileTable[]> {
   try {
     let size = 0;
@@ -70,7 +70,8 @@ async function getTableData(
       const isp = ispData.find(e => e.id === ispId);
       const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
       for (const f of groupFilesIsp) size += (f?.size ?? 0);
-      if (section != undefined && section != '' && section != '0') {
+      if (sectionName != undefined && sectionName != '' && sectionName != 'ปกติ') {
+        console.log(sectionName)
         const ispFilesAll = groupFilesData.filter((e) => e?.allIsp);
         for (const f of ispFilesAll) size += (f?.size ?? 0);
       }
@@ -91,49 +92,9 @@ async function getTableData(
   }
 }
 
-async function getFilesAllData(
-  groupId: number,
-  section?: string
-): Promise<GroupFile[]> {
-  try {
-    let size = 0;
 
-    const group: Group = await getGroup(groupId);
-    const groupFilesData = group?.groupFiles?? [];
-    const groupDocuments = group?.documents?? [];
-
-    const ispIds = Array.from(
-      new Set(
-        groupFilesData
-          .map(e => e.isp?.id)
-          .filter((id): id is number => id != null)
-      )
-    );
-    for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
-
-    const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
-      const isp = ispData.find(e => e.id === ispId);
-      const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
-      for (const f of groupFilesIsp) size += (f?.size ?? 0);
-      if (!isp) return [];
-      return [{
-        isp,
-        groupFiles: groupFilesData.filter(ee => ee.isp?.id === ispId),
-        size,
-      }];
-    });
-
-    return rows;
-  } catch (error) {
-    if (isAuthError(error)) {
-      redirectToLogin();
-    }
-    return [];
-  }
-}
-
-export function BookCard({ispData, groupId, section}:
-  {ispData: Isp[], groupId: number, section: string}) {
+export function BookCard({ispData, groupId, sectionName}:
+  {ispData: Isp[], groupId: number, sectionName: string}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const uploadIspAllRef = useRef<HTMLInputElement | null>(null);
   const [ispSelected, setIspSelected] = useState<Isp | null>(null);
@@ -147,12 +108,12 @@ export function BookCard({ispData, groupId, section}:
 
   useEffect(() => {
     const getData = async() => {
-      const data: GroupFileTable[] = await getTableData(groupId, ispData, section);
+      const data: GroupFileTable[] = await getTableData(groupId, ispData, sectionName);
       setTableData((data ?? []) as GroupFileTable[]);
     }
 
     getData();
-  }, [groupDocuments, ispFilesAll, section]);
+  }, [groupDocuments, ispFilesAll, sectionName]);
 
   useEffect(() => {
     const getData = async() => {
@@ -162,7 +123,7 @@ export function BookCard({ispData, groupId, section}:
     }
 
     getData();
-  }, [section]);
+  }, [sectionName]);
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
@@ -211,7 +172,7 @@ export function BookCard({ispData, groupId, section}:
             newFiles={newFiles} setNewFiles={setNewFiles}
             />
           {
-            section != '0' && section != '' &&
+            sectionName != 'ปกติ' && sectionName != '' &&
             <div className="flex flex-col w-full">
               <Button variant='secondary' className="w-fit px-2 py-1" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                 e.preventDefault();
@@ -249,12 +210,12 @@ export function BookCard({ispData, groupId, section}:
               />
               <div className="flex flex-col gap-y-2 mt-4 w-full">
               {
-                ispFilesAll.map((e: GroupFile) => {
+                ispFilesAll.map((e: GroupFile, idx: number) => {
                   const filename = e?.originalFilename?? '-';
                   const fileSplited = filename.split('.');
                   const fileExt = fileSplited[fileSplited.length - 1];
                   const bg = (['xlsx', 'xls'].includes(fileExt))? 'bg-green-200': 'bg-background'
-                  return <div className="flex w-full gap-x-1">
+                  return <div className="flex w-full gap-x-1" key={`isp-file-all-${idx}`}>
                     <div className="w-full">
                       <Button variant="outline" className={`w-full ${bg}`}
                         onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {

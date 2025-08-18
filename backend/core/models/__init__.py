@@ -10,3 +10,4 @@ from .activity import Activity, ActivityType
 from .mail import Mail, MailStatus, MailFile, MailGroup
 from .kind import Kind
 from .request_log import RequestLog
+from .section import Section

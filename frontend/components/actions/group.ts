@@ -431,12 +431,12 @@ export async function updateDocumentSecret({
   }
 }
 
-export async function updateDocumentSection({
+export async function updateSection({
   groupId,
-  section
+  sectionId
 }: {
   groupId: number,
-  section: number
+  sectionId: number
 }) {
 
   try {
@@ -449,7 +449,7 @@ export async function updateDocumentSection({
           "Content-Type": "application/json"
         },
       body: JSON.stringify({
-        section
+        sectionId
       })
     }); 
 

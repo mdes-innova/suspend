@@ -37,7 +37,7 @@ export type Group = {
     speed?: number,
     secret?: number,
     groupFiles?: GroupFile[],
-    section: string
+    section?: Section,
 }
 
 export type User = {
@@ -166,4 +166,10 @@ export type GroupFileTable = {
   isp: Isp,
   groupFiles: GroupFile[],
   size: number
+}
+
+export type Section = {
+  id: number,
+  name: string,
+  createdAt: string
 }

@@ -9,12 +9,14 @@ import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
+import {useRouter} from 'next/navigation';
 
 export default function MailView({
     mailGroup
 }: {
     mailGroup: MailGroup
 }) {
+    const router = useRouter();
     return (
         <div className="w-full h-full flex flex-col gap-y-2">
             <div className="grid grid-cols-2 py-4">
@@ -44,8 +46,8 @@ export default function MailView({
                         <TableHead className="w-[20px] text-left">#</TableHead>
                         <TableHead className="w-[400px] text-left">ชื่อเอกสาร</TableHead>
                         <TableHead className='w-[200px] text-left'>ISP</TableHead>
-                        <TableHead className="w-[50px] text-left">เวลาที่ส่ง</TableHead>
-                        <TableHead className="w-[50px] text-left">เวลาที่ยืนยัน</TableHead>
+                        <TableHead className="w-[50px] text-left">ส่ง ISP</TableHead>
+                        <TableHead className="w-[50px] text-left">ISP ยืนยัน</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -131,7 +133,12 @@ export default function MailView({
                         {
                             mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0?
                             mailGroup.documents.map((e: Document, idx: number) => 
-                            <TableRow key={`table-row-${idx}`}>
+                            <TableRow key={`table-row-${idx}`} className="cursor-default"
+                                onClick={(evt: React.MouseEvent<HTMLTableRowElement>) => {
+                                    evt.preventDefault();
+                                    router.push(`/document-view/${e.id}`);
+                                }}
+                            >
                                 <TableCell>
                                     {idx + 1} 
                                 </TableCell>

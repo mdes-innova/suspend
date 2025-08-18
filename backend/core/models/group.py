@@ -45,14 +45,13 @@ class Group(models.Model):
             ],
          null=True
     )
-    section = models.IntegerField(
-         validators=[
-            MinValueValidator(0),
-            MaxValueValidator(3)
-            ],
-         null=True,
-         default=0
-    )
+    section = models.ForeignKey(
+        "Section",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='groups'
+        )
+
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
