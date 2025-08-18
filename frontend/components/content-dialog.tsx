@@ -194,7 +194,29 @@ export const columns: ColumnDef<Document>[] = [
           </div>
       );
     },
-  }, 
+  }, {
+    id: 'ประเภท',
+    accessorKey: "kindName",
+    header: ({ column }: { column: Column<Document> }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          ประเภท
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }: { row: Row<Document> }) => {
+      return (
+        <div>
+          {row.getValue('ประเภท')?? '-'}
+          </div>
+      );
+    },
+  },
 ]
 
 export default function ContentDialog({data}: {data: Document[]}) {
@@ -257,7 +279,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown />
+                คอลัมน์<ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

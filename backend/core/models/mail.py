@@ -124,9 +124,13 @@ class MailFile(models.Model):
     file = models.FileField(
         upload_to=mail_file_path,
         validators=[
-            FileExtensionValidator(allowed_extensions=['pdf'])
+            FileExtensionValidator(allowed_extensions=['pdf', 'xlsx', 'xls'])
         ],
         blank=True,
+        null=True
+    )
+    all_isp = models.BooleanField(
+        default=False,
         null=True
     )
 

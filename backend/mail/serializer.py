@@ -87,10 +87,14 @@ class MailSerializer(serializers.ModelSerializer):
     isp = ISPSerializer(
         read_only=True
     )
+    all_isp = serializers.BooleanField(
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = Mail
-        fields = ['id', 'receiver_id', 'receiver', 'isp_id', 'isp',
+        fields = ['id', 'receiver_id', 'receiver', 'isp_id', 'isp', 'all_isp',
                   'status', 'datetime', 'confirmed', 'confirmed_uuid',
                   'confirmed_date', 'created_at', 'modified_at', 'mail_files',
                   'mail_group_id']

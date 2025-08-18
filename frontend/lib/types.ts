@@ -118,7 +118,8 @@ export type GroupFile = {
   group?: Group,
   file?: Blob,
   originalFilename?: string,
-  size: number
+  size: number,
+  allIsp?: boolean
 }
 
 export type StaffMail = {

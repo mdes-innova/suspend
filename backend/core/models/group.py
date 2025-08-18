@@ -77,9 +77,13 @@ class GroupFile(models.Model):
     file = models.FileField(
         upload_to=group_file_path,
         validators=[
-            FileExtensionValidator(allowed_extensions=['pdf'])
+            FileExtensionValidator(allowed_extensions=['pdf', 'xlsx', 'xls'])
         ],
         blank=True,
+        null=True
+    )
+    all_isp = models.BooleanField(
+        default=False,
         null=True
     )
 

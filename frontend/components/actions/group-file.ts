@@ -32,6 +32,7 @@ export async function uploadFile({
 }) {
   try {
     const access = await getAccess();
+    console.log(formData);
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/upload/`, {
       method: "POST",
       body: formData,

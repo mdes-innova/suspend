@@ -48,7 +48,53 @@ import { getGroup } from "../actions/group";
 async function getTableData(
   groupId: number,
   ispData: Isp[],
+  section?: string
 ): Promise<GroupFileTable[]> {
+  try {
+    let size = 0;
+
+    const group: Group = await getGroup(groupId);
+    const groupFilesData = group?.groupFiles?? [];
+    const groupDocuments = group?.documents?? [];
+
+    const ispIds = Array.from(
+      new Set(
+        groupFilesData
+          .map(e => e.isp?.id)
+          .filter((id): id is number => id != null && id != undefined)
+      )
+    );
+    for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
+
+    const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
+      const isp = ispData.find(e => e.id === ispId);
+      const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
+      for (const f of groupFilesIsp) size += (f?.size ?? 0);
+      if (section != undefined && section != '' && section != '0') {
+        const ispFilesAll = groupFilesData.filter((e) => e?.allIsp);
+        for (const f of ispFilesAll) size += (f?.size ?? 0);
+      }
+      if (!isp) return [];
+      return [{
+        isp,
+        groupFiles: groupFilesData.filter(ee => ee.isp?.id === ispId),
+        size,
+      }];
+    });
+
+    return rows;
+  } catch (error) {
+    if (isAuthError(error)) {
+      redirectToLogin();
+    }
+    return [];
+  }
+}
+
+async function getFilesAllData(
+  groupId: number,
+  section?: string
+): Promise<GroupFile[]> {
   try {
     let size = 0;
 
@@ -65,7 +111,6 @@ async function getTableData(
     );
     for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
 
-    // Build rows; flatMap avoids returning [] inside map (no union with never[])
     const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
       const isp = ispData.find(e => e.id === ispId);
       const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
@@ -83,30 +128,41 @@ async function getTableData(
     if (isAuthError(error)) {
       redirectToLogin();
     }
-    // Always return an array to satisfy Promise<GroupFileTable[]>
     return [];
   }
 }
 
-export function BookCard({ispData, groupId}:
-  {ispData: Isp[], groupId: number}) {
+export function BookCard({ispData, groupId, section}:
+  {ispData: Isp[], groupId: number, section: string}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
+  const uploadIspAllRef = useRef<HTMLInputElement | null>(null);
   const [ispSelected, setIspSelected] = useState<Isp | null>(null);
   const [selectedIsps, setSelectedIsps] = useState<Isp[]>([]);
   const [tableData, setTableData] = useState<GroupFileTable[]>([]);
   const [openNew, setOpenNew] = useState<number | null>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [ispFilesAll, setIspFilesAll] = useState<GroupFile[]>([]);
 
   const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
 
   useEffect(() => {
     const getData = async() => {
-      const data: GroupFileTable[] = await getTableData(groupId, ispData);
+      const data: GroupFileTable[] = await getTableData(groupId, ispData, section);
       setTableData((data ?? []) as GroupFileTable[]);
     }
 
     getData();
-  }, [groupDocuments]);
+  }, [groupDocuments, ispFilesAll, section]);
+
+  useEffect(() => {
+    const getData = async() => {
+      const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+      const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
+      setIspFilesAll(allFilesIsp);
+    }
+
+    getData();
+  }, [section]);
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
@@ -140,7 +196,7 @@ export function BookCard({ispData, groupId}:
 
     setSelectedIsps(ispList ?? []);
   }, [tableData]);
-
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -154,7 +210,97 @@ export function BookCard({ispData, groupId}:
             tableData={tableData} uploadRef={uploadRef}
             newFiles={newFiles} setNewFiles={setNewFiles}
             />
-      
+          {
+            section != '0' && section != '' &&
+            <div className="flex flex-col w-full">
+              <Button variant='secondary' className="w-fit px-2 py-1" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                if (uploadIspAllRef.current) uploadIspAllRef.current.click();
+              }}>อัพโหลดเอกสาร</Button>
+              <Input
+                ref={uploadIspAllRef}
+                id="isp-all-pdf-upload"
+                type="file"
+                accept=".pdf,.xlsx,.xls"
+                multiple
+                onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
+                  const files = e.currentTarget.files;
+                  if (!files || files.length === 0) return;
+
+                  const selected: File[] = Array.from(files);
+                  Promise.all(
+                    selected.map(async (file: File) => {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      formData.append("all_isp", String(true));
+                      formData.append("group", String(groupId));
+                      
+                      await uploadFile({
+                        formData
+                      });
+                      
+                      const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+                      const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
+                      setIspFilesAll(allFilesIsp);
+                    })
+                  );
+                }}
+                className="hidden"
+              />
+              <div className="flex flex-col gap-y-2 mt-4 w-full">
+              {
+                ispFilesAll.map((e: GroupFile) => {
+                  const filename = e?.originalFilename?? '-';
+                  const fileSplited = filename.split('.');
+                  const fileExt = fileSplited[fileSplited.length - 1];
+                  const bg = (['xlsx', 'xls'].includes(fileExt))? 'bg-green-200': 'bg-background'
+                  return <div className="flex w-full gap-x-1">
+                    <div className="w-full">
+                      <Button variant="outline" className={`w-full ${bg}`}
+                        onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                        evt.preventDefault();
+                        const fileId = e.id;
+                        try {
+                          const blob = await downloadFile(fileId as number);
+                          const url = window.URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.setAttribute("download", `${filename}`);
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                          window.URL.revokeObjectURL(url);
+                        } catch (error) {
+                        console.error(error);
+                        if (isAuthError(error))
+                          redirectToLogin(); 
+                        }
+                      }}  
+                      >
+                        {filename}
+                      </Button>
+                    </div>
+                    <div className="w-10">
+                      <Button variant="destructive" className="w-full"
+                        onClick={async(evt: React.MouseEvent<HTMLButtonElement>) => {
+                          evt.preventDefault();
+                          if (e?.id)
+                            await RemoveFile(e?.id);
+                          const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+                          const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
+                          setIspFilesAll(allFilesIsp);
+                        }}
+                      >
+                        <CircleX />
+                      </Button>
+                    </div>
+                  </div>
+                })
+              }
+              </div>
+            </div>
+          }
+
           <Button className="w-fit" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             setOpenNew(-1);

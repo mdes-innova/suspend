@@ -535,7 +535,7 @@ export function GroupForm({
             <Button type="submit" className="hidden" ref={submitRef}>Submit</Button>
         </form>
     </Form>
-      <BookCard ispData={isps} groupId={groupId}/>
+      <BookCard ispData={isps} groupId={groupId} section={section}/>
       { section != '1'? children: <></> }
       { section === '1' && <Textarea className='h-64' placeholder="กรอกข้อความเพื่อส่งเมล..."
         value={textareaValue}

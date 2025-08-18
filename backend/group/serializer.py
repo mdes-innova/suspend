@@ -16,14 +16,17 @@ class GroupFileSerializer(serializers.ModelSerializer):
     )
     isp = ISPSerializer(read_only=True)
     size = serializers.SerializerMethodField()
+    all_isp = serializers.BooleanField(
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = GroupFile
         fields = ['id', 'isp_id', 'isp', 'original_filename',
-                  'created_at', 'modified_at', 'size']
+                  'created_at', 'modified_at', 'size', 'all_isp']
         read_only_fields = ['id', 'isp', 'file', 'created_at',
                             'modified_at', 'size']
-    
     
     def get_size(self, obj):
         if obj.file:
