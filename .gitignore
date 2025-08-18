@@ -9,6 +9,8 @@ backend/media/
 backend/uploads/
 backend/pdfs/
 backend/local_settings.py
+backend/Dockerfile
+backend/scripts/
 
 # Django Migrations (optional)
 backend/**/migrations/__pycache__/
@@ -24,6 +26,7 @@ frontend/npm-debug.log
 frontend/yarn-debug.log
 frontend/yarn-error.log
 frontend/package-lock.json
+frontend/Dockerfile
 
 # === Global Python envs ===
 .venv/
@@ -38,6 +41,7 @@ venv/
 # === Docker-related ===
 .dockerignore
 docker-compose.override.yml
+docker-compose.yaml
 volumes/
 postgres_data/
 Dockerfile
