@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
-import MailView from '@/components/mail-view';
+import MailGroupView from '@/components/mailgroup-view';
 import ReloadPage from '@/components/reload-page';
 import { notFound } from "next/navigation";
 import { getAccess } from '../../page';
@@ -30,7 +30,7 @@ async function MailContent({params}: {params: Promise<{ id: string }>}) {
 
     return (
       <div className='w-full h-full flex flex-col px-2'>
-        <MailView mailGroup={data} />
+        <MailGroupView mailGroup={data} />
       </div>
     );
   } catch (error) {

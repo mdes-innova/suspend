@@ -4,6 +4,10 @@ from django.db.models.functions import Lower
 
 
 class Section(models.Model):
+    user = models.ForeignKey("User",
+                            null=True,
+                            default=None,
+                             on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
@@ -11,8 +15,8 @@ class Section(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                Lower('name'),
-                name='unique_section_name_ci'
+                Lower('name'), 'user',
+                name='unique_section_name_user_ci'
             )
         ]
 

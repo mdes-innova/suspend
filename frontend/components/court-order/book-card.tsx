@@ -36,14 +36,15 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table";
-import { useRef, useState,  ChangeEvent, useEffect } from "react";
+import { useRef, useState,  ChangeEvent, useEffect, useCallback } from "react";
 import {  type GroupFile, type Isp, type GroupFileTable, type Group } from "@/lib/types";
-import { downloadFile, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
-import { isAuthError } from '@/components/exceptions/auth';
+import { downloadFile, GetFilesFromGroup, RemoveFile } from "../actions/group-file";
+import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "../reload-page";
 import { useAppSelector } from "../store/hooks";
 import { RootState } from "../store";
 import { getGroup } from "../actions/group";
+import { getAccess } from "../actions/auth";
 
 async function getTableData(
   groupId: number,
@@ -157,6 +158,32 @@ export function BookCard({ispData, groupId, sectionName}:
 
     setSelectedIsps(ispList ?? []);
   }, [tableData]);
+
+  const uploadFile = useCallback(async(formData: FormData) => {
+    try {
+      const backendBaseUrl = process.env.NODE_ENV === "development"?
+        process.env.NEXT_PUBLIC_BACKEND_DEV: process.env.NEXT_PUBLIC_BACKEND_PROD;
+
+      const access = await getAccess();
+      const response = await fetch(`${backendBaseUrl}/group/files/upload/`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Authorization": `Bearer ${access}`
+        }
+      }); 
+
+      if (!response.ok) {
+        if (response.status === 401)
+          throw new AuthError('Authenticatioin fail.');
+        throw new Error('Upload fail.');
+      }
+    } catch (error) {
+      if (isAuthError(error)) redirectToLogin();
+      else throw new Error("Upload fail.");
+      
+    }
+  }, []);
   
   return (
     <Card className="w-full">
@@ -169,7 +196,7 @@ export function BookCard({ispData, groupId, sectionName}:
             selectedIsps={selectedIsps} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
             tableData={tableData} uploadRef={uploadRef}
-            newFiles={newFiles} setNewFiles={setNewFiles}
+            newFiles={newFiles} setNewFiles={setNewFiles} uploadFile={uploadFile}
             />
           {
             sectionName != 'ปกติ' && sectionName != '' &&
@@ -187,24 +214,25 @@ export function BookCard({ispData, groupId, sectionName}:
                 onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
                   const files = e.currentTarget.files;
                   if (!files || files.length === 0) return;
-
-                  const selected: File[] = Array.from(files);
-                  Promise.all(
-                    selected.map(async (file: File) => {
+                  try {
+                    const selected: File[] = Array.from(files);
+                    for (const nf of selected) {
                       const formData = new FormData();
-                      formData.append("file", file);
+                      formData.append("file", nf);
                       formData.append("all_isp", String(true));
                       formData.append("group", String(groupId));
-                      
-                      await uploadFile({
-                        formData
-                      });
+
+                      await uploadFile(formData);
                       
                       const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
                       const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
                       setIspFilesAll(allFilesIsp);
-                    })
-                  );
+                    }
+                  } catch (error) {
+                    console.error(error);
+                    if (isAuthError(error)) 
+                      redirectToLogin();
+                  }
                 }}
                 className="hidden"
               />
@@ -389,7 +417,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
 
 function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
   ispData, selectedIsps, uploadRef, tableData, setTableData,
-  newFiles, setNewFiles
+  newFiles, setNewFiles, uploadFile
 }:
   {
     groupId: number,
@@ -404,7 +432,8 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
     tableData: GroupFileTable[],
     setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
     newFiles: File[],
-    setNewFiles: React.Dispatch<React.SetStateAction<File[]>>
+    setNewFiles: React.Dispatch<React.SetStateAction<File[]>>,
+    uploadFile: (form: FormData) => Promise<void>
   }) {
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
@@ -607,9 +636,8 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             return;
                           formData.append("isp", `${ispSelected?.id}`);
                           formData.append("group", `${groupId}`);
-                          await uploadFile({
-                            formData
-                          });
+                          console.log(formData.get('isp'))
+                          await uploadFile(formData);
                         }
                         const newData: GroupFileTable[] = await getTableData(groupId, ispData);
                         setTableData((newData?? []) as GroupFileTable[]);
@@ -646,9 +674,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             return;
                           formData.append("isp", `${ispSelected?.id}`);
                           formData.append("group", `${groupId}`);
-                          await uploadFile({
-                            formData
-                          });
+                          await uploadFile(formData);
                         }
 
                         const newData: GroupFileTable[] = await getTableData(groupId, ispData);

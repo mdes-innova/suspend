@@ -133,11 +133,6 @@ class GroupFileView(viewsets.ModelViewSet):
             raise PermissionDenied("You are not allowed to delete this group file.")
         instance.delete()
 
-    def delete(self, *args, **kwargs):
-        if self.file:
-            self.file.delete(save=False)
-        super().delete(*args, **kwargs)
-
     @action(
        detail=False,
        url_path='by-group/(?P<gid>[^/]+)',

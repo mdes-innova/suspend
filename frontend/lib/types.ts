@@ -141,7 +141,8 @@ export type MailGroup = {
   subject: string,
   mails: Mail[],
   documents: Document[],
-  section: number
+  section: Section,
+  allispMailFiles?: MailFile[]
 }
 
 export type GroupUpdate = {

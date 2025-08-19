@@ -68,7 +68,7 @@ export function DropdownMenuUser() {
           try {
             await logoutUser();
               dispatch(setUser(null));
-              window.location.href = `/login/?path=${pathname}`;
+              window.location.href = `/login`;
           } catch (err) {
             console.error('Logout error:', err);
           }

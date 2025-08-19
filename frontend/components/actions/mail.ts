@@ -221,14 +221,10 @@ export async function downloadFile(fid: number) {
 }
 
 export async function sendIspMail({
-  section,
   mailGroupId,
-  documentId,
   ispId
 }: {
-  section: number,
   mailGroupId: string,
-  documentId?: number,
   ispId: number
 }) {
   try {
@@ -237,9 +233,7 @@ export async function sendIspMail({
     const res = await fetch(`${url}/mail/mails/send-mail/`, {
       method: 'POST',
       body: JSON.stringify({
-        section,
         mailGroupId,
-        documentId,
         ispId
       }),
       headers: {

@@ -25,7 +25,7 @@ export async function getSections() {
     const kinds = await res.json();
     return kinds;
   } catch (error) {
-    return error;
+    throw error;
   }
 }
 
@@ -59,12 +59,11 @@ export async function createSection({
     const section = await res.json();
     return section;
   } catch (error) {
-    return error;
+    throw error;
   }
 }
 
-export async function getSection(sectionId) {
-
+export async function getSection(sectionId: number) {
   try {
     const access = await getAccess();
     const res = await fetch(
@@ -85,6 +84,30 @@ export async function getSection(sectionId) {
     const kinds = await res.json();
     return kinds;
   } catch (error) {
-    return error;
+    throw error;
+  }
+}
+
+export async function removeSection(sectionId: number) {
+  try {
+    const access = await getAccess();
+    const res = await fetch(
+      `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/section/sections/${sectionId}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${access}`
+        },
+        method: 'DELETE'
+      }
+    );
+
+    if (!res.ok) {
+      if (res.status === 401)
+        throw new AuthError('Authentication fail.');
+      throw new Error('Delete section failed');
+    }
+    return {'sectionId': sectionId};
+  } catch (error) {
+    throw error;
   }
 }

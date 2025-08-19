@@ -10,13 +10,15 @@ import { Label } from "./ui/label";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
 import {useRouter} from 'next/navigation';
+import { Button } from "./ui/button";
 
-export default function MailView({
+export default function MailGroupView({
     mailGroup
 }: {
     mailGroup: MailGroup
 }) {
     const router = useRouter();
+    console.log(mailGroup)
     return (
         <div className="w-full h-full flex flex-col gap-y-2">
             <div className="grid grid-cols-2 py-4">
@@ -36,10 +38,43 @@ export default function MailView({
                     ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][mailGroup.secret as number]}
                 </div>
                 <div>
-                    มาตรา: {['ปกติ', 'มาตรา 15'][mailGroup.section as number]}
+                    มาตรา: {mailGroup.section?.name?? '-'}
                 </div>
             </div>
             <Card>
+                <div className="w-full flex flex-col items-center gap-y-2">
+                    {mailGroup?.allispMailFiles?.map((e, idx) => {
+                        const filename = e?.originalFilename?? '-';
+                        const fileSplited = filename.split('.');
+                        const fileExt = fileSplited[fileSplited.length - 1];
+                        const bg = (['xlsx', 'xls'].includes(fileExt))? 'bg-green-200': 'bg-background'
+                        return <div className="w-11/12" key={`all-isp-file-${idx}`}>
+                            <Button variant="outline" className={`w-full ${bg}`}
+                                onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                                evt.preventDefault();
+                                const fileId = e.id;
+                                try {
+                                const blob = await downloadFile(fileId as number);
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.href = url;
+                                link.setAttribute("download", `${filename}`);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                console.error(error);
+                                if (isAuthError(error))
+                                redirectToLogin(); 
+                                }
+                            }}  
+                            >
+                                {filename}
+                            </Button>
+                    </div>
+                    })}
+                </div>
                 <Table className='overflow-y-hidden px-2'>
                     <TableHeader>
                         <TableRow className="hover:bg-background">

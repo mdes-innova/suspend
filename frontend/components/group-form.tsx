@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, ControllerRenderProps } from "react-hook-form"
 import {z } from "zod"
 import { Button } from "@/components/ui/button"
-import { PlusCircleIcon} from "lucide-react";
+import { PlusCircleIcon, Trash2} from "lucide-react";
 import {
   Form,
   FormControl,
@@ -30,8 +30,8 @@ import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page"
 import { Textarea } from "./ui/textarea"
 import { useAppDispatch } from "./store/hooks"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog"
-import { createSection, getSections } from "./actions/section"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "./ui/playlist-dialog"
+import { createSection, getSections, removeSection } from "./actions/section"
 import { Label } from "./ui/label"
 
 
@@ -56,9 +56,10 @@ export function GroupForm({
     const [mailStatus, setMailStatus] = useState(2);
     const submitRef = useRef<HTMLButtonElement>(null);
     const [textareaValue, setTextareaValue] = useState("");
-    const [newsectionError, setNewSectionError] = useState("");
-    const [prevSectionName, setPrevSectionName] = useState<Section | null>(null);
+    const [sectionErrorMsg, setSectionErrorMsg] = useState("");
+    const [prevSectionName, setPrevSectionName] = useState<string | null>(null);
     const [sectionName, setSectionName] = useState("");
+    const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
     const newSectionNameRef = useRef<HTMLInputElement>(null);
     const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -267,7 +268,7 @@ export function GroupForm({
 
       const group: Group = await getGroup(groupId);
 
-      const groupFiles = group?.groupFiles?? [];
+      const groupFiles = group?.groupFiles?.filter((e) => !e.allIsp)?? [];
       if (groupFiles.length) {
         const ispIds = [...new Set(groupFiles.map((e) => e.isp?.id)
           .filter((e) => typeof e === 'number'))];
@@ -277,7 +278,6 @@ export function GroupForm({
           if (mailStatus != 2) break;
           try {
             const ispMail: Mail = await sendIspMail({
-              section: parseInt(section),
               mailGroupId: mailGroup.id,
               ispId: ispIds[ispIndex]
             });
@@ -314,7 +314,7 @@ export function GroupForm({
 
   useEffect(() => {
     if (mailStatus != 2 && mgId != '') {
-      router.push(`/mail/${mgId}`);
+      router.push(`/mail-group/${mgId}`);
       setMailStatus(2);
       setMgId('');
     } 
@@ -523,7 +523,7 @@ export function GroupForm({
               <FormLabel className="inline-flex items-center gap-0.5">
                   มาตรา<span className="text-red-400">*</span>
               </FormLabel>
-              <div className="mt-2">
+              <div className="mt-2 flex gap-x-4">
                 <Select
                   name="section"
                   required
@@ -558,7 +558,7 @@ export function GroupForm({
               </Select>
               <Dialog open={sectionName === `${sections.length}`} onOpenChange={(open) => {
                 if (!open) setSectionName(prevSectionName);
-                setNewSectionError('');
+                setSectionErrorMsg('');
               }}>
                 <DialogContent>
                   <DialogTitle>สร้างมาตราใหม่</DialogTitle>
@@ -570,11 +570,11 @@ export function GroupForm({
                         ref={newSectionNameRef} placeholder="ใส่ชื่อมาตรา..."
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           e.preventDefault();
-                          setNewSectionError('');
+                          setSectionErrorMsg('');
                         }}
                         />
                     </div>
-                    <div className="text-destructive block h-8">{newsectionError}</div>
+                    <div className="text-destructive block h-8">{sectionErrorMsg}</div>
                   </div>
                   <DialogFooter>
                   <DialogClose asChild>
@@ -586,11 +586,11 @@ export function GroupForm({
                       try {
                         const newSectionName = newSectionNameRef?.current?.value;
                         if (!newSectionName || newSectionName === '') {
-                          setNewSectionError("กรุณาใส่ชื่อมาตราให้ถูกต้อง");
+                          setSectionErrorMsg("กรุณาใส่ชื่อมาตราให้ถูกต้อง");
                           return;
                         }
                        else if ((sections as Section[]).map((e) => e.name).includes(newSectionName)) {
-                          setNewSectionError("ชื่อมาตราซ้ำ");
+                          setSectionErrorMsg("ชื่อมาตราซ้ำ");
                           return;
                        }
 
@@ -603,13 +603,59 @@ export function GroupForm({
                        setSections(newSections);
 
                       } catch (error) {
-                        setNewSectionError("ไม่สามารถสร้างมาตราใหม่ได้");
+                        setSectionErrorMsg("ไม่สามารถสร้างมาตราใหม่ได้");
                         if (isAuthError(error))
                           redirectToLogin();
                       }
                     }}
                   >ตกลง</Button>
                 </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={sectionDeleteOpen} onOpenChange={(open) => {
+                setSectionDeleteOpen(open);
+                setSectionErrorMsg('');
+              }}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogTitle>
+                    ลบมาตรา
+                  </DialogTitle>
+                  <DialogDescription>
+                    ท่านต้องการลบมาตรา "{sectionName}" หรือไม่?
+                  </DialogDescription>
+                  <div className="text-destructive block h-8">{sectionErrorMsg}</div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="outline">ยกเลิก</Button>
+                    </DialogClose>
+                    <Button variant="destructive"
+                      onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.preventDefault();
+                        const currentSectionName = sectionName;
+                        try {
+                          const rmvSection = (sections as Section[]).find((e) => e.name === currentSectionName);
+                          if (!rmvSection) {
+                            setSectionErrorMsg(`ไม่สามารถลบ "${currentSectionName}" ได้`);
+                            return;
+                          }
+                          await removeSection(rmvSection.id);
+                          setSectionDeleteOpen(false);
+                          const sectionData = await getSections();
+                          setSectionName('');
+                          setSections(sectionData);
+                        } catch (error) {
+                          setSectionErrorMsg(`ไม่สามารถลบ "${currentSectionName}" ได้`);
+                          if (isAuthError(error)) 
+                            redirectToLogin();
+                        }
+                      }}
+                    >ยืนยัน</Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
               </div>

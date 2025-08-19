@@ -35,7 +35,7 @@ const items = [
   },
   {
     title: "กล่องข้อความ",
-    url: "/mail",
+    url: "/mail-group",
     icon: Inbox,
   },
   {
