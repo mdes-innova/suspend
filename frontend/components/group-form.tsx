@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from "react"
 import { type Group, type Mail, type Isp, Section } from "@/lib/types"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { createMailGroup, sendIspMail } from "./actions/mail"
+import { createMailGroup, sendIspMail, sendMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret,
   updateDocumentSpeed, updateDocumentTitle, updateBody, 
@@ -33,6 +33,7 @@ import { useAppDispatch } from "./store/hooks"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "./ui/playlist-dialog"
 import { createSection, getSections, removeSection } from "./actions/section"
 import { Label } from "./ui/label"
+import { getUserFromIsp, getUsersFromIspList } from "./actions/user"
 
 
 const FormSchema = z.object({
@@ -272,14 +273,16 @@ export function GroupForm({
       if (groupFiles.length) {
         const ispIds = [...new Set(groupFiles.map((e) => e.isp?.id)
           .filter((e) => typeof e === 'number'))];
-        setProgressMails(Array.from({length: ispIds.length}).map(() => -1));
+        const receivers = await getUsersFromIspList(ispIds);
+        if (!receivers || !receivers.length) throw new Error("Receivers not found.");
+        setProgressMails(Array.from({length: receivers.length}).map(() => -1));
 
-        for (let ispIndex=0; ispIndex<ispIds.length; ispIndex++) {
+        for (let receiverIdx=0; receiverIdx<receivers.length; receiverIdx++) {
           if (mailStatus != 2) break;
           try {
-            const ispMail: Mail = await sendIspMail({
+            const ispMail: Mail = await sendMail({
               mailGroupId: mailGroup.id,
-              ispId: ispIds[ispIndex]
+              receiverId: receivers[receiverIdx]
             });
 
             if (ispMail.status != 'successful')
@@ -287,13 +290,13 @@ export function GroupForm({
 
             setProgressMails((prev: number[]) => {
               const updated = [...prev];
-              updated[ispIndex] = 0;
+              updated[receiverIdx] = 0;
               return updated;
             });
           } catch (error0) {
             setProgressMails((prev: number[]) => {
               const updated = [...prev];
-              updated[ispIndex] = 1;
+              updated[receiverIdx] = 1;
               return updated;
             });
             if (isAuthError(error0)) {
@@ -325,7 +328,7 @@ export function GroupForm({
       {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
       <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
         -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
-        <div className={`w-full h-full flex justify-center items-center gap-x-2`}>
+        <div className={`w-full h-full grid grid-cols-12 justify-center items-center gap-x-2 gap-y-4`}>
         {
           progresMails.map((pmail: number, idx: number) => {
             const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];

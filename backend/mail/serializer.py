@@ -81,10 +81,6 @@ class MailSerializer(serializers.ModelSerializer):
         read_only=True
     )
     mail_group_id = serializers.UUIDField(write_only=True)
-    isp_id = serializers.PrimaryKeyRelatedField(
-        write_only=True,
-        queryset=ISP.objects.all()
-    )
     isp = ISPSerializer(
         read_only=True
     )
@@ -95,7 +91,7 @@ class MailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mail
-        fields = ['id', 'receiver_id', 'receiver', 'isp_id', 'isp', 'all_isp',
+        fields = ['id', 'receiver_id', 'receiver', 'isp', 'all_isp',
                   'status', 'datetime', 'confirmed', 'confirmed_uuid',
                   'confirmed_date', 'created_at', 'modified_at', 'mail_files',
                   'mail_group_id']
@@ -107,18 +103,16 @@ class MailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         receiver = validated_data.pop('receiver_id')
         mail_group_id = validated_data.pop('mail_group_id')
-        isp = validated_data.pop('isp_id', None)
         mail_group = MailGroup.objects.get(id=mail_group_id)
         group = mail_group.group
         mail = Mail.objects.create(
             receiver=receiver,
             confirmed=False,
             mail_group=mail_group,
-            isp=isp,
             **validated_data
         )
 
-        group_files_isp = group.group_files.filter(isp=isp)
+        group_files_isp = group.group_files.filter(isp=receiver.isp)
         if group:
             for group_file in group_files_isp:
                 if group_file:
@@ -126,7 +120,7 @@ class MailSerializer(serializers.ModelSerializer):
                     mail_file = MailFile.objects.create(
                         mail_group=mail_group,
                         mail=mail,
-                        isp=isp,
+                        isp=receiver.isp,
                         original_filename=filename
                     )
 
