@@ -30,6 +30,7 @@ class Group(models.Model):
     document_no = models.CharField(max_length=32, blank=True)
     document_date = models.DateTimeField(null=True)
     title = models.CharField(max_length=256, blank=True)
+    body = models.TextField(blank=True, default='')
     speed = models.IntegerField(
          validators=[
             MinValueValidator(0),
@@ -79,14 +80,6 @@ class GroupFile(models.Model):
         blank=True,
         null=True
     )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['group', 'isp'],
-                name='unique_isp_per_group'
-            )
-        ]
 
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

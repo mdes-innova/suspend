@@ -1,45 +1,66 @@
-import { getGroup, postGroup } from "@/components/actions/group";
-import { GetFilesFromGroup } from "@/components/actions/group-file";
-import { getIsps } from "@/components/actions/isp";
-import { getCurrentDate } from "@/components/actions/utils";
-import { AuthError } from "@/components/exceptions/auth";
+import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import GroupView from "@/components/group-view";
-import { type Group} from "@/lib/types";
-import { redirect } from "next/navigation";
+import ReloadPage from "@/components/reload-page";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { getAccess } from "../../page";
 
 async function Components({ params }: { params: Promise<{ id: string }>}) {
   const { id } = await params;
 
   try {
-    const currentDate = await getCurrentDate();
-    let groupData: Group | null = null;
+    const access = await getAccess();
+    const baseUrl = process.env.NODE_ENV === "development" 
+      ? process.env.BACKEND_URL_DEV 
+      : process.env.BACKEND_URL_PROD;
 
-    if (id === '-1') {
-      try {
-        const createdUntitled = await postGroup('ไม่มีชื่อ');
-        createdUntitled.createdAt = currentDate;
-        groupData = createdUntitled;
-      } catch (err1) {
-        if (err1 instanceof AuthError) throw err1;
-            return <></>;
+    const isNew = id === '-1';
+    const groupEndpoint = isNew 
+      ? `${baseUrl}/group/groups/` 
+      : `${baseUrl}/group/groups/${id}/`;
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${access}`,
+      ...(isNew ? { "Content-Type": "application/json" } : {}),
+    };
+
+    const resGroup = await fetch(groupEndpoint, {
+      method: isNew ? "POST" : "GET",
+      headers,
+      ...(isNew && { body: JSON.stringify({ name: "ไม่มีชื่อ" }) }),
+    });
+
+    if (!resGroup.ok) throw new Error(`Error ${resGroup.status}`);
+
+    const groupData = await resGroup.json();
+
+    const resIsps = await fetch(
+      `${baseUrl}/isp/isps/`,
+      {
+        headers: {
+          Authorization: `Bearer ${access}`
+        },
       }
-    } else {
-      groupData = await getGroup(parseInt(id));
+    );
+
+    if (!resIsps.ok) {
+      if (resIsps.status === 401)
+        throw new AuthError('Authentication fail.');
+      throw new Error('Get ISPs fail.');
     }
 
-    const isps = await getIsps();
-    const fileData = await GetFilesFromGroup((groupData as Group).id);
+    const isps = await resIsps.json();
 
     return (
-      <GroupView groupData={groupData} isps={isps} fileData={fileData}/>
+      <GroupView groupData={groupData} isps={isps} idParam={id}/>
     );
 
   } catch (error) {
-    if (error instanceof AuthError) {
-      redirect(`/login?path=/document-view/${id}/`)
+    console.log(error)
+    if (isAuthError(error)) {
+      return <ReloadPage />;
     } else {
-      return <></>;
+      return notFound();
     }
   }
 }

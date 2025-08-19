@@ -4,9 +4,9 @@ import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 
 export async function getKinds() {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(
       `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/kind/kinds/`,
       {
@@ -30,8 +30,8 @@ export async function getKinds() {
 }
 
 export async function getLastKind() {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const res = await fetch(
         `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/kind/kinds/last/`,
       {

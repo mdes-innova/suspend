@@ -39,17 +39,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
         validators=[username_validator],
     )
-    isp = models.ForeignKey(
+    isp = models.OneToOneField(
         ISP,
         on_delete=models.SET_NULL,
         related_name='users',
         null=True,
         default=None,
-        blank=True
+        blank=True,
     )
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

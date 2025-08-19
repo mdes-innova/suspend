@@ -20,7 +20,8 @@ export type Document = {
   ispDate?: string,
   active?: boolean,
   groupName?: string,
-  groupId?: number
+  groupId?: number,
+  documentFile?: DocumentFile
 }
 
 export type Group = {
@@ -34,7 +35,9 @@ export type Group = {
     documentNo: string,
     documentDate?: string,
     speed?: number,
-    secret?: number
+    secret?: number,
+    groupFiles?: GroupFile[],
+    section: string
 }
 
 export type User = {
@@ -42,6 +45,7 @@ export type User = {
   username: string,
   isStaff: boolean,
   isActive: boolean,
+  isSuperuser: boolean,
   isp?: Isp 
 };
 
@@ -69,7 +73,7 @@ export type UserRegister = {
   password: string,
   email?: string,
   isStaff: boolean,
-  ispId?: number
+  ispId?: number,
 }
 
 export type IspFile = {
@@ -81,12 +85,13 @@ export type IspFile = {
 
 export type Mail = {
   id: number,
+  isp: Isp,
   subject: string,
   datetime?: string,
   receiver: User,
   sender: User,
   group?: Group,
-  mailFile: MailFile,
+  mailFiles: MailFile[],
   createdAt: string,
   confirmed?: boolean,
   confirmedHash?: string,
@@ -112,7 +117,8 @@ export type GroupFile = {
   isp?: Isp,
   group?: Group,
   file?: Blob,
-  originalFilename?: string
+  originalFilename?: string,
+  size: number
 }
 
 export type StaffMail = {
@@ -123,4 +129,40 @@ export type StaffMail = {
   numDocuments: number,
   sends: string,
   confirms: string
+}
+
+export type MailGroup = {
+  id?: number,
+  documentNo: string,
+  documentDate: string,
+  speed: number,
+  secret: number,
+  subject: string,
+  mails: Mail[],
+  documents: Document[],
+  section: number
+}
+
+export type GroupUpdate = {
+    name?: string,
+    title?: string,
+    documentNo?: string,
+    documentDate?: string | null,
+    speed?: number | null,
+    secret?: number | null,
+    section?: number | null,
+    body?: string
+}
+
+export type DocumentFile = {
+  id: number,
+  originalFilename: string,
+  size: number,
+  uploadedAt: string
+}
+
+export type GroupFileTable = {
+  isp: Isp,
+  groupFiles: GroupFile[],
+  size: number
 }

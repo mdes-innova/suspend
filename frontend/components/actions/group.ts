@@ -4,9 +4,8 @@ import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 
 export async function getGroups() {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'GET',
       headers: {
@@ -28,10 +27,9 @@ export async function getGroups() {
 }
 
 export async function getGroupList() {
-  const access = await getAccess();
-
   try {
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/group-list/`, {
+    const access = await getAccess();
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -52,9 +50,8 @@ export async function getGroupList() {
 }
 
 export async function getGroup(groupId: number) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'GET',
       headers: {
@@ -76,9 +73,8 @@ export async function getGroup(groupId: number) {
 }
 
 export async function postGroup(name: string) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/`, {
       method: 'POST',
       body: JSON.stringify({
@@ -90,23 +86,22 @@ export async function postGroup(name: string) {
         },
     }); 
 
-      if (!res.ok) {
-      if (res.status === 401)
-          throw new AuthError('Authentication fail.')
-      throw new Error('Create a new group fail.');
-      }
+    if (!res.ok) {
+    if (res.status === 401)
+        throw new AuthError('Authentication fail.')
+    throw new Error('Create a new group fail.');
+    }
 
-      const content = await res.json();
-      return content;
+    const content = await res.json();
+    return content;
   } catch (error) {
       throw error; 
   }
 }
 
 export async function RemoveGroup(groupId: number) {
-  const access = await getAccess();
-
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'DELETE',
       headers: {
@@ -129,9 +124,9 @@ export async function RemoveGroup(groupId: number) {
 export async function addToGroup({ docIds, mode, groupId }: {
     docIds: number[], mode?: string, groupId: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -160,9 +155,9 @@ export async function addToGroup({ docIds, mode, groupId }: {
 export async function RenameGroup({ name, groupId }: {
     name: string, groupId: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -190,9 +185,9 @@ export async function RenameGroup({ name, groupId }: {
 export async function removeDocumentFromGroup({ docIds, groupId }: {
     docIds: number[], groupId: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/${groupId}/`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -219,9 +214,9 @@ export async function removeDocumentFromGroup({ docIds, groupId }: {
 }
 
 export async function getGroupFromDocument(docId: number) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/by-document/${docId}/`, {
       method: 'GET',
       headers: {
@@ -243,9 +238,9 @@ export async function getGroupFromDocument(docId: number) {
 }
 
 export async function getUntilted() {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/groups/by-name/ไม่มีชื่อ/`, {
       method: 'GET',
       headers: {
@@ -265,16 +260,16 @@ export async function getUntilted() {
   }
 }
 
-export async function setDocumentNo({
+export async function updateDocumentNo({
   groupId,
   documentNo
 }: {
   groupId: number,
   documentNo: string
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -299,16 +294,16 @@ export async function setDocumentNo({
   }
 }
 
-export async function setDocumentDate({
+export async function updateDocumentDate({
   groupId,
   documentDate 
 }: {
   groupId: number,
   documentDate: string | Date
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const d = new Date(documentDate)
     const isoUtc = d.toISOString()
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
@@ -335,16 +330,16 @@ export async function setDocumentDate({
   }
 }
 
-export async function setDocumentTitle({
+export async function updateDocumentTitle({
   groupId,
   title
 }: {
   groupId: number,
   title: string
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -369,16 +364,16 @@ export async function setDocumentTitle({
   }
 }
 
-export async function setDocumentSpeed({
+export async function updateDocumentSpeed({
   groupId,
   speed
 }: {
   groupId: number,
   speed: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -402,16 +397,16 @@ export async function setDocumentSpeed({
       throw error; 
   }
 }
-export async function setDocumentSecret({
+export async function updateDocumentSecret({
   groupId,
   secret
 }: {
   groupId: number,
   secret: number
 }) {
-  const access = await getAccess();
 
   try {
+    const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
     const res = await fetch(`${url}/group/groups/${groupId}/`, {
       method: 'PATCH',
@@ -428,6 +423,74 @@ export async function setDocumentSecret({
       if (res.status === 401)
           throw new AuthError('Authentication fail.')
       throw new Error('Update secret for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function updateDocumentSection({
+  groupId,
+  section
+}: {
+  groupId: number,
+  section: number
+}) {
+
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        section
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update section for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function updateBody({
+  groupId,
+  body
+}: {
+  groupId: number,
+  body: string
+}) {
+
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify({
+        body
+      })
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update body for a group fail.');
       }
       const content = await res.json();
       return content;

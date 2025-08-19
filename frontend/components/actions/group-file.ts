@@ -4,8 +4,8 @@ import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 
 export async function GetFilesFromGroup(gid: number) {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/by-group/${gid}/`, {
       method: "GET",
       headers: {
@@ -30,9 +30,8 @@ export async function uploadFile({
 }: {
   formData: FormData
 }) {
-  const access = await getAccess();
-  
   try {
+    const access = await getAccess();
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/upload/`, {
       method: "POST",
       body: formData,
@@ -54,8 +53,8 @@ export async function uploadFile({
 }
 
 export async function downloadFile(fid: number) {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/download/${fid}/`, {
       method: "GET",
       headers: {
@@ -75,8 +74,8 @@ export async function downloadFile(fid: number) {
 }
 
 export async function RemoveFile(fid: number) {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const res = await fetch(
       `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/${fid}/`,
       {
@@ -103,12 +102,13 @@ export async function Edit({
 }: {
   fid: number, file?: Blob, isp?: string
 }) {
-  const access = await getAccess();
-  const formData = new FormData();
-  if (file != undefined) formData.append('file', file);
-  if (isp != undefined) formData.append('isp', isp);
-
   try {
+
+    const access = await getAccess();
+    const formData = new FormData();
+    if (file != undefined) formData.append('file', file);
+    if (isp != undefined) formData.append('isp', isp);
+
     const res = await fetch(
       `${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/${fid}/edit/`,
       {

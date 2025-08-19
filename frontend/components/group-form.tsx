@@ -12,20 +12,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
+import {closeModal, LOADINGUI, openModal} from './store/features/loading-ui-slice';
 import { Input } from "@/components/ui/input"
 import { useEffect, useRef, useState } from "react"
-import { Group, GroupFile, type Isp } from "@/lib/types"
-import { useAppDispatch } from "./store/hooks"
-import { Dialog, DialogContent, DialogTitle} from "./ui/dialog"
+import { type Group, type Mail, type Isp } from "@/lib/types"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { SendMails } from "./actions/mail"
+import { createMailGroup, sendIspMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
-import { getGroup, setDocumentDate, setDocumentNo, setDocumentSecret, setDocumentSpeed, setDocumentTitle } from "./actions/group"
-import DialogLoading from "./loading/dialog"
-import { closeModal, LOADINGUI, openModal } from "./store/features/loading-ui-slice";
+import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret, 
+  updateDocumentSection, updateDocumentSpeed, updateDocumentTitle, updateBody } from "./actions/group"
 import { useRouter } from 'next/navigation';
+import { Card } from "./ui/card";
+import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page"
+import { Textarea } from "./ui/textarea"
+import { useAppDispatch } from "./store/hooks"
 
 
 const FormSchema = z.object({
@@ -37,20 +40,18 @@ export function GroupForm({
   children,
   isps,
   groupId,
-  fileData
 }: Readonly<{
   children?: React.ReactNode,
   isps: Isp[],
   groupId: number,
-  fileData: GroupFile[]
 }>) {
     const [speed, setSpeed] = useState('');
     const [secret, setSecret] = useState('');
+    const [section, setSection] = useState('');
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
-    const dispatch = useAppDispatch();
     const submitRef = useRef<HTMLButtonElement>(null);
-    const [sendText, setSendText] = useState(0);
+    const [textareaValue, setTextareaValue] = useState("");
     const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
@@ -60,6 +61,8 @@ export function GroupForm({
       },
   });
   const router = useRouter();
+  const [progresMails, setProgressMails] = useState<number[]>([]);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const getData = async() => {
@@ -67,12 +70,15 @@ export function GroupForm({
         const group: Group = await getGroup(groupId);
         if (group.speed != null || group.speed != undefined) setSpeed(`${group.speed}`);
         if (group.secret != null || group.secret != undefined) setSecret(`${group.secret}`);
+        if (group.section != null || group.section != undefined) setSection(`${group.section}`);
         if (group.documentDate) setDate(new Date(group.documentDate));
         form.reset({
             documentNo: group.documentNo || '',
             title: group.title || '',
           });
-      } catch {
+      } catch (error) {
+        if (isAuthError(error))
+          redirectToLogin();
       }
     }
 
@@ -81,11 +87,17 @@ export function GroupForm({
 
   useEffect(() => {
     const updateDocumentDate = async() => {
-      if (date != undefined)
-        await updateField({
-          kind: 'documentDate',
-          value: date.toString()
-        });
+      if (date != undefined) {
+        try {
+          await updateField({
+            kind: 'documentDate',
+            value: date.toString()
+          });
+        } catch (error) {
+          if (isAuthError(error))
+            redirectToLogin();
+        }
+      }
     }
 
     if (date) updateDocumentDate();
@@ -93,73 +105,115 @@ export function GroupForm({
 
   useEffect(() => {
     const updateSecret = async() => {
-      await updateField({
-        kind: 'secret',
-        value: secret
-      });
+      try {
+        await updateField({
+          kind: 'secret',
+          value: secret
+        });
+      } catch (error) {
+        if (isAuthError(error))
+          redirectToLogin();
+      }
     }
     if (secret != '') updateSecret();
-    else {
-
-    }
 
   }, [secret]);
 
 
   useEffect(() => {
     const updateSpeed = async() => {
-      await updateField({
-        kind: 'speed',
-        value: speed
-      });
+      try {
+        await updateField({
+          kind: 'speed',
+          value: speed
+        });
+      } catch (error) {
+        if (isAuthError(error))
+          redirectToLogin();
+      }
     }
     if (speed != '') updateSpeed();
   }, [speed]);
 
+  useEffect(() => {
+    const updateSection = async() => {
+      try {
+        await updateField({
+          kind: 'section',
+          value: section
+        });
+      } catch (error) {
+        if (isAuthError(error))
+          redirectToLogin();
+      }
+    }
+    if (section != '') updateSection();
+  }, [section]);
+
   const updateField = async({kind, value}: {kind: string, value: string}) => {
-    switch (kind) {
-      case 'documentNo':
-        await setDocumentNo({
-          groupId,
-          documentNo: value
-        }) 
-        break;
+    try {
+      switch (kind) {
+        case 'documentNo':
+          await updateDocumentNo({
+            groupId,
+            documentNo: value
+          }) 
+          break;
 
-      case 'documentDate':
-        await setDocumentDate({
-          groupId,
-          documentDate: value
-        }) 
-        break;
+        case 'documentDate':
+          await updateDocumentDate({
+            groupId,
+            documentDate: value
+          }) 
+          break;
 
-      case 'title':
-        await setDocumentTitle({
-          groupId,
-          title: value
-        }) 
-        break;
+        case 'title':
+          await updateDocumentTitle({
+            groupId,
+            title: value
+          }) 
+          break;
 
-      case 'speed':
-        await setDocumentSpeed({
-          groupId,
-          speed: parseInt(value)
-        }) 
-        break;
+        case 'body':
+          await updateBody({
+            groupId,
+            body: value
+          }) 
+          break;
 
-      case 'secret':
-        await setDocumentSecret({
-          groupId,
-          secret: parseInt(value)
-        }) 
-        break;
-    
-      default:
-        await setDocumentNo({
-          groupId,
-          documentNo: value
-        }) 
+        case 'speed':
+          await updateDocumentSpeed({
+            groupId,
+            speed: parseInt(value)
+          }) 
+          break;
 
-        break;
+        case 'secret':
+          await updateDocumentSecret({
+
+            groupId,
+            secret: parseInt(value)
+          }) 
+          break;
+
+        case 'section':
+          await updateDocumentSection({
+            groupId,
+            section: parseInt(value)
+          }) 
+          break;
+      
+        default:
+          await updateDocumentNo({
+            groupId,
+            documentNo: value
+          }) 
+
+          break;
+      }
+    } catch (error) {
+      if (isAuthError(error))
+        redirectToLogin();
     }
   }
 
@@ -169,7 +223,9 @@ export function GroupForm({
         alert('Cannot send mails.');
         return;
       }
+
       dispatch(openModal({ui: LOADINGUI.dialog}));
+
       await updateField({
         kind: 'title',
         value: values.title
@@ -178,50 +234,111 @@ export function GroupForm({
         kind: 'documentNo',
         value: values.documentNo
       });
-      const mailGroupId = (await SendMails(groupId)).data;
-      setSendText(1)
-      setMgId(mailGroupId);
-      
+
+      await updateField({
+        kind: 'body',
+        value: textareaValue
+      });
+
+      const mailGroup = await createMailGroup({
+        groupId
+      });
+      dispatch(closeModal({ui: LOADINGUI.dialog}));
+      setMgId(mailGroup?.id);
+
+      const group: Group = await getGroup(groupId);
+
+      const groupFiles = group?.groupFiles?? [];
+      if (groupFiles.length) {
+        const ispIds = [...new Set(groupFiles.map((e) => e.isp?.id)
+          .filter((e) => typeof e === 'number'))];
+        setProgressMails(Array.from({length: ispIds.length}).map(() => -1));
+
+        for (let ispIndex=0; ispIndex<ispIds.length; ispIndex++) {
+          if (mailStatus != 2) break;
+          try {
+            const ispMail: Mail = await sendIspMail({
+              section: parseInt(section),
+              mailGroupId: mailGroup.id,
+              ispId: ispIds[ispIndex]
+            });
+
+            if (ispMail.status != 'successful')
+              throw new Error("Fail to send a mail.");
+
+            setProgressMails((prev: number[]) => {
+              const updated = [...prev];
+              updated[ispIndex] = 0;
+              return updated;
+            });
+          } catch (error0) {
+            setProgressMails((prev: number[]) => {
+              const updated = [...prev];
+              updated[ispIndex] = 1;
+              return updated;
+            });
+            if (isAuthError(error0)) {
+              redirectToLogin();
+            }
+          }
+        }
+      }
+      dispatch(closeModal({ui: LOADINGUI.dialog}));
     } catch (error) {
-      console.error(error);
-      setSendText(2)
+      setMailStatus(2);
+      setMgId('');
+      setProgressMails([]);
+      if (isAuthError(error))
+        redirectToLogin();
     }
-    dispatch(closeModal({ui: LOADINGUI.dialog}));
   }
 
   useEffect(() => {
-    if (sendText === 1) setMailStatus(0);
-    else if (sendText === 2) setMailStatus(1);
-  }, [sendText]);
-
-  useEffect(() => {
-    if (mailStatus === 2) setSendText(0);
-  }, [mailStatus]);
+    if (mailStatus != 2 && mgId != '') {
+      router.push(`/mail/${mgId}`);
+      setMailStatus(2);
+      setMgId('');
+    } 
+  }, [mailStatus, mgId]);
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
-      <DialogLoading />
-      <Dialog open={mailStatus != 2} onOpenChange={(open: boolean) => {
-        if (!open) setMailStatus(2);
-      }}>
-        <DialogContent>
-          <DialogTitle>
-            {
-              ['', 'ส่งเมลล์สำเร็จ', 'ส่งเมลล์ไม่สำเร็จ'][sendText]
-            }
-          </DialogTitle>
-            <Button variant={mailStatus === 0? 'default': 'destructive'}
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                if (mailStatus === 0)
-                  router.push(`/mail/${mgId}`);
-                setMailStatus(2);
-              }}
-            >
-              ตกลง
-            </Button>
-        </DialogContent>
-      </Dialog>
+      {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
+      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
+        -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
+        <div className={`w-full h-full flex justify-center items-center gap-x-2`}>
+        {
+          progresMails.map((pmail: number, idx: number) => {
+            const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
+            return (
+                <div key={`mail-progress-${idx}`} className={`rounded-md w-8 h-2 ${bg}`}></div>
+            );
+          }
+        )
+        }
+        </div>
+        {
+          progresMails[progresMails.length - 1] != -1?
+          <Button
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.preventDefault();
+              setMailStatus(0);
+              setProgressMails([]);
+            }}
+          >
+            ตกลง
+          </Button>:
+          <Button variant="destructive"
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.preventDefault();
+              setMailStatus(1);
+              setProgressMails([]);
+            }}
+          >
+            ยกเลิก
+          </Button>
+        }
+      </Card>}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 w-full">
             <FormField
@@ -233,15 +350,36 @@ export function GroupForm({
                         เลขหนังสือ<span className="text-red-400">*</span>
                     </FormLabel>
                     <FormControl>
-                    <Input {...field} onChange={(e: React.ChangeEvent<HTMLDivElement>) => {
+                    <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         field.onChange(e)
                     }} 
+                      onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        const documentNo = e.currentTarget.value;
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          try {
+                            await updateField({
+                              kind: 'body',
+                              value: documentNo
+                            }); 
+                          } catch (error) {
+                            if (isAuthError(error))
+                              redirectToLogin();
+                          }
+                          e.currentTarget.blur();
+                        }
+                      }}
                       onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
                         const documentNo = e.target.value;
-                        await updateField({
-                          kind: 'documentNo',
-                          value: documentNo
-                        })
+                        try {
+                          await updateField({
+                            kind: 'documentNo',
+                            value: documentNo
+                          });
+                        } catch (error) {
+                          if (isAuthError(error))
+                            redirectToLogin(); 
+                        }
                       }}
                     />
                     </FormControl>
@@ -267,12 +405,33 @@ export function GroupForm({
                     <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         field.onChange(e)
                     }}
+                      onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        const title = e.currentTarget.value;
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          try {
+                            await updateField({
+                              kind: 'title',
+                              value: title 
+                            }); 
+                          } catch (error) {
+                            if (isAuthError(error))
+                              redirectToLogin();
+                          }
+                          e.currentTarget.blur();
+                        }
+                      }}
                       onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
                         const title = e.target.value;
-                        await updateField({
-                          kind: 'title',
-                          value: title 
-                        })
+                        try {
+                          await updateField({
+                            kind: 'title',
+                            value: title 
+                          });
+                        } catch (error) {
+                          if (isAuthError(error))  
+                            redirectToLogin();
+                        }
                       }}
                     />
                     </FormControl>
@@ -332,7 +491,38 @@ export function GroupForm({
                     <SelectLabel>ชั้นความลับ</SelectLabel>
                     <>
                       {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'].map((secret: string, idx: number) => (<SelectItem  
-                          key={`speed-${idx}`} value={`${idx}`}> {secret}
+                          key={`section-${idx}`} value={`${idx}`}> {secret}
+                          </SelectItem>)
+                      )}
+                    </>
+                    </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <FormLabel className="inline-flex items-center gap-0.5">
+                  มาตรา<span className="text-red-400">*</span>
+              </FormLabel>
+              <div className="mt-2">
+                <Select
+                  name="section"
+                  required
+                  value={section}
+                  onValueChange={(value: string) => {
+                    setSection(value);
+                  }}
+                >
+                <SelectTrigger className="w-full" >
+                  <SelectValue placeholder="เลือก มาตรา" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    <SelectLabel>มาตรา</SelectLabel>
+                    <>
+                      {['ปกติ', 'มาตรา 15'].map((section: string, idx: number) => (<SelectItem  
+                          key={`section-${idx}`} value={`${idx}`}> {section}
                           </SelectItem>)
                       )}
                     </>
@@ -345,8 +535,54 @@ export function GroupForm({
             <Button type="submit" className="hidden" ref={submitRef}>Submit</Button>
         </form>
     </Form>
-      <BookCard ispData={isps} groupId={groupId} fileData={fileData}/>
-      { children }
+      <BookCard ispData={isps} groupId={groupId}/>
+      { section != '1'? children: <></> }
+      { section === '1' && <Textarea className='h-64' placeholder="กรอกข้อความเพื่อส่งเมล..."
+        value={textareaValue}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTextareaValue(e.target.value)}
+        onKeyDown={async(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+          if (e.key === "Tab") {
+            // Handle tab insertion
+            e.preventDefault();
+            const { selectionStart, selectionEnd } = e.currentTarget;
+            const newValue =
+              textareaValue.substring(0, selectionStart) +
+              "\t" +
+              textareaValue.substring(selectionEnd);
+            setTextareaValue(newValue);
+            setTimeout(() => {
+              e.currentTarget.selectionStart = e.currentTarget.selectionEnd = selectionStart + 1;
+            }, 0);
+          } 
+          else if (e.key === "Enter" && !e.shiftKey) {
+            // Enter without Shift → blur
+            e.preventDefault();
+            try {
+              await updateField({
+                kind: 'body',
+                value: textareaValue
+              });
+            } catch (error) {
+              if (isAuthError(error))
+                redirectToLogin();
+            }
+            e.currentTarget.blur();
+          } 
+          else if (e.key === "Enter" && e.shiftKey) {
+            // Shift + Enter → newline
+            e.preventDefault();
+            const { selectionStart, selectionEnd } = e.currentTarget;
+            const newValue =
+              textareaValue.substring(0, selectionStart) +
+              "\n" +
+              textareaValue.substring(selectionEnd);
+            setTextareaValue(newValue);
+            setTimeout(() => {
+              e.currentTarget.selectionStart = e.currentTarget.selectionEnd = selectionStart + 1;
+            }, 0);
+          }
+        }}
+      />}
       <div className='w-full flex justify-center items-center gap-x-4'>
         <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();

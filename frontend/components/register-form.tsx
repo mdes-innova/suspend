@@ -26,12 +26,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { PasswordInput } from "./password-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { AuthError } from "./exceptions/auth";
+import { isAuthError } from '@/components/exceptions/auth';
 import { registerUser } from "./actions/user";
-import { type UserRegister, type Isp } from "@/lib/types";
+import { type Isp } from "@/lib/types";
+import { redirectToLogin } from "./reload-page";
+import { useEffect } from 'react';
 
 type TheUser = {
   username: string,
@@ -39,61 +40,92 @@ type TheUser = {
   confirmPassword: string
 }
 
-const FormSchema = z.object({
-  username: z.string().min(2, {
-    message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
-  }),
-  password: z.string().min(6, {
-    message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
-  }),
-  confirmPassword: z.string(),
-  email: z.string().email({
-    message: "กรุณากรอกอีเมลที่ถูกต้อง",
-  }),
-}).refine((data: TheUser) => data.password === data.confirmPassword, {
-  path: ["confirmPassword"],
-  message: "รหัสผ่านไม่ตรงกัน",
-});
 
 export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
 
   const [errorMessage, setErrorMessage] = useState('');
   const [userType, setUserType]= useState('user');
   const [success, setSuccess] = useState(false);
-  const [isp, setIsp] = useState("")
-  const router = useRouter();
+  const [isp, setIsp] = useState("");
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
+  const UserFormSchema = z.object({
+    username: z.string().min(2, {
+      message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+    }),
+    password: z.string().min(6, {
+      message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    }),
+    confirmPassword: z.string(),
+    email: z.string().email({
+      message: "กรุณากรอกอีเมลที่ถูกต้อง",
+    }),
+  }).refine((data: TheUser) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "รหัสผ่านไม่ตรงกัน",
+  });
+
+  const StaffFormSchema = z.object({
+    username: z.string().min(2, {
+      message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+    }),
+    password: z.string().min(6, {
+      message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    }),
+    confirmPassword: z.string(),
+  }).refine((data: TheUser) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "รหัสผ่านไม่ตรงกัน",
+  });
+
+  const FormSchema = z.union([UserFormSchema, StaffFormSchema]);
+  type FormValues = z.infer<typeof FormSchema>;
+
+  const userDefaults = {
       username: "",
       password: "",
       confirmPassword: "",
       email: ""
-    },
-  })
+  };
 
-  const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    const extendedValues: UserRegister = {
+  const staffDefaults = {
+      username: "",
+      password: "",
+      confirmPassword: "",
+  }
+  const form = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: userType === 'user'? staffDefaults : userDefaults,
+  });
+
+  useEffect(() => {
+    form.reset(userType === 'user'? staffDefaults : userDefaults as FormValues);
+    setIsp('');
+  }, [userType]);
+
+  const onSubmit = async (values: FormValues) => {
+    const email = 'email' in values ? values.email : undefined;
+    const extendedValues  = {
       username: values.username,
       password: values.password,
-      email: values.email,
+      email,
+      ispId: (isp != "" && userType === 'user')? parseInt(isp): undefined,
       isStaff: userType === 'user'? false: true
-    };
+    }
 
-    if (isp != "")
-      extendedValues['ispId'] = parseInt(isp);
+    // if (isp != "")
+    //   extendedValues['ispId'] = parseInt(isp);
 
     try {
       await registerUser(extendedValues);
-      router.refresh();
+      // router.refresh();
       setErrorMessage('');
       setSuccess(true);
 
     } catch (error) {
-      if (error instanceof AuthError)
-        router.push('/login?path=/register');
-      else{
+      if (isAuthError(error)) {
+        redirectToLogin();
+      }
+      else {
         setSuccess(false);
         setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
       }
@@ -113,6 +145,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                 <FormControl>
                   <Input placeholder="Username" {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setErrorMessage('');
+                    setSuccess(false);
                     field.onChange(e);
                   }}/>
                 </FormControl>
@@ -131,7 +164,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                     placeholder="••••••••"
                     {...field}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setErrorMessage('')
+                      setErrorMessage('');
+                      setSuccess(false);
                       field.onChange(e)
                     }}
                   />
@@ -151,8 +185,9 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                     placeholder="••••••••"
                     {...field}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setErrorMessage('')
-                      field.onChange(e)
+                      setErrorMessage('');
+                      setSuccess(false);
+                      field.onChange(e);
                     }}
                   />
                 </FormControl>
@@ -161,6 +196,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
             )}
           /> 
             <RadioGroup value={userType} onValueChange={(value) => {
+                setErrorMessage('');
+                setSuccess(false);
                 setUserType(value);
               }}>
                 <div className="flex items-center space-x-2">
@@ -170,10 +207,6 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="staff" id="r2" />
                     <Label htmlFor="r2">Staff</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admin" id="r3" />
-                    <Label htmlFor="r3">Admin</Label>
                 </div>
             </RadioGroup>
             {
@@ -187,6 +220,8 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                   required
                   value={isp}
                   onValueChange={(value: string) => {
+                    setErrorMessage('');
+                    setSuccess(false);
                     setIsp(value);
                   }}
                 >
@@ -219,6 +254,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                       <FormControl>
                         <Input placeholder="isp@example.com" {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           setErrorMessage('');
+                          setSuccess(false);
                           field.onChange(e);
                         }}/>
                       </FormControl>

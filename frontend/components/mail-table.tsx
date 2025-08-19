@@ -1,6 +1,6 @@
 'use client';
 
-import { StaffMail } from "@/lib/types";
+import { Mail, MailGroup } from "@/lib/types";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -26,19 +26,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import {useState} from 'react';
 import Link from 'next/link';
 import {useEffect} from 'react';
-import { Datetime2Thai } from "@/lib/utils";
-import { getStaffMails } from "./actions/mail";
+import { Datetime2Thai } from "@/lib/client/utils";
+import { getMailGroups } from "./actions/mail";
+import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
-const staffColumns: ColumnDef<StaffMail>[] = [
+const staffColumns: ColumnDef<MailGroup>[] = [
  {
     id: 'วันที่',
     accessorKey: "createdAt",
-    sortingFn: (rowA: Row<StaffMail>, rowB: Row<StaffMail>, columnId: string) => {
+    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
       const dateA = new Date(rowA.getValue(columnId));
       const dateB = new Date(rowB.getValue(columnId));
       return dateA.getTime() - dateB.getTime(); // ascending
     },
-    header: ({ column }: { column: Column<StaffMail> }) => {
+    header: ({ column }: { column: Column<MailGroup> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -51,7 +53,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<StaffMail> }) => {
+    cell: ({ row }: { row: Row<MailGroup> }) => {
       return (
         <div>
           {row.getValue('วันที่')? Datetime2Thai(row.getValue('วันที่')): '-'}
@@ -61,7 +63,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
   }, {
     id: 'เลขหนังสือ',
     accessorKey: "documentNo",
-    header: ({ column }: { column: Column<StaffMail> }) => {
+    header: ({ column }: { column: Column<MailGroup> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -74,7 +76,7 @@ const staffColumns: ColumnDef<StaffMail>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<StaffMail> }) => {
+    cell: ({ row }: { row: Row<MailGroup> }) => {
       return (
         <div>
           {row.getValue('เลขหนังสือ')?? '-'}
@@ -83,8 +85,13 @@ const staffColumns: ColumnDef<StaffMail>[] = [
     },
   }, {
     id: 'จำนวนคำสั่งศาล',
-    accessorKey: "numDocuments",
-    header: ({ column }: { column: Column<StaffMail>}) => {
+    accessorKey: "documents",
+    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
+      const numA = (rowA.getValue(columnId) as Document[]).length?? 0;
+      const numB = (rowB.getValue(columnId) as Document[]).length?? 0;
+      return numA - numB; // ascending
+    },
+    header: ({ column }: { column: Column<MailGroup>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -97,25 +104,37 @@ const staffColumns: ColumnDef<StaffMail>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<StaffMail> }) => {
-
+    cell: ({ row }: { row: Row<MailGroup> }) => {
+      const original = row.original;
+      const noDocuments = original?.documents?.length?? '-';
       return (
         <div>
-          {row.getValue('จำนวนคำสั่งศาล')?? '-'}
+          {noDocuments}
           </div>
       );
     },
   }, {
     id: 'ส่ง',
-    accessorKey: "sends",
-    sortingFn: (rowA: Row<StaffMail>, rowB: Row<StaffMail>, columnId: string) => {
-      const splitedAs = (rowA.getValue(columnId) as string).split('/');
-      const splitedBs = (rowB.getValue(columnId) as string).split('/');
-      const a = parseFloat(splitedAs[0])/parseFloat(splitedAs[1]);
-      const b = parseFloat(splitedBs[0])/parseFloat(splitedBs[1]);
-      return a - b; // ascending
+    accessorKey: "mails",
+    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
+      let valueA = -1;
+      let valueB = -1;
+      
+      const mailsA = rowA.getValue(columnId) as Mail[];
+      const mailsB = rowB.getValue(columnId) as Mail[];
+
+      if (mailsA.length > 0) {
+        const numConfirms = (mailsA.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
+        valueA = numConfirms/mailsA.length;
+      }
+      if (mailsB.length > 0) {
+        const numConfirms = (mailsB.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
+        valueB = numConfirms/mailsB.length;
+      }
+
+      return valueA - valueB; // ascending
     },
-    header: ({ column }: { column: Column<StaffMail> }) => {
+    header: ({ column }: { column: Column<MailGroup> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -128,25 +147,42 @@ const staffColumns: ColumnDef<StaffMail>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<StaffMail> }) => {
-
+    cell: ({ row }: { row: Row<MailGroup> }) => {
+      const original = row.original;
+      const mails = original?.mails as Mail[];
+      let sends = '-';
+      if (mails && mails?.length) {
+        const numSends = (mails.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
+        sends = `${numSends}/${mails.length}`
+      }
       return (
         <div>
-          {row.getValue('ส่ง')?? '-'}
+          {sends}
           </div>
       );
     },
   }, {
     id: 'ยืนยัน',
-    accessorKey: "confirms",
-    sortingFn: (rowA: Row<StaffMail>, rowB: Row<StaffMail>, columnId: string) => {
-      const splitedAs = (rowA.getValue(columnId) as string).split('/');
-      const splitedBs = (rowB.getValue(columnId) as string).split('/');
-      const a = parseFloat(splitedAs[0])/parseFloat(splitedAs[1]);
-      const b = parseFloat(splitedBs[0])/parseFloat(splitedBs[1]);
-      return a - b; // ascending
+    accessorKey: "mails",
+    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
+      let valueA = -1;
+      let valueB = -1;
+      
+      const mailsA = rowA.getValue(columnId) as Mail[];
+      const mailsB = rowB.getValue(columnId) as Mail[];
+
+      if (mailsA.length > 0) {
+        const numConfirms = (mailsA.filter((e: Mail) => e?.confirmed)).length;
+        valueA = numConfirms/mailsA.length;
+      }
+      if (mailsB.length > 0) {
+        const numConfirms = (mailsB.filter((e: Mail) => e?.confirmed)).length;
+        valueB = numConfirms/mailsB.length;
+      }
+
+      return valueA - valueB; // ascending
     },
-    header: ({ column }: { column: Column<StaffMail>}) => {
+    header: ({ column }: { column: Column<MailGroup>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -159,11 +195,18 @@ const staffColumns: ColumnDef<StaffMail>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<StaffMail> }) => {
+    cell: ({ row }: { row: Row<MailGroup> }) => {
+      const original = row.original;
+      const mails = original?.mails as Mail[];
+      let confirms = '-';
+      if (mails && mails?.length) {
+        const numConfirms = (mails.filter((e: Mail) => e?.confirmed)).length;
+        confirms = `${numConfirms}/${mails.length}`
+      }
 
       return (
         <div>
-          {row.getValue('ยืนยัน')?? '-'}
+          {confirms}
           </div>
       );
     },
@@ -202,11 +245,14 @@ export default function MailTable() {
   useEffect(() => {
     const getData = async() => {
       try {
-        const data = await getStaffMails(); 
+        const data = await getMailGroups(); 
         setTableData(data);
       } catch (error) {
         console.error(error);
         setTableData([]);
+
+        if (isAuthError(error))
+          redirectToLogin(); 
       }
     }
 
@@ -235,8 +281,8 @@ export default function MailTable() {
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column: Column<StaffMail>) => column.getCanHide())
-                .map((column: Column<StaffMail>) => {
+                .filter((column: Column<MailGroup>) => column.getCanHide())
+                .map((column: Column<MailGroup>) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -257,9 +303,9 @@ export default function MailTable() {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup: HeaderGroup<StaffMail>) => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<MailGroup>) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header: Header<StaffMail, unknown>) => {
+                {headerGroup.headers.map((header: Header<MailGroup, unknown>) => {
                   return (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
@@ -276,15 +322,15 @@ export default function MailTable() {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row: Row<StaffMail>) => {
+              table.getRowModel().rows.map((row: Row<MailGroup>) => {
                 return (
                 <TableRow
                   key={row.id}
                   className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell: Cell<StaffMail, unknown>) => (
+                  {row.getVisibleCells().map((cell: Cell<MailGroup, unknown>) => (
                     <TableCell key={cell.id}>
-                        <Link href={`/mail/${row.original.mailGroupId}`}>
+                        <Link href={`/mail/${row.original.id}`}>
                             {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()

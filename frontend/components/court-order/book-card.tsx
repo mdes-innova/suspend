@@ -37,24 +37,82 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useRef, useState,  ChangeEvent, useEffect } from "react";
-import { GroupFile, type Isp } from "@/lib/types";
-import { downloadFile, Edit, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
+import {  type GroupFile, type Isp, type GroupFileTable, type Group } from "@/lib/types";
+import { downloadFile, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
+import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "../reload-page";
+import { useAppSelector } from "../store/hooks";
+import { RootState } from "../store";
+import { getGroup } from "../actions/group";
 
-export function BookCard({ispData, fileData, groupId}:
-  {ispData: Isp[], fileData: GroupFile[], groupId: number}) {
+async function getTableData(
+  groupId: number,
+  ispData: Isp[],
+): Promise<GroupFileTable[]> {
+  try {
+    let size = 0;
+
+    const group: Group = await getGroup(groupId);
+    const groupFilesData = group?.groupFiles?? [];
+    const groupDocuments = group?.documents?? [];
+
+    const ispIds = Array.from(
+      new Set(
+        groupFilesData
+          .map(e => e.isp?.id)
+          .filter((id): id is number => id != null)
+      )
+    );
+    for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
+
+    // Build rows; flatMap avoids returning [] inside map (no union with never[])
+    const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
+      const isp = ispData.find(e => e.id === ispId);
+      const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
+      for (const f of groupFilesIsp) size += (f?.size ?? 0);
+      if (!isp) return [];
+      return [{
+        isp,
+        groupFiles: groupFilesData.filter(ee => ee.isp?.id === ispId),
+        size,
+      }];
+    });
+
+    return rows;
+  } catch (error) {
+    if (isAuthError(error)) {
+      redirectToLogin();
+    }
+    // Always return an array to satisfy Promise<GroupFileTable[]>
+    return [];
+  }
+}
+
+export function BookCard({ispData, groupId}:
+  {ispData: Isp[], groupId: number}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
   const [ispSelected, setIspSelected] = useState<Isp | null>(null);
   const [selectedIsps, setSelectedIsps] = useState<Isp[]>([]);
-  const [tableData, setTableData] = useState<GroupFile[]>(fileData);
+  const [tableData, setTableData] = useState<GroupFileTable[]>([]);
   const [openNew, setOpenNew] = useState<number | null>(null);
-  const [filename, setFilename] = useState<string | null>(null);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+
+  const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
+
+  useEffect(() => {
+    const getData = async() => {
+      const data: GroupFileTable[] = await getTableData(groupId, ispData);
+      setTableData((data ?? []) as GroupFileTable[]);
+    }
+
+    getData();
+  }, [groupDocuments]);
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
-      setFilename(null);
       setIspSelected(null);
       const ispList = tableData
-        ?.map((e: GroupFile) => e.isp)
+        ?.map((e: GroupFileTable) => e?.isp)
         .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
 
       if (ispList && ispList.length > 0) {
@@ -64,23 +122,24 @@ export function BookCard({ispData, fileData, groupId}:
       const currentRow = tableData?.[openNew];
       if (!currentRow) return;
       const currentIsp = currentRow.isp;
-      const currentFile = currentRow.originalFilename;
       setIspSelected(currentIsp?? null);
       if (currentIsp)
         setSelectedIsps((prev: Isp[]) => {
           return prev.filter((isp) => isp.id !== currentIsp.id);
         });
-      setFilename(currentFile?? "");
+      setNewFiles([]);
     }
+
+    setNewFiles([]);
   }, [openNew])
 
   useEffect(() => {
-  const ispList = tableData
-    ?.map((e: GroupFile) => e.isp)
-    .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
+    const ispList = tableData
+      ?.map((e: GroupFileTable) => e.isp)
+      .filter((isp: Isp | undefined): isp is Isp => isp !== undefined);
 
-  setSelectedIsps(ispList ?? []);
-}, [tableData]);
+    setSelectedIsps(ispList ?? []);
+  }, [tableData]);
 
   return (
     <Card className="w-full">
@@ -89,10 +148,12 @@ export function BookCard({ispData, fileData, groupId}:
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full items-start justify-center gap-4">
-          <EditDialog groupId={groupId} filename={filename??""} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
-            selectedIsps={selectedIsps} setFilename={setFilename} setIspSelected={setIspSelected} 
+          <EditDialog groupId={groupId} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
+            selectedIsps={selectedIsps} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
-            tableData={tableData} uploadRef={uploadRef}/>
+            tableData={tableData} uploadRef={uploadRef}
+            newFiles={newFiles} setNewFiles={setNewFiles}
+            />
       
           <Button className="w-fit" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
@@ -106,17 +167,18 @@ export function BookCard({ispData, fileData, groupId}:
                 <TableHead className="w-[20px]">#</TableHead>
                 <TableHead className="w-[400px]">ชื่อเอกสาร</TableHead>
                 <TableHead className='w-[200px]'>ISP</TableHead>
+                <TableHead className='w-[50px]'>ขนาดไฟล์</TableHead>
                 <TableHead className="w-[50px] text-right">แก้ไข</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-                {tableData.length > 0 ? (
+                {tableData?.length > 0 ? (
                   <TableData tableData={tableData} setTableData={setTableData} setOpenNew={setOpenNew} 
-                     groupId={groupId}
+                     groupId={groupId} ispData={ispData}
                   />
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-4">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
                       No data to display
                     </TableCell>
                   </TableRow>
@@ -129,54 +191,64 @@ export function BookCard({ispData, fileData, groupId}:
   )
 }
 
-function TableData({groupId, tableData, setTableData, setOpenNew}:
+function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
   {
-    tableData: GroupFile[], setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>,
+    tableData: GroupFileTable[], setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
     setOpenNew: React.Dispatch<React.SetStateAction<number | null>>, groupId: number,
+    ispData: Isp[]
   }) {
+
   return (
     <>
       {
-        tableData.map((e: GroupFile, idx: number) => {
+        tableData.map((e: GroupFileTable, idx: number) => {
           return <TableRow key={`table-cell-${idx}`}>
-            <TableCell className='w-[20px]'>{idx + 1}</TableCell>
-            <TableCell className='max-w-[400px]'>
-              <div className='w-full h-full flex'>
-              <ArrowDownToLine size={16} className='cursor-pointer'
-              onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
-                evt.preventDefault();
-                const fileName = e.originalFilename;
-                const fileId = e.id;
-                try {
-                  const blob = await downloadFile(fileId as number);
-                  const url = window.URL.createObjectURL(blob);
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.setAttribute("download", `${fileName}`);
-                  document.body.appendChild(link);
-                  link.click();
-                  link.remove();
-                  window.URL.revokeObjectURL(url);
-                } catch (error) {
-                 console.error(error) 
-                }
-              }}/>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className='w-full truncate'>
-                    {e.originalFilename}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{e.originalFilename}</p>
-                </TooltipContent>
-              </Tooltip>
-
-              </div>
+            <TableCell className='w-[20px]'>
+              {idx + 1}
+              </TableCell>
+            <TableCell className='max-w-[400px] flex flex-col items-start'>
+              {
+                e.groupFiles.map((ee, idx2) => 
+                  <div className='w-full h-full flex' key={`isp-file-${idx}-${idx2}`}>
+                    <ArrowDownToLine size={16} className='cursor-pointer'
+                    onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                      evt.preventDefault();
+                      const fileName = ee.originalFilename;
+                      const fileId = ee.id;
+                      try {
+                        const blob = await downloadFile(fileId as number);
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.setAttribute("download", `${fileName}`);
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        window.URL.revokeObjectURL(url);
+                      } catch (error) {
+                      console.error(error);
+                      if (isAuthError(error))
+                        redirectToLogin(); 
+                      }
+                    }}/>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className='w-full truncate'>
+                          {ee.originalFilename}
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{ee.originalFilename}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )
+              }
             </TableCell>
             <TableCell className='w-[200px]'>{e?.isp?.name?? '-'}</TableCell>
-            <TableCell className='text-right  flex justify-end w-full px-0'>
-              <div className="flex gap-x-1">
+            <TableCell className='w-[200px]'>{e?.size? (e.size/(1024 * 1024)).toFixed(2): '-'} MB</TableCell>
+            <TableCell className='w-[200px]'>
+              <div className="flex gap-x-1 justify-end">
                 <FilePenLine size={24} className='cursor-pointer'
                 onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
                   evt.preventDefault();
@@ -185,12 +257,21 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
                 <CircleX className='hover:text-red-400' size={24}
                 onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                   evt.preventDefault();
-                  await RemoveFile(e.id as number);
-                  const newData = await GetFilesFromGroup(groupId);
-                  setTableData(newData);
+                  try {
+                    const gfs = tableData[idx].groupFiles;
+                    for (const gf of gfs) {
+                      await RemoveFile(gf.id as number);
+                    }
+                    const newData: GroupFileTable[] = await getTableData(groupId, ispData);
+                    setTableData((newData?? []) as GroupFileTable[]);
+                  } catch (error) {
+                    if (isAuthError(error))
+                      redirectToLogin(); 
+                  }
                 }}
                 />
-              </div>
+                </div>
+
             </TableCell>
           </TableRow>
         })
@@ -200,7 +281,9 @@ function TableData({groupId, tableData, setTableData, setOpenNew}:
 }
 
 function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
-  ispData, selectedIsps, filename, setFilename, uploadRef, tableData, setTableData}:
+  ispData, selectedIsps, uploadRef, tableData, setTableData,
+  newFiles, setNewFiles
+}:
   {
     groupId: number,
     openNew: number | null,
@@ -210,11 +293,11 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
     ispData: Isp[],
     selectedIsps: Isp[],
     setSelectedIsps: React.Dispatch<React.SetStateAction<Isp[]>>,
-    filename: string,
-    setFilename: React.Dispatch<React.SetStateAction<string | null>>,
     uploadRef: React.RefObject<HTMLInputElement | null>,
-    tableData: GroupFile[],
-    setTableData: React.Dispatch<React.SetStateAction<GroupFile[]>>
+    tableData: GroupFileTable[],
+    setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
+    newFiles: File[],
+    setNewFiles: React.Dispatch<React.SetStateAction<File[]>>
   }) {
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
@@ -263,27 +346,118 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                   </div>
                   <div className="grid gap-3">
                     {
-                      !filename?
-                      <>
-                        <Button variant='outline' onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                          e.preventDefault();
-                          if (uploadRef.current) uploadRef.current.click();
-                        }}>อัพโหลดเอกสาร</Button>
-                        <Input
-                          ref={uploadRef}
-                          id="isp-pdf-upload"
-                          type="file"
-                          accept="application/pdf"
-                          onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
-                            if (e?.target?.files && e?.target?.files.length > 0) {
-                              setFilename(e.target.files[0].name);
-                            }
-                          }}
-                          className="hidden"
-                        />
-                      </>:
-                      <>
-                        <Tooltip>
+                      openNew === -1 || !tableData ?
+                      <></>
+                      :
+                      tableData[openNew as number]?.groupFiles?.map((gf, gfIdx) => {
+                        return (
+                          <div className="w-96 flex justify-between" key={`gf-${gfIdx}`}>
+                            <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className='truncate w-full text-accent p-0 underline cursor-default'
+                                onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                                  e.preventDefault();
+                                  try {
+                                    const blob = await downloadFile(gf.id as number);
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.setAttribute("download", `${gf.originalFilename}`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                    window.URL.revokeObjectURL(url);
+                                  } catch (error) {
+                                    if (isAuthError(error))
+                                      redirectToLogin();
+                                    
+                                  }
+                              }}>{gf.originalFilename}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{gf.originalFilename}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <CircleX className='hover:text-red-400' size={24}
+                              onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
+                              evt.preventDefault();
+                              setTableData((prev: GroupFileTable[]) => {
+                                const idx = typeof openNew === "number" ? openNew : -1;
+                                if (idx < 0 || idx >= prev.length) return prev;
+                                
+                                const row = prev[idx];
+                                if (!row) return prev;
+                                const filtered = row.groupFiles.filter(e => e.id !== gf.id);
+                                if (filtered.length === row.groupFiles.length) return prev;
+
+                                const updated = [...prev];
+                                updated[idx] = { ...row, groupFiles: filtered };
+                                return updated;
+                              });
+                            }}
+                            />
+                          </div>
+                        );
+                      })
+                    }
+                    {newFiles.map((nf, nfIdx) => {
+                      return (
+                        <div className="w-96 flex justify-between" key={`gf-${nfIdx}`}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p
+                                className="truncate w-full text-accent p-0 underline cursor-default"
+                                onClick={(e: React.MouseEvent<HTMLParagraphElement>) => {
+                                  e.preventDefault();
+                                  const url = window.URL.createObjectURL(nf);
+                                  const link = document.createElement("a");
+                                  link.href = url;
+                                  link.setAttribute("download", nf.name);
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  link.remove();
+                                  window.URL.revokeObjectURL(url);
+                                }}
+                              >
+                                {nf.name}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{nf.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          <CircleX
+                            className="hover:text-red-400"
+                            size={24}
+                            onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
+                              evt.preventDefault();
+                              setNewFiles((prev: File[]) => prev.filter((_, nnfIdx) => nnfIdx !== nfIdx));
+                            }}
+                          />
+                        </div>
+                      );
+                    })} 
+                    <Button variant='outline' onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                      e.preventDefault();
+                      if (uploadRef.current) uploadRef.current.click();
+                    }}>อัพโหลดเอกสาร</Button>
+                    <Input
+                      ref={uploadRef}
+                      id="isp-pdf-upload"
+                      type="file"
+                      accept="application/pdf"
+                      multiple
+                      onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
+                        const files = e.currentTarget.files;
+                        if (!files || files.length === 0) return;
+
+                        const selected = Array.from(files);
+                        setNewFiles((prev: File[]) =>  [...prev, ...selected]);
+                      }}
+                      className="hidden"
+                    />
+                        {/* <Tooltip>
                           <TooltipTrigger asChild>
                               <p className='truncate w-full text-accent p-0 underline cursor-default'
                               onClick={(e: React.MouseEvent<HTMLDivElement>) => {
@@ -306,9 +480,8 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             }
                           }}
                           className="hidden"
-                        />
-                      </>
-                    }
+                        /> */}
+
                   </div>
                 </div>
                 <DialogFooter>
@@ -319,47 +492,65 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                     openNew === -1 &&
                     <Button type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.preventDefault();
-                      if (!filename || !ispSelected) return;
-                      const files = uploadRef?.current?.files;
-                      if (!files || !(files.length)) return;
-
-                      const formData = new FormData();
-                      formData.append("file", files[0]);
-                      formData.append("isp", `${ispSelected.id}`);
-                      formData.append("group", `${groupId}`);
-                      await uploadFile({
-                        formData
-                      });
-                      const newData = await GetFilesFromGroup(groupId);
-                      setTableData(newData);
-                      setOpenNew(null);
-
+                      try {
+                        for (const nf of newFiles) {
+                          const formData = new FormData();
+                          formData.append("file", nf);
+                          if (!ispSelected)
+                            return;
+                          formData.append("isp", `${ispSelected?.id}`);
+                          formData.append("group", `${groupId}`);
+                          await uploadFile({
+                            formData
+                          });
+                        }
+                        const newData: GroupFileTable[] = await getTableData(groupId, ispData);
+                        setTableData((newData?? []) as GroupFileTable[]);
+                        setOpenNew(null);
+                      } catch (error) {
+                        if (isAuthError(error))  
+                          redirectToLogin(); 
+                      }
                     }}>เพิ่ม</Button>
                   }
                   {
                     openNew != null && openNew > -1 &&
                     <Button type="submit" onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.preventDefault();
-                      if (!filename || !ispSelected) return;
-                      const files = uploadRef?.current?.files;
-                      if (!files || !(files.length)) {
-                        if (ispSelected != tableData[openNew].isp) {
-                          await Edit({
-                            fid: tableData[openNew].id as number,
-                            isp: `${ispSelected.id}`
+                      try {
+                        const idx = typeof openNew === 'number'? openNew: -1;
+                        if (idx < 0 || idx >= tableData.length) return;
+
+                        const row = tableData[idx];
+                        const orgGroupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+                        const orgGroupFileIsp = orgGroupFiles.filter((e) => e.isp?.id === row.isp.id);
+                        const tableGroupFilesids = row.groupFiles.map((e) => e?.id);
+                        const rmvGroupFiles = orgGroupFileIsp.filter((e) => !(tableGroupFilesids.includes(e.id)));
+
+                        for (const gf of rmvGroupFiles) {
+                          if (gf && gf?.id)
+                            await RemoveFile(gf.id);
+                        }
+                        
+                         for (const nf of newFiles) {
+                          const formData = new FormData();
+                          formData.append("file", nf);
+                          if (!ispSelected)
+                            return;
+                          formData.append("isp", `${ispSelected?.id}`);
+                          formData.append("group", `${groupId}`);
+                          await uploadFile({
+                            formData
                           });
                         }
-                      } else {
-                        await Edit({
-                          fid: tableData[openNew].id as number,
-                          isp: ispSelected.id != tableData[openNew]?.isp?.id? `${ispSelected.id}`: undefined,
-                          file: files[0]
-                        });
-                    
+
+                        const newData: GroupFileTable[] = await getTableData(groupId, ispData);
+                        setTableData((newData?? []) as GroupFileTable[]);
+                        setOpenNew(null);
+                      } catch (error) {
+                        if (isAuthError(error))
+                          redirectToLogin(); 
                       }
-                      const newData = await GetFilesFromGroup(groupId);
-                      setTableData(newData);
-                      setOpenNew(null);
                     }}>แก้ไข</Button>
                   }
                 </DialogFooter>

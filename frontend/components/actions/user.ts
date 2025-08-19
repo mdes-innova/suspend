@@ -6,9 +6,9 @@ import { getAccess } from "./auth";
 import { cookies } from 'next/headers';
 
 export async function getProfile() {
-    const access = await getAccess();
 
     try {
+        const access = await getAccess();
         const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/me/`, {
         headers: {
           Authorization: `Bearer ${access}`
@@ -28,9 +28,9 @@ export async function getProfile() {
 }
 
 export async function getUsers() {
-    const access = await getAccess();
 
     try {
+        const access = await getAccess();
         const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
         const res = await fetch(`${url}/user/users/`, {
         headers: {
@@ -51,8 +51,8 @@ export async function getUsers() {
 }
 
 export async function registerUser(userRegisterParams: UserRegister) {
-   const access = await getAccess(); 
     try {
+        const access = await getAccess(); 
         const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/`, {
         method: 'POST',
         headers: {
@@ -67,6 +67,8 @@ export async function registerUser(userRegisterParams: UserRegister) {
         if (!res.ok) {
             if (res.status === 401)
                 throw new AuthError('Authentication fail.')
+            else
+                throw new Error("Register new user fail.");
         }
         const profile = await res.json();
         return profile;

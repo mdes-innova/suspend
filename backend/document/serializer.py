@@ -7,17 +7,31 @@ from url.serializer import UrlSerializer
 from django.db.utils import IntegrityError
 
 
+class DocumentFileSerializer(serializers.ModelSerializer):
+    """Image serializer class."""
+    size = serializers.SerializerMethodField()
+    class Meta:
+        """Meta class for DocumentFileSerializer."""
+        model = DocumentFile
+        fields = ['id', 'original_filename', 'size', 'uploaded_at']
+
+    def get_size(self, obj):
+        if obj.file:
+            return obj.file.size
+        return None
+
 class DocumentSerializer(serializers.ModelSerializer):
     """Document seriaizer class without a description field."""
     active = serializers.SerializerMethodField()
     group_id = serializers.SerializerMethodField()
     group_name = serializers.SerializerMethodField()
+    document_file = DocumentFileSerializer(read_only=True)
 
     class Meta:
         """Meta class for Document serializer."""
         model = Document
         fields = ['id', 'order_id', 'order_no', 'order_list', 'order_date',
-                  'order_filename', 'orderred_no', 'orderred_date',
+                  'order_filename', 'orderred_no', 'orderred_date', 'document_file',
                   'kind_id', 'kind_name', 'active', 'group_id', 'group_name',
                   'orderblack_no', 'orderblack_date', 'isp_no', 'isp_date',
                   'createdate', 'created_at']
@@ -33,13 +47,3 @@ class DocumentSerializer(serializers.ModelSerializer):
     def get_group_name(self, obj):
         gd = getattr(obj, 'groupdocument', None)
         return gd.group.name if gd else None
-
-class FileSerializer(serializers.ModelSerializer):
-    """Image serializer class."""
-    class Meta:
-        """Meta class for FileSerializer."""
-        model = DocumentFile
-        fields = ['id', 'original_name', 'file', 'uploaded_at']        
-
-    def get_files(self, obj):
-        return [{'id': f.id, 'file': f.file.url} for f in obj.files.all()]

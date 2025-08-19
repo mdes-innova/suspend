@@ -18,13 +18,14 @@ class UserSerializer(serializers.ModelSerializer):
         required=False
     )
     email = serializers.EmailField(required=False, allow_blank=True)
+    is_superuser = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = get_user_model()
         fields = ['id', 'username', 'password', 'isp', 'isp_id', 'email',
-                  'is_staff', 'is_active']
+                  'is_staff', 'is_active', 'is_superuser']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
-        read_only_fields = ['isp']
+        read_only_fields = ['isp', 'is_superuser']
 
     def validate_username(self, value):
         try:

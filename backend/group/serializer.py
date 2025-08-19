@@ -6,6 +6,7 @@ from core.models import Group, Document, GroupDocument, GroupFile, ISP
 from document.serializer import DocumentSerializer
 from user.serializer import UserSerializer
 from isp.serializer import ISPSerializer
+from .utils import create_document_file
 
 
 class GroupFileSerializer(serializers.ModelSerializer):
@@ -14,13 +15,21 @@ class GroupFileSerializer(serializers.ModelSerializer):
         write_only=True
     )
     isp = ISPSerializer(read_only=True)
+    size = serializers.SerializerMethodField()
 
     class Meta:
         model = GroupFile
-        fields = ['id', 'isp_id', 'isp', 'file', 'original_filename',
-                  'created_at', 'modified_at']
+        fields = ['id', 'isp_id', 'isp', 'original_filename',
+                  'created_at', 'modified_at', 'size']
         read_only_fields = ['id', 'isp', 'file', 'created_at',
-                            'modified_at']
+                            'modified_at', 'size']
+    
+    
+    def get_size(self, obj):
+        if obj.file:
+            return obj.file.size
+        return None
+
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -32,21 +41,27 @@ class GroupSerializer(serializers.ModelSerializer):
         required=False
     )
     document_no = serializers.CharField(allow_blank=True, required=False)
+    body = serializers.CharField(allow_blank=True, required=False)
     document_date = serializers.DateTimeField(allow_null=True, required=False)
     title = serializers.CharField(allow_blank=True, required=False)
+    body = serializers.CharField(allow_blank=True, required=False)
     speed = serializers.IntegerField(allow_null=True, required=False)
     secret = serializers.IntegerField(allow_null=True, required=False)
+    section = serializers.IntegerField(allow_null=True, required=False)
     documents = DocumentSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
+    group_files = GroupFileSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = Group
         fields = [
-            'id', 'name', 'documents', 'document_ids', 'user',
+            'id', 'name', 'documents', 'document_ids', 'user', 'body',
             'document_no', 'document_date', 'title', 'speed', 'secret',
-            'created_at', 'modified_at'
+            'created_at', 'modified_at', 'group_files', 'section'
             ]
-        read_only_fields = ['documents', 'user', 'created_at', 'modified_at']
+        read_only_fields = ['documents', 'user', 'created_at', 'modified_at',
+                            'group_files']
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -67,6 +82,9 @@ class GroupSerializer(serializers.ModelSerializer):
         if documents:
             try:
                 if mode == 'append':
+                    for document in documents:
+                        if not hasattr(document, 'document_file'):
+                            create_document_file(document)
                     had_doc_ids = set(
                         GroupDocument.objects
                         .filter(group=instance)
@@ -79,9 +97,15 @@ class GroupSerializer(serializers.ModelSerializer):
                     ])
 
                 elif mode == 'remove':
+                    for document in documents:
+                        if hasattr(document, 'document_file'):
+                            document.document_file.delete()
                     GroupDocument.objects.filter(group=instance, document__in=documents).delete()
 
-                else:  # reset
+                else:
+                    for document in documents:
+                        if not hasattr(document, 'document_file'):
+                            create_document_file(document)
                     GroupDocument.objects.filter(group=instance).delete()
                     GroupDocument.objects.bulk_create([
                         GroupDocument(group=instance, document=doc, user=user)

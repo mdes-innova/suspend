@@ -1,30 +1,44 @@
 import { Suspense } from 'react';
 import ContentLoading from "@/components/loading/content";
-import { redirect } from "next/navigation";
-import { AuthError } from '@/components/exceptions/auth';
-import { getGroupMails } from '@/components/actions/mail';
+import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import MailView from '@/components/mail-view';
+import ReloadPage from '@/components/reload-page';
+import { notFound } from "next/navigation";
+import { getAccess } from '../../page';
 
-
-async function getData(id: string) {
-  try {
-    const data = await getGroupMails(id);
-    return data;
-  } catch (error) {
-    if (error instanceof AuthError) redirect('/login') ;
-    else return [];
-  }
-}
 
 async function MailContent({params}: {params: Promise<{ id: string }>}) {
+  try {
     const {id} = await params;
-    const data = await getData(id);
+    const access = await getAccess();
 
-  return (
-    <div className='w-full h-full flex flex-col px-2'>
-      <MailView data={data} />
-    </div>
-  );
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mailgroups/${id}/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+    if (!res.ok) {
+    if (res.status === 401)
+        throw new AuthError('Authentication fail.')
+    throw new Error('Get a mail group fail.');
+    }
+
+    const data = await res.json();
+
+    return (
+      <div className='w-full h-full flex flex-col px-2'>
+        <MailView mailGroup={data} />
+      </div>
+    );
+  } catch (error) {
+    if (isAuthError(error))
+      return <ReloadPage />;
+    else
+      return notFound();
+  }
 }
 
 export default function Page({params}: {params: Promise<{id: string}>}) {

@@ -1,5 +1,3 @@
-import { confirm } from '@/components/actions/mail';
-import {type Mail } from '@/lib/types';
 import { Suspense } from 'react';
 import { CircleX, CheckCircle2Icon } from "lucide-react"
 import {
@@ -13,7 +11,22 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
     try {
-        const mail: Mail = await confirm(id);
+        const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+        const res = await fetch(`${baseUrl}/mail/mails/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({
+            confirmed_uuid: id
+        }),
+        headers: {
+            "Content-Type": "application/json"
+            },
+        }); 
+
+        if (!res.ok) {
+            throw new Error('Confirm fail.');
+        }
+
+        const mail = await res.json();
         if (!(mail.confirmed))
             throw new Error("Confirm fail.");
         return (

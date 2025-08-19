@@ -1,36 +1,40 @@
 'use client';
-import {type Mail, Document } from "@/lib/types"
+import {type Mail, Document, MailGroup } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
-import { Date2Thai, Datetime2Thai } from "@/lib/utils"
+import { Date2Thai, Datetime2Thai } from "@/lib/client/utils"
 import { ArrowDownToLine} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
+import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "./reload-page";
 
 export default function MailView({
-    data
+    mailGroup
 }: {
-    data: Mail[]
+    mailGroup: MailGroup
 }) {
-    console.log(data)
     return (
         <div className="w-full h-full flex flex-col gap-y-2">
             <div className="grid grid-cols-2 py-4">
                 <div className="col-span-2 text-2xl font-bold">
-                    {data[0].documentNo}
+                    {mailGroup.documentNo}
                 </div>
                 <div className="col-span-2 text-lg">
-                    {Date2Thai(data[0].documentDate as string)}
+                    {Date2Thai(mailGroup.documentDate as string)}
                 </div>
                 <div className="col-span-2 text-lg mt-4 italic">
-                    {data[0].subject}
+                    {mailGroup.subject}
                 </div>
                 <div>
-                    ชั้นความเร็ว: {['ปกติ', 'ด่วน', 'ด่วนมาก', 'ด่วนที่สุด'][data[0].speed as number]}
+                    ชั้นความเร็ว: {['ปกติ', 'ด่วน', 'ด่วนมาก', 'ด่วนที่สุด'][mailGroup.speed as number]}
                 </div>
                 <div>
-                    ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][data[0].secret as number]}
+                    ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][mailGroup.secret as number]}
+                </div>
+                <div>
+                    มาตรา: {['ปกติ', 'มาตรา 15'][mailGroup.section as number]}
                 </div>
             </div>
             <Card>
@@ -46,48 +50,53 @@ export default function MailView({
                     </TableHeader>
                     <TableBody>
                         {
-                            data && data.length > 0?
-                            data.map((e: Mail, idx: number) => 
+                            mailGroup != undefined && mailGroup?.mails && mailGroup?.mails?.length > 0?
+                            mailGroup?.mails.map((e: Mail, idx: number) => 
                             <TableRow key={`table-row-${idx}`}>
                                 <TableCell>
                                     {idx + 1} 
                                 </TableCell>
-                                <TableCell className='max-w-[400px]'>
-                                    <div className='w-full h-full flex'>
-                                    <ArrowDownToLine size={16} className='cursor-pointer'
-                                    onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                                <TableCell className='max-w-[400px] flex flex-col items-start'>
+                                {
+                                    e.mailFiles.map((ee, idx2) => 
+                                    <div className='w-full h-full flex' key={`isp-file-${idx}-${idx2}`}>
+                                        <ArrowDownToLine size={16} className='cursor-pointer'
+                                        onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
                                         evt.preventDefault();
-                                        const fileName = e.mailFile.originalFilename;
-                                        const fileId = e.mailFile.id;
+                                        const fileName = ee.originalFilename;
+                                        const fileId = ee.id;
                                         try {
-                                        const blob = await downloadFile(fileId as number);
-                                        const url = window.URL.createObjectURL(blob);
-                                        const link = document.createElement("a");
-                                        link.href = url;
-                                        link.setAttribute("download", `${fileName}`);
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        link.remove();
-                                        window.URL.revokeObjectURL(url);
+                                            const blob = await downloadFile(fileId as number);
+                                            const url = window.URL.createObjectURL(blob);
+                                            const link = document.createElement("a");
+                                            link.href = url;
+                                            link.setAttribute("download", `${fileName}`);
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            link.remove();
+                                            window.URL.revokeObjectURL(url);
                                         } catch (error) {
-                                        console.error(error) 
+                                        console.error(error);
+                                        if (isAuthError(error))
+                                            redirectToLogin(); 
                                         }
-                                    }}/>
-                                    <Tooltip>
+                                        }}/>
+                                        <Tooltip>
                                         <TooltipTrigger asChild>
-                                        <p className='w-full truncate'>
-                                            {e.mailFile.originalFilename}
-                                        </p>
+                                            <p className='w-full truncate'>
+                                            {ee.originalFilename}
+                                            </p>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                        <p>{e.mailFile.originalFilename}</p>
+                                            <p>{ee.originalFilename}</p>
                                         </TooltipContent>
-                                    </Tooltip>
-
+                                        </Tooltip>
                                     </div>
-                                    </TableCell>
+                                    )
+                                }
+                                </TableCell>
                                 <TableCell>
-                                    {e.mailFile.isp.name} 
+                                    {e?.isp?.name} 
                                 </TableCell>
                                 <TableCell>
                                     {e.status === "successful"? Datetime2Thai(e.datetime as string): '-'} 
@@ -120,8 +129,8 @@ export default function MailView({
                     </TableHeader>
                     <TableBody>
                         {
-                            data && data.length > 0 && data[0] && data[0].documents && data[0].documents.length > 0?
-                            data[0].documents.map((e: Document, idx: number) => 
+                            mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0?
+                            mailGroup.documents.map((e: Document, idx: number) => 
                             <TableRow key={`table-row-${idx}`}>
                                 <TableCell>
                                     {idx + 1} 

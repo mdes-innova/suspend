@@ -17,9 +17,11 @@ import { Separator } from "@/components/ui/separator";
 import { Plus } from "lucide-react";
 import { addToGroup, getGroups } from "../actions/group";
 import { getDocumentList } from "../actions/document";
-import { Datetime2Thai } from "@/lib/utils";
+import { Datetime2Thai } from "@/lib/client/utils";
 import { RootState } from "../store";
 import { type Group, type Document } from "@/lib/types";
+import { isAuthError } from '@/components/exceptions/auth';
+import { redirectToLogin } from "../reload-page";
  
 
 function MyScrollArea({ data }: { data: Group[] }) {
@@ -47,9 +49,10 @@ function MyScrollArea({ data }: { data: Group[] }) {
                   dispatch(closeModal({ui: PLAYLISTUI.list,
                     info: [newPlaylist, ...documentList.map((ee: Document) => ee.orderNo)] }));
                 } catch (error) {
-                  console.error(error);
                   dispatch(closeModal({ui: PLAYLISTUI.new,
                     info: [error as string], err: true }));
+                  if (isAuthError(error))
+                    redirectToLogin();
                 }
               }
             }}>
@@ -83,6 +86,8 @@ export default function PlaylistDialog() {
             console.error(error);
            dispatch(closeModal({ui: PLAYLISTUI.list}));
            dispatch(closeModal({ui: PLAYLISTUI.new, info: ["error"], err: true}));
+           if (isAuthError(error))
+            redirectToLogin();
           }
         }
       }

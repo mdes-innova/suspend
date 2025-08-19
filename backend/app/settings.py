@@ -63,7 +63,8 @@ INSTALLED_APPS = [
     'two_factor',
     'django_otp.plugins.otp_static',
     'corsheaders',
-    'django_celery_beat'
+    'django_celery_beat',
+    'django_cleanup.apps.CleanupConfig'
 ]
 
 MIDDLEWARE = [
@@ -225,3 +226,7 @@ LOGIN_REDIRECT_URL = '/admin/'
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+CLEANUP_IGNORE = (
+    ("core.MailFile", "file"),
+)

@@ -5,9 +5,9 @@ import { getAccess } from "./auth";
 import { AuthError } from "../exceptions/auth";
 
 export async function getMails() {
+  try {
     const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-  try {
     const res = await fetch(`${url}/mail/mails/`, {
       method: 'GET',
       headers: {
@@ -29,39 +29,41 @@ export async function getMails() {
 }
 
 export async function SendMail({
-    groupId, groupFile
+    groupId, groupFile, documentId
 }: {
     groupId: number,
-    groupFile: GroupFile
+    groupFile: GroupFile,
+    documentId: number
 }) {
-    const access = await getAccess();
 
     try {
-        const res = await fetch(
-        `${process.env.NODE_ENV === "development"?
-            process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send/`,
-        {
-            headers: {
-                Authorization: `Bearer ${access}`,
-                "Content-Type": "application/json"
-            },
-            method: "POST",
-            body: JSON.stringify({
-                groupId,
-                groupFileId: groupFile.id,
-                isp_id: groupFile.isp?.id
-            })
-        }
-        );
+      const access = await getAccess();
+      const res = await fetch(
+      `${process.env.NODE_ENV === "development"?
+          process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send-mail/`,
+      {
+          headers: {
+              Authorization: `Bearer ${access}`,
+              "Content-Type": "application/json"
+          },
+          method: "POST",
+          body: JSON.stringify({
+              groupId,
+              groupFileId: groupFile.id,
+              ispId: groupFile.isp?.id,
+              documentId
+          })
+      }
+      );
 
-        if (!res.ok) {
-        if (res.status === 401)
-            throw new AuthError('Authentication fail.');
-        throw new Error('Mail failed');
-        }
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.');
+      throw new Error('Mail failed');
+      }
 
-        const mail = await res.json();
-        return mail;
+      const mail = await res.json();
+      return mail;
     } catch (error) {
         return error;
     }
@@ -69,48 +71,45 @@ export async function SendMail({
 }
 
 export async function SendMails(groupId: number) {
-    const access = await getAccess();
     try {
-        const res = await fetch(
-        `${process.env.NODE_ENV === "development"?
-            process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send-mails/`,
-        {
-            headers: {
-                Authorization: `Bearer ${access}`,
-                "Content-Type": "application/json"
-            },
-            method: "POST",
-            body: JSON.stringify({
-                groupId
-            })
-        }
-        );
+      const access = await getAccess();
+      const res = await fetch(
+      `${process.env.NODE_ENV === "development"?
+          process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mails/send-mails/`,
+      {
+          headers: {
+              Authorization: `Bearer ${access}`,
+              "Content-Type": "application/json"
+          },
+          method: "POST",
+          body: JSON.stringify({
+              groupId
+          })
+      }
+      );
 
-        if (!res.ok) {
-        if (res.status === 401)
-            throw new AuthError('Authentication fail.');
-        throw new Error('Send mails failed');
-        }
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.');
+      throw new Error('Send mails failed');
+      }
 
-        const mails = await res.json();
-        return mails;
+      const mails = await res.json();
+      return mails;
     } catch (error) {
         return error;
     }
 }
 
-export async function confirm(hash: string) {
-  const access = await getAccess();
-
+export async function confirm(confirmed_uuid: string) {
   try {
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
     const res = await fetch(`${url}/mail/mails/confirm/`, {
       method: 'POST',
       body: JSON.stringify({
-        hash
+        confirmed_uuid
       }),
       headers: {
-          Authorization: `Bearer ${access}`,
           "Content-Type": "application/json"
         },
     }); 
@@ -129,10 +128,34 @@ export async function confirm(hash: string) {
 }
 
 export async function getStaffMails() {
+  try {
     const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-  try {
     const res = await fetch(`${url}/mail/mails/staff-mails/`, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+    if (!res.ok) {
+    if (res.status === 401)
+        throw new AuthError('Authentication fail.')
+    throw new Error('Get staff mails fail.');
+    }
+
+    const content = await res.json();
+    return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function getMailGroups() {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mailgroups/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -142,7 +165,7 @@ export async function getStaffMails() {
       if (!res.ok) {
       if (res.status === 401)
           throw new AuthError('Authentication fail.')
-      throw new Error('Get staff mails fail.');
+      throw new Error('Get mail groups fail.');
       }
 
       const content = await res.json();
@@ -152,11 +175,11 @@ export async function getStaffMails() {
   }
 }
 
-export async function getGroupMails(groupMailId: string) {
+export async function getMailGroup(id: string) {
+  try {
     const access = await getAccess();
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-  try {
-    const res = await fetch(`${url}/mail/mails/group-mail/${groupMailId}/`, {
+    const res = await fetch(`${url}/mail/mailgroups/${id}/`, {
       method: 'GET',
       headers: {
           Authorization: `Bearer ${access}`
@@ -166,7 +189,7 @@ export async function getGroupMails(groupMailId: string) {
       if (!res.ok) {
       if (res.status === 401)
           throw new AuthError('Authentication fail.')
-      throw new Error('Get group mails fail.');
+      throw new Error('Get a mail group fail.');
       }
 
       const content = await res.json();
@@ -177,8 +200,8 @@ export async function getGroupMails(groupMailId: string) {
 }
 
 export async function downloadFile(fid: number) {
-  const access = await getAccess();
   try {
+    const access = await getAccess();
     const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/mail/mailfiles/download/${fid}/`, {
       method: "GET",
       headers: {
@@ -194,5 +217,113 @@ export async function downloadFile(fid: number) {
     return response.blob();
   } catch (error) {
     throw error;
+  }
+}
+
+export async function sendIspMail({
+  section,
+  mailGroupId,
+  documentId,
+  ispId
+}: {
+  section: number,
+  mailGroupId: string,
+  documentId?: number,
+  ispId: number
+}) {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mails/send-mail/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        section,
+        mailGroupId,
+        documentId,
+        ispId
+      }),
+      headers: {
+          "Authorization": `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+        if (res.status === 401)
+            throw new AuthError('Authentication fail.')
+        throw new Error('Send mail fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function createMailFile({
+  groupFileId,
+  mailGroupId
+}: {
+  groupFileId: number,
+  mailGroupId: number
+}) {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mailfiles/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        groupFileId,
+        mailGroupId
+      }),
+      headers: {
+          "Authorization": `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Create a mail file fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
+
+export async function createMailGroup({
+  groupId
+}: {
+  groupId: number
+}) {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mailgroups/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        groupId
+      }),
+      headers: {
+          "Authorization": `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Create a mail group fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
   }
 }
