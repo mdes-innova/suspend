@@ -50,7 +50,7 @@ export default function MailGroupView({
                         const bg = (['xlsx', 'xls'].includes(fileExt))? 'bg-green-200': 'bg-background'
                         return <div className="w-11/12" key={`all-isp-file-${idx}`}>
                             <Button variant="outline" className={`w-full ${bg}`}
-                                onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                                onClick={async(evt: React.MouseEvent<HTMLButtonElement>) => {
                                 evt.preventDefault();
                                 const fileId = e.id;
                                 try {

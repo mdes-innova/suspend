@@ -13,7 +13,6 @@ import {
   DropdownMenu,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { usePathname } from "next/navigation";
 
 import { Button } from "./ui/button";
 import { useRouter } from 'next/navigation';
@@ -27,7 +26,6 @@ export function DropdownMenuUser() {
   const router = useRouter();
   const [open, setOpen] = useState(false)
   const dispatch = useAppDispatch();
-  const pathname = usePathname();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
 
   if (!user) return null;

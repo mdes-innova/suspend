@@ -57,7 +57,7 @@ export function GroupForm({
     const submitRef = useRef<HTMLButtonElement>(null);
     const [textareaValue, setTextareaValue] = useState("");
     const [sectionErrorMsg, setSectionErrorMsg] = useState("");
-    const [prevSectionName, setPrevSectionName] = useState<string | null>(null);
+    const [prevSectionName, setPrevSectionName] = useState<string>('');
     const [sectionName, setSectionName] = useState("");
     const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
     const newSectionNameRef = useRef<HTMLInputElement>(null);
@@ -87,7 +87,7 @@ export function GroupForm({
           });
         
         const sectionData = await getSections();
-        setSections(sectionData);
+        setSections(sectionData??[]);
       } catch (error) {
         if (isAuthError(error))
           redirectToLogin();
@@ -600,7 +600,7 @@ export function GroupForm({
                        setSectionName(newSection.name);
 
                        const newSections = await getSections();
-                       setSections(newSections);
+                       setSections(newSections??[]);
 
                       } catch (error) {
                         setSectionErrorMsg("ไม่สามารถสร้างมาตราใหม่ได้");
@@ -626,7 +626,7 @@ export function GroupForm({
                     ลบมาตรา
                   </DialogTitle>
                   <DialogDescription>
-                    ท่านต้องการลบมาตรา "{sectionName}" หรือไม่?
+                    ท่านต้องการลบมาตรา &quot;{sectionName}&quot; หรือไม่?
                   </DialogDescription>
                   <div className="text-destructive block h-8">{sectionErrorMsg}</div>
                   <DialogFooter>
@@ -647,7 +647,7 @@ export function GroupForm({
                           setSectionDeleteOpen(false);
                           const sectionData = await getSections();
                           setSectionName('');
-                          setSections(sectionData);
+                          setSections(sectionData?? []);
                         } catch (error) {
                           setSectionErrorMsg(`ไม่สามารถลบ "${currentSectionName}" ได้`);
                           if (isAuthError(error)) 

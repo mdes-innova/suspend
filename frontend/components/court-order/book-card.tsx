@@ -246,7 +246,7 @@ export function BookCard({ispData, groupId, sectionName}:
                   return <div className="flex w-full gap-x-1" key={`isp-file-all-${idx}`}>
                     <div className="w-full">
                       <Button variant="outline" className={`w-full ${bg}`}
-                        onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
+                        onClick={async(evt: React.MouseEvent<HTMLButtonElement>) => {
                         evt.preventDefault();
                         const fileId = e.id;
                         try {

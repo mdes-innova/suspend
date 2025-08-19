@@ -14,7 +14,7 @@ import CategoryGroup from "./document-category";
 import { Date2Thai, Text2Thai } from "@/lib/client/utils";
 import { downloadPdf, downloadUrls } from "./actions/document";
 import { isAuthError } from "./exceptions/auth";
-
+import { redirectToLogin } from "./reload-page";
 
 export default function DocumentView(
   { docData, groupData }: { docData: Document, groupData: Group }) {

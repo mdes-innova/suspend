@@ -22,7 +22,8 @@ import {
   Row,
   Column,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, SlidersVertical } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal,
+  SlidersVertical, ChevronLeft, ChevronRight } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting, setPagination} 
   from "../store/features/content-list-ui-slice";
 import { Button } from "@/components/ui/button";
@@ -232,6 +233,7 @@ export const columns: ColumnDef<Document>[] = [
 ]
 
 export default function DataTable({ data }: { data: Document[] }) {
+  const paginations = [20, 50, 100];
   const dispatch = useAppDispatch();
   const [tableData, setTableData] = React.useState<Document[]>(data);
   const sorting = useAppSelector((state: RootState) => state.contentListUi.sorting);
@@ -422,12 +424,33 @@ export default function DataTable({ data }: { data: Document[] }) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between py-4">
+        <div className="text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        <div className="space-x-2">
+        <div className="flex gap-x-2">
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize <= 20) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex <= 0) return;
+            dispatch(setPagination({...pagination, pageSize: paginations[currentPageIndex - 1]}));
+          }}>
+            <ChevronLeft/>
+          </Button>
+            <p className="flex flex-col justify-center items-center">{pagination.pageSize}</p>
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize >= 100) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex >= paginations.length - 1) return;
+            dispatch(setPagination({...pagination, pageSize: paginations[currentPageIndex + 1]}));
+          }}>
+            <ChevronRight />
+          </Button>
+        </div>
+        <div className="flex gap-x-2">
           <Button
             variant="outline"
             size="sm"
