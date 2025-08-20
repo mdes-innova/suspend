@@ -29,7 +29,9 @@ services:
       context: ./backend
     working_dir: /app
     env_file:
-      - ./.env  
+      - ./.env
+    volumes:
+      - suspend_uploads:/app/uploads
     environment:
       DJANGO_ENV: production 
     depends_on:
@@ -94,6 +96,7 @@ services:
 
 volumes:
   postgres_data:
+  suspend_uploads:
 
 networks:
   suspend_mdes_network:

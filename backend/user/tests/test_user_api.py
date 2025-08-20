@@ -173,7 +173,6 @@ class AdminUserTest(TestCase):
             'username': 'arnon', 'password': 'Arnon@1234', 'isp_id': isp.id,
             'is_staff': False
         }
-        print(payload)
         res = self.__client.post(CREATE_USER_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual({'username': res.data['username'],

@@ -45,6 +45,13 @@ class Group(models.Model):
             ],
          null=True
     )
+    section = models.ForeignKey(
+        "Section",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='groups'
+        )
+
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -69,9 +76,13 @@ class GroupFile(models.Model):
     file = models.FileField(
         upload_to=group_file_path,
         validators=[
-            FileExtensionValidator(allowed_extensions=['pdf'])
+            FileExtensionValidator(allowed_extensions=['pdf', 'xlsx', 'xls'])
         ],
         blank=True,
+        null=True
+    )
+    all_isp = models.BooleanField(
+        default=False,
         null=True
     )
 

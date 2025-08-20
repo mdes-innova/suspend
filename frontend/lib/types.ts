@@ -21,7 +21,8 @@ export type Document = {
   active?: boolean,
   groupName?: string,
   groupId?: number,
-  documentFile?: DocumentFile
+  documentFile?: DocumentFile,
+  hasAllIsps?: boolean
 }
 
 export type Group = {
@@ -37,7 +38,7 @@ export type Group = {
     speed?: number,
     secret?: number,
     groupFiles?: GroupFile[],
-    section: string
+    section?: Section,
 }
 
 export type User = {
@@ -118,7 +119,8 @@ export type GroupFile = {
   group?: Group,
   file?: Blob,
   originalFilename?: string,
-  size: number
+  size: number,
+  allIsp?: boolean
 }
 
 export type StaffMail = {
@@ -140,7 +142,8 @@ export type MailGroup = {
   subject: string,
   mails: Mail[],
   documents: Document[],
-  section: number
+  section: Section,
+  allispMailFiles?: MailFile[]
 }
 
 export type GroupUpdate = {
@@ -165,4 +168,10 @@ export type GroupFileTable = {
   isp: Isp,
   groupFiles: GroupFile[],
   size: number
+}
+
+export type Section = {
+  id: number,
+  name: string,
+  createdAt: string
 }

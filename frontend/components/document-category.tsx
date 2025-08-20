@@ -56,7 +56,7 @@ export default function CategoryGroup({ doc, group }:
     ];
     const [groupData, setGroupData] = useState<Group | null>(null);
     const user = useAppSelector((state: RootState) => state.userAuth.user);
-    const isOwner = user && groupData && user.id === groupData.user.id;
+    const isOwner = user && groupData && ((user.id === groupData.user.id) || (user.isSuperuser));
 
     const router = useRouter();
 

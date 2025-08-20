@@ -7,6 +7,7 @@ from core.models import (
 from user.serializer import UserSerializer
 from document.serializer import DocumentSerializer
 from group.serializer import GroupSerializer, GroupFileSerializer
+from section.serializer import SectionSerializer
 from isp.serializer import ISPSerializer
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
@@ -39,9 +40,9 @@ class MailFileSerializer(serializers.ModelSerializer):
         model = MailFile
         fields = ['id', 'original_filename', 'group_file_id',
                   'mail_group', 'mail_group_id',
-                  'group_file', 'isp', 'created_at', 'mail']
+                  'group_file', 'isp', 'created_at']
         read_only_fields = ['id', 'original_filename', 'mail_group'
-                            'isp', 'created_at', 'mail']
+                            'isp', 'created_at']
     
     def create(self, validated_data):
         group_file = validated_data.pop('group_file_id')
@@ -80,17 +81,17 @@ class MailSerializer(serializers.ModelSerializer):
         read_only=True
     )
     mail_group_id = serializers.UUIDField(write_only=True)
-    isp_id = serializers.PrimaryKeyRelatedField(
-        write_only=True,
-        queryset=ISP.objects.all()
-    )
     isp = ISPSerializer(
         read_only=True
+    )
+    all_isp = serializers.BooleanField(
+        allow_null=True,
+        required=False
     )
 
     class Meta:
         model = Mail
-        fields = ['id', 'receiver_id', 'receiver', 'isp_id', 'isp',
+        fields = ['id', 'receiver_id', 'receiver', 'isp', 'all_isp',
                   'status', 'datetime', 'confirmed', 'confirmed_uuid',
                   'confirmed_date', 'created_at', 'modified_at', 'mail_files',
                   'mail_group_id']
@@ -102,48 +103,58 @@ class MailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         receiver = validated_data.pop('receiver_id')
         mail_group_id = validated_data.pop('mail_group_id')
-        isp = validated_data.pop('isp_id', None)
         mail_group = MailGroup.objects.get(id=mail_group_id)
         group = mail_group.group
         mail = Mail.objects.create(
             receiver=receiver,
             confirmed=False,
             mail_group=mail_group,
-            isp=isp,
             **validated_data
         )
 
-        mail_files = []
-        group_files_isp = group.group_files.filter(isp=isp)
-        if group:
-            for group_file in group_files_isp:
-                if group_file:
-                    filename = group_file.original_filename
-                    mail_file = MailFile.objects.create(
-                        mail_group=mail_group,
-                        mail=mail,
-                        isp=isp,
-                        original_filename=filename
-                    )
-
-                    gf_file = group_file.file
-                    if gf_file:
-                        mail_file.file.save(
-                            filename,
-                            gf_file.file,
-                            save=True
+        if MailFile.objects.filter(
+                mail_group=mail_group,
+                isp=receiver.isp
+                ).exists():
+            mail_files = MailFile.objects.filter(
+                mail_group=mail_group,
+                isp=receiver.isp
+            )
+            mail.mail_files.set(mail_files)
+        else:
+            new_mail_files = []
+            group_files_isp = group.group_files.filter(isp=receiver.isp)  # type: ignore
+            if group:
+                for group_file in group_files_isp:
+                    if group_file:
+                        filename = group_file.original_filename
+                        mail_file = MailFile.objects.create(
+                            mail_group=mail_group,
+                            isp=receiver.isp,
+                            original_filename=filename
                         )
-                    mail_files.append(mail_file)
+
+                        gf_file = group_file.file
+                        if gf_file:
+                            mail_file.file.save(
+                                filename,
+                                gf_file.file,
+                                save=True
+                            )
+                        new_mail_files.append(mail_file)
+            mail.mail_files.set(new_mail_files)
 
         try:
-            if (mail_group.section == 0):
-                send_email(mail, mail_group)
+            if str(mail_group.section.name) == 'ปกติ':
+                send_email(mail, mail_group, section=False)
             else:
-                send_email(mail, mail_group)
+                send_email(mail, mail_group, section=True)
             mail.status = MailStatus.SUCCESSFUL
             mail.datetime = timezone.now()
+            documents = mail_group.documents.all()
+            receiver.isp.documents.add(*documents)
         except Exception as e:
-            print(e)
+            # print(e)
             mail.status = MailStatus.FAIL
 
         mail.save(update_fields=['status', 'datetime'])
@@ -167,14 +178,23 @@ class MailGroupSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
+    allisp_mail_files = serializers.SerializerMethodField()
+    section = SectionSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = MailGroup
-        fields = ['id', 'mails', 'user', 'group_id', 'documents', 'body',
+        fields = ['id', 'mails', 'user', 'group_id', 'documents', 'body', 'allisp_mail_files',
                   'created_at', 'modified_at', 'subject', 'speed', 'name',
                   'secret', 'document_no', 'document_date', 'group', 'section']
-        read_only_fields = ['id', 'mails', 'user', 'created_at', 'name',
+        read_only_fields = ['id', 'mails', 'user', 'created_at', 'name', 'allisp_mail_files',
                             'modified_at', 'group', 'documents', 'section']
+    
+    def get_allisp_mail_files(self, obj):
+        data = obj.mail_files.filter(all_isp=True)
+        return MailFileSerializer(data, many=True).data
+
     
     def create(self, validated_data):
         group = validated_data.pop('group_id')
@@ -190,5 +210,25 @@ class MailGroupSerializer(serializers.ModelSerializer):
                 **validated_data 
             )
         created_mailgroup.documents.set(group.documents.all())
+
+        if created_mailgroup.section.name != 'ปกติ':
+            all_group_files = group.group_files.filter(
+                all_isp=True
+            )
+
+            if len(all_group_files):
+                for gf in all_group_files.all():
+                    mail_file = MailFile.objects.create(
+                        mail_group=created_mailgroup,
+                        all_isp=True,
+                        original_filename=gf.original_filename
+                    )
+                    gf_file = gf.file
+                    if gf_file:
+                        mail_file.file.save(
+                            gf.original_filename,
+                            gf_file.file,
+                            save=True
+                        )
 
         return created_mailgroup

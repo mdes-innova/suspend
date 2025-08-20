@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'tag',
     'category',
     'url',
+    'section',
     'group',
     # 'activity',
     'mail',

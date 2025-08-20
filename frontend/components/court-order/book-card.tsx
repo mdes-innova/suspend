@@ -36,18 +36,20 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table";
-import { useRef, useState,  ChangeEvent, useEffect } from "react";
+import { useRef, useState,  ChangeEvent, useEffect, useCallback } from "react";
 import {  type GroupFile, type Isp, type GroupFileTable, type Group } from "@/lib/types";
-import { downloadFile, GetFilesFromGroup, RemoveFile, uploadFile } from "../actions/group-file";
-import { isAuthError } from '@/components/exceptions/auth';
+import { downloadFile, GetFilesFromGroup, RemoveFile, updateGroupFileIsp } from "../actions/group-file";
+import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "../reload-page";
 import { useAppSelector } from "../store/hooks";
 import { RootState } from "../store";
 import { getGroup } from "../actions/group";
+import { getAccess } from "../actions/auth";
 
 async function getTableData(
   groupId: number,
   ispData: Isp[],
+  sectionName?: string
 ): Promise<GroupFileTable[]> {
   try {
     let size = 0;
@@ -60,16 +62,19 @@ async function getTableData(
       new Set(
         groupFilesData
           .map(e => e.isp?.id)
-          .filter((id): id is number => id != null)
+          .filter((id): id is number => id != null && id != undefined)
       )
     );
     for (const d of groupDocuments ?? []) size += (d?.documentFile?.size ?? 0);
 
-    // Build rows; flatMap avoids returning [] inside map (no union with never[])
     const rows: GroupFileTable[] = ispIds.flatMap((ispId) => {
       const isp = ispData.find(e => e.id === ispId);
       const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
       for (const f of groupFilesIsp) size += (f?.size ?? 0);
+      if (sectionName != undefined && sectionName != '' && sectionName != 'ปกติ') {
+        const ispFilesAll = groupFilesData.filter((e) => e?.allIsp);
+        for (const f of ispFilesAll) size += (f?.size ?? 0);
+      }
       if (!isp) return [];
       return [{
         isp,
@@ -83,33 +88,47 @@ async function getTableData(
     if (isAuthError(error)) {
       redirectToLogin();
     }
-    // Always return an array to satisfy Promise<GroupFileTable[]>
     return [];
   }
 }
 
-export function BookCard({ispData, groupId}:
-  {ispData: Isp[], groupId: number}) {
+
+export function BookCard({ispData, groupId, sectionName}:
+  {ispData: Isp[], groupId: number, sectionName: string}) {
   const uploadRef = useRef<HTMLInputElement | null>(null);
+  const uploadIspAllRef = useRef<HTMLInputElement | null>(null);
   const [ispSelected, setIspSelected] = useState<Isp | null>(null);
   const [selectedIsps, setSelectedIsps] = useState<Isp[]>([]);
   const [tableData, setTableData] = useState<GroupFileTable[]>([]);
   const [openNew, setOpenNew] = useState<number | null>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [editTable, setEditTable] = useState<GroupFileTable | null>(null);
+  const [ispFilesAll, setIspFilesAll] = useState<GroupFile[]>([]);
 
   const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
 
   useEffect(() => {
     const getData = async() => {
-      const data: GroupFileTable[] = await getTableData(groupId, ispData);
+      const data: GroupFileTable[] = await getTableData(groupId, ispData, sectionName);
       setTableData((data ?? []) as GroupFileTable[]);
     }
 
     getData();
-  }, [groupDocuments]);
+  }, [groupDocuments, ispFilesAll, sectionName]);
+
+  useEffect(() => {
+    const getData = async() => {
+      const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+      const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
+      setIspFilesAll(allFilesIsp);
+    }
+
+    getData();
+  }, [sectionName]);
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
+      setEditTable(null);
       setIspSelected(null);
       const ispList = tableData
         ?.map((e: GroupFileTable) => e?.isp)
@@ -121,6 +140,7 @@ export function BookCard({ispData, groupId}:
     } else {
       const currentRow = tableData?.[openNew];
       if (!currentRow) return;
+      setEditTable(currentRow);
       const currentIsp = currentRow.isp;
       setIspSelected(currentIsp?? null);
       if (currentIsp)
@@ -141,6 +161,32 @@ export function BookCard({ispData, groupId}:
     setSelectedIsps(ispList ?? []);
   }, [tableData]);
 
+  const uploadFile = useCallback(async(formData: FormData) => {
+    try {
+      const backendBaseUrl = process.env.NODE_ENV === "development"?
+        process.env.NEXT_PUBLIC_BACKEND_DEV: process.env.NEXT_PUBLIC_BACKEND_PROD;
+
+      const access = await getAccess();
+      const response = await fetch(`${backendBaseUrl}/group/files/upload/`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Authorization": `Bearer ${access}`
+        }
+      }); 
+
+      if (!response.ok) {
+        if (response.status === 401)
+          throw new AuthError('Authenticatioin fail.');
+        throw new Error('Upload fail.');
+      }
+    } catch (error) {
+      if (isAuthError(error)) redirectToLogin();
+      else throw new Error("Upload fail.");
+      
+    }
+  }, []);
+  
   return (
     <Card className="w-full">
       <CardHeader>
@@ -151,10 +197,101 @@ export function BookCard({ispData, groupId}:
           <EditDialog groupId={groupId} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
             selectedIsps={selectedIsps} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
-            tableData={tableData} uploadRef={uploadRef}
-            newFiles={newFiles} setNewFiles={setNewFiles}
+            tableData={tableData} uploadRef={uploadRef} editTable={editTable} setEditTable={setEditTable}
+            newFiles={newFiles} setNewFiles={setNewFiles} uploadFile={uploadFile}
             />
-      
+          {
+            sectionName != 'ปกติ' && sectionName != '' &&
+            <div className="flex flex-col w-full">
+              <Button variant='secondary' className="w-fit px-2 py-1" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                if (uploadIspAllRef.current) uploadIspAllRef.current.click();
+              }}>อัพโหลดเอกสาร</Button>
+              <Input
+                ref={uploadIspAllRef}
+                id="isp-all-pdf-upload"
+                type="file"
+                accept=".pdf,.xlsx,.xls"
+                multiple
+                onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
+                  const files = e.currentTarget.files;
+                  if (!files || files.length === 0) return;
+                  try {
+                    const selected: File[] = Array.from(files);
+                    for (const nf of selected) {
+                      const formData = new FormData();
+                      formData.append("file", nf);
+                      formData.append("all_isp", String(true));
+                      formData.append("group", String(groupId));
+
+                      await uploadFile(formData);
+                      
+                      const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+                      const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
+                      setIspFilesAll(allFilesIsp);
+                    }
+                  } catch (error) {
+                    console.error(error);
+                    if (isAuthError(error)) 
+                      redirectToLogin();
+                  }
+                }}
+                className="hidden"
+              />
+              <div className="flex flex-col gap-y-2 mt-4 w-full">
+              {
+                ispFilesAll.map((e: GroupFile, idx: number) => {
+                  const filename = e?.originalFilename?? '-';
+                  const fileSplited = filename.split('.');
+                  const fileExt = fileSplited[fileSplited.length - 1];
+                  const bg = (['xlsx', 'xls'].includes(fileExt))? 'bg-green-200': 'bg-background'
+                  return <div className="flex w-full gap-x-1" key={`isp-file-all-${idx}`}>
+                    <div className="w-full">
+                      <Button variant="outline" className={`w-full ${bg}`}
+                        onClick={async(evt: React.MouseEvent<HTMLButtonElement>) => {
+                        evt.preventDefault();
+                        const fileId = e.id;
+                        try {
+                          const blob = await downloadFile(fileId as number);
+                          const url = window.URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.setAttribute("download", `${filename}`);
+                          document.body.appendChild(link);
+                          link.click();
+                          link.remove();
+                          window.URL.revokeObjectURL(url);
+                        } catch (error) {
+                        console.error(error);
+                        if (isAuthError(error))
+                          redirectToLogin(); 
+                        }
+                      }}  
+                      >
+                        {filename}
+                      </Button>
+                    </div>
+                    <div className="w-10">
+                      <Button variant="destructive" className="w-full"
+                        onClick={async(evt: React.MouseEvent<HTMLButtonElement>) => {
+                          evt.preventDefault();
+                          if (e?.id)
+                            await RemoveFile(e?.id);
+                          const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
+                          const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
+                          setIspFilesAll(allFilesIsp);
+                        }}
+                      >
+                        <CircleX />
+                      </Button>
+                    </div>
+                  </div>
+                })
+              }
+              </div>
+            </div>
+          }
+
           <Button className="w-fit" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.preventDefault();
             setOpenNew(-1);
@@ -282,7 +419,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
 
 function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
   ispData, selectedIsps, uploadRef, tableData, setTableData,
-  newFiles, setNewFiles
+  newFiles, setNewFiles, uploadFile, editTable, setEditTable 
 }:
   {
     groupId: number,
@@ -297,7 +434,10 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
     tableData: GroupFileTable[],
     setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
     newFiles: File[],
-    setNewFiles: React.Dispatch<React.SetStateAction<File[]>>
+    setNewFiles: React.Dispatch<React.SetStateAction<File[]>>,
+    uploadFile: (form: FormData) => Promise<void>,
+    editTable: GroupFileTable | null,
+    setEditTable: React.Dispatch<React.SetStateAction<GroupFileTable | null>>
   }) {
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
@@ -345,12 +485,11 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                     </Select>
                   </div>
                   <div className="grid gap-3">
-                    {
-                      openNew === -1 || !tableData ?
-                      <></>
-                      :
-                      tableData[openNew as number]?.groupFiles?.map((gf, gfIdx) => {
-                        return (
+                  {
+                    (editTable != null && editTable.groupFiles != null) && 
+                    (editTable.groupFiles != undefined && editTable.groupFiles.length > 0) &&
+                    editTable.groupFiles.map((gf, gfIdx) => {
+                      return (
                           <div className="w-96 flex justify-between" key={`gf-${gfIdx}`}>
                             <Tooltip>
                             <TooltipTrigger asChild>
@@ -381,18 +520,18 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             <CircleX className='hover:text-red-400' size={24}
                               onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
                               evt.preventDefault();
-                              setTableData((prev: GroupFileTable[]) => {
-                                const idx = typeof openNew === "number" ? openNew : -1;
-                                if (idx < 0 || idx >= prev.length) return prev;
-                                
-                                const row = prev[idx];
-                                if (!row) return prev;
-                                const filtered = row.groupFiles.filter(e => e.id !== gf.id);
-                                if (filtered.length === row.groupFiles.length) return prev;
+                              setEditTable((prev: GroupFileTable | null) => {
+                                if (prev && prev?.groupFiles && prev?.groupFiles?.length > 0) {
+                                  const filteredGroupFiles = prev?.groupFiles.filter(
+                                    (_, etIdx) => etIdx != gfIdx);
 
-                                const updated = [...prev];
-                                updated[idx] = { ...row, groupFiles: filtered };
-                                return updated;
+                                    return {
+                                      ...prev,
+                                      groupFiles: filteredGroupFiles
+                                    }
+                                } else {
+                                  return null;
+                                }
                               });
                             }}
                             />
@@ -500,9 +639,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             return;
                           formData.append("isp", `${ispSelected?.id}`);
                           formData.append("group", `${groupId}`);
-                          await uploadFile({
-                            formData
-                          });
+                          await uploadFile(formData);
                         }
                         const newData: GroupFileTable[] = await getTableData(groupId, ispData);
                         setTableData((newData?? []) as GroupFileTable[]);
@@ -521,33 +658,46 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         const idx = typeof openNew === 'number'? openNew: -1;
                         if (idx < 0 || idx >= tableData.length) return;
 
-                        const row = tableData[idx];
-                        const orgGroupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
-                        const orgGroupFileIsp = orgGroupFiles.filter((e) => e.isp?.id === row.isp.id);
-                        const tableGroupFilesids = row.groupFiles.map((e) => e?.id);
-                        const rmvGroupFiles = orgGroupFileIsp.filter((e) => !(tableGroupFilesids.includes(e.id)));
+                        const rowGroupFiles = tableData[openNew]?.groupFiles;
+                        if (!rowGroupFiles) return;
 
-                        for (const gf of rmvGroupFiles) {
-                          if (gf && gf?.id)
-                            await RemoveFile(gf.id);
+                        if ((editTable?.isp?.id != ispSelected?.id) &&
+                          (editTable && editTable?.groupFiles && editTable?.groupFiles?.length > 0)) {
+                          await Promise.all(editTable.groupFiles.map(async(e) => {
+                            if (typeof e?.id === 'number' && typeof ispSelected?.id === 'number')
+                              await updateGroupFileIsp({
+                                ispId: ispSelected?.id,
+                                groupFileId: e.id
+                              });
+                          }));
                         }
+                        const editTableGroupFilesIds = editTable?.groupFiles
+                          .map((e) => e?.id).filter((e) => typeof e === 'number')
+                        const rmvGroupFiles = rowGroupFiles.filter((e) => (typeof e.id === 'number') &&
+                          !(editTableGroupFilesIds?.includes(e.id)));
                         
-                         for (const nf of newFiles) {
+                        await Promise.all(rmvGroupFiles.map(async(e) => {
+                          if (typeof e.id === 'number')
+                            await RemoveFile(e.id);
+                        }));
+
+                        for (const nf of newFiles) {
                           const formData = new FormData();
                           formData.append("file", nf);
                           if (!ispSelected)
                             return;
                           formData.append("isp", `${ispSelected?.id}`);
                           formData.append("group", `${groupId}`);
-                          await uploadFile({
-                            formData
-                          });
+                          await uploadFile(formData);
                         }
+
+                        
 
                         const newData: GroupFileTable[] = await getTableData(groupId, ispData);
                         setTableData((newData?? []) as GroupFileTable[]);
                         setOpenNew(null);
                       } catch (error) {
+                        console.error(error)
                         if (isAuthError(error))
                           redirectToLogin(); 
                       }

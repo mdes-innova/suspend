@@ -24,6 +24,10 @@ from django.core.cache import cache
 import httpx
 from datetime import datetime
 from django.db.models import Prefetch
+from django.http import HttpResponse
+from core.utils import gen_xlsx_bytes, get_urls
+from pathlib import Path
+from urllib.parse import quote
 
 
 class DocumentView(viewsets.ModelViewSet):
@@ -119,29 +123,131 @@ class DocumentView(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        name='document-pdf-download',
-        url_path='pdf-download/(?P<fid>[^/]+)'
+        url_path='pdf-download/(?P<did>[^/]+)'
     )
-    def pdf_download(self, request, fid=None):
+    def pdf_download(self, request, did=None):
         try:
-            f = DocumentFile.objects.get(pk=fid)
-        except DocumentFile.DoesNotExist:
-            return Response({'detail': "File not available"},
+            document = Document.objects.get(id=did)
+        except Document.DoesNotExist:
+            return Response({'detail': "Document not available"},
                             status.HTTP_404_NOT_FOUND)
         except:
             return Response({'detail': "File not available"},
                             status.HTTP_404_NOT_FOUND)
         else:
-            if f:
-                return FileResponse(
-                    f.file.open('rb'),
-                    as_attachment=True,
-                    filename=str(f.original_name),
-                    content_type='application/pdf'
-                )
+            document_file = document.document_file\
+                if hasattr(document, 'document_file') else None
+            
+            if document_file:
+                f = document_file.file
+                if f:
+                    return FileResponse(
+                        f.file.open('rb'),
+                        as_attachment=True,
+                        filename=str(document.order_filename),
+                        content_type='application/pdf'
+                    )
+                else:
+                    raise Exception("No file found")
             else:
-                return Response({'detail': "File not available"},
-                                status.HTTP_404_NOT_FOUND)
+                try:
+                    filename = document.order_filename
+                    bearer_token = os.environ.get("WEBD_TOKEN")
+                    webd_url = os.environ.get("WEBD_URL")
+                    res = httpx.post(
+                        f'{webd_url}/api/courtorderdownload',
+                        headers={
+                            'Authorization': f'Bearer {bearer_token}',
+                            'Content-Type': 'application/json'
+                        },
+                        json={
+                            'filename': filename
+                        }
+                    )
+                    if (res.status_code != 200):
+                        return Response({'detail': "Get a file from webD fail."},
+                                        status.HTTP_404_NOT_FOUND)
+                    
+                    resp = HttpResponse(
+                        res.content,
+                        content_type=res.headers.get('Content-Type', 'application/octet-stream'),
+                        status=200,
+                    )
+                    resp['Content-Disposition'] = res.headers.get('Content-Disposition', f'attachment; filename="{filename}"')
+                    if 'Content-Length' in res.headers:
+                        resp['Content-Length'] = res.headers['Content-Length']
+                    return resp
+                except:
+                    return Response({'detail': "File not available"},
+                                    status.HTTP_404_NOT_FOUND)
+    
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='urls-download/(?P<did>[^/]+)'
+    )
+    def urls_download(self, request, did=None):
+        try:
+            document = Document.objects.get(id=did)
+        except Document.DoesNotExist:
+            return Response({'detail': "Document not available"},
+                            status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'detail': "File not available"},
+                            status.HTTP_404_NOT_FOUND)
+        else:
+            xlsx_bytes = None
+            document_file = document.document_file\
+                if hasattr(document, 'document_file') else None
+            
+            filename = Path(document.order_filename) 
+            filename = 'urls' + filename.stem + '.xlsx'
+            if document_file:
+                f = document_file.file
+                if f:
+                    filepath = f.path
+                    urls = get_urls(filepath)
+                    xlsx_bytes = gen_xlsx_bytes(urls, document.order_no)
+                    resp = HttpResponse(
+                        xlsx_bytes,
+                        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                    resp['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(filename)}"
+                    resp['Content-Length'] = str(len(xlsx_bytes))
+                    return resp
+                else:
+                    raise Exception("No file found")
+            else:
+                try:
+                    filename = document.order_filename
+                    bearer_token = os.environ.get("WEBD_TOKEN")
+                    webd_url = os.environ.get("WEBD_URL")
+                    res = httpx.post(
+                        f'{webd_url}/api/courtorderdownload',
+                        headers={
+                            'Authorization': f'Bearer {bearer_token}',
+                            'Content-Type': 'application/json'
+                        },
+                        json={
+                            'filename': filename
+                        }
+                    )
+                    if (res.status_code != 200):
+                        return Response({'detail': "Get a file from webD fail."},
+                                        status.HTTP_404_NOT_FOUND)
+                    urls = get_urls(res.content, is_path=False) 
+                    xlsx_bytes = gen_xlsx_bytes(urls, document.order_no)
+                except Exception as e:
+                    return Response({'detail': "File not available"},
+                                    status.HTTP_404_NOT_FOUND)
+                else:
+                    resp = HttpResponse(
+                        xlsx_bytes,
+                        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                    resp['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(filename)}"
+                    resp['Content-Length'] = str(len(xlsx_bytes))
+                    return resp
 
     @action(
         detail=False,

@@ -39,7 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
         validators=[username_validator],
     )
-    isp = models.OneToOneField(
+    isp = models.ForeignKey(
         ISP,
         on_delete=models.SET_NULL,
         related_name='users',

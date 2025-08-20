@@ -98,3 +98,45 @@ export async function getDocumentList(ids: number[]) {
       throw error; 
   }
 }
+
+export async function downloadPdf(did: number) {
+  try {
+  const access = await getAccess();
+    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/pdf-download/${did}/`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${access}`
+      }
+    }); 
+    if (!response.ok) {
+      if (response.status === 401)
+        throw new AuthError('Authenticatioin fail.');
+      throw new Error('Download pdf failed');
+    }
+
+    return response.blob();
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function downloadUrls(did: number) {
+  try {
+  const access = await getAccess();
+    const response = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/urls-download/${did}/`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${access}`
+      }
+    }); 
+    if (!response.ok) {
+      if (response.status === 401)
+        throw new AuthError('Authenticatioin fail.');
+      throw new Error('Download urls failed');
+    }
+
+    return response.blob();
+  } catch (error) {
+    throw error;
+  }
+}

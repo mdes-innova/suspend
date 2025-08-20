@@ -39,6 +39,11 @@ class MailGroup(models.Model):
             ],
          null=True,
     )
+    section = models.ForeignKey(
+        "Section",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='mailgroups')
 
     user = models.ForeignKey(
         "User",
@@ -65,12 +70,6 @@ class MailGroup(models.Model):
 
 class Mail(models.Model):
     datetime = models.DateTimeField(null=True)
-    isp = models.ForeignKey(
-        'ISP',
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='mails'  
-    )
     mail_group = models.ForeignKey(
         MailGroup,
         related_name='mails',
@@ -82,6 +81,11 @@ class Mail(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='received_mails'
+    )
+
+    mail_files = models.ManyToManyField(
+        'MailFile',
+        related_name='mails'
     )
 
     confirmed = models.BooleanField(default=False)
@@ -97,9 +101,6 @@ class Mail(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.subject} ({self.datetime})"
-
 
 class MailFile(models.Model):
     mail_group = models.ForeignKey(
@@ -110,15 +111,17 @@ class MailFile(models.Model):
     )
     isp = models.ForeignKey('ISP', on_delete=models.SET_NULL,
                             null=True, default=None)
-    mail = models.ForeignKey('Mail', on_delete=models.SET_NULL,
-                              null=True, default=None,
-                              related_name='mail_files')
+
     file = models.FileField(
         upload_to=mail_file_path,
         validators=[
-            FileExtensionValidator(allowed_extensions=['pdf'])
+            FileExtensionValidator(allowed_extensions=['pdf', 'xlsx', 'xls'])
         ],
         blank=True,
+        null=True
+    )
+    all_isp = models.BooleanField(
+        default=False,
         null=True
     )
 

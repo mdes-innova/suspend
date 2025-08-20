@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PasswordInput } from "./password-input";
 import { useSearchParams } from "next/navigation";
-import { loginUser } from "./actions/user";
+import { getProfile, loginUser } from "./actions/user";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setUser } from "./store/features/user-auth-slice";
 import { RootState } from "./store";
@@ -35,6 +35,16 @@ export default function LoginForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
+
+  useEffect(() => {
+    const getData = async() => {
+      const checkUser = await getProfile();
+      dispatch(setUser(checkUser));
+    }
+
+    if (!user)
+      getData();
+  }, []);
 
   useEffect(() => {
     if (user) {

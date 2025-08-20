@@ -12,6 +12,8 @@ import { redirect } from 'next/navigation';
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
 import { Date2Thai, Text2Thai } from "@/lib/client/utils";
+import { Button } from "./ui/button";
+import { PencilLine } from "lucide-react";
 
 export default function GroupView(
   { groupData, isps, idParam}: { groupData: Group | null, isps: Isp[], idParam: string }) {
@@ -53,31 +55,24 @@ export default function GroupView(
       <div className="flex w-full justify-between">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
+            <div className="flex justify-start gap-x-1">
             {
               !onTitleChange?
-              <div className="w-full text-start text-2xl font-bold"
-                onDoubleClick={(evt: React.MouseEvent<HTMLDivElement>) => {
-                  evt.preventDefault();
-                  setOnTitleChange(true);
-                }}
-              >{title}</div>:
-              <Input defaultValue={title} ref={titleRef} 
-                onBlur={() => {
-                  if (titleRef?.current)
-                    setTitle(titleRef?.current?.value);
-                  setOnTitleChange(false);
-                }}
-                onKeyDown={(evt: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (evt.key === "Enter") {
-                    if (titleRef?.current)
-                    setTitle(titleRef?.current?.value);
-                    setOnTitleChange(false);
-                    evt.currentTarget.blur();
-                  }
-                }
-              }
-              />
+              <div className="w-full text-start text-2xl font-bold">{title}</div>:
+              <Input defaultValue={title} ref={titleRef} />
             }
+            <Button variant={null} className="w-fit h-fit cursor-pointer" asChild
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                setOnTitleChange((prev) => {
+                  if (prev && titleRef?.current) setTitle(titleRef?.current?.value);
+                  return !prev;
+                });
+              }}
+            >
+              <PencilLine size={20}/>
+            </Button>
+            </div>
             <div className="w-full text-start text-md">{
             groupData && groupData?.createdAt? Text2Thai(Date2Thai(groupData.createdAt)): '-'
             }</div>

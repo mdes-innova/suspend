@@ -330,7 +330,7 @@ export default function MailTable() {
                 >
                   {row.getVisibleCells().map((cell: Cell<MailGroup, unknown>) => (
                     <TableCell key={cell.id}>
-                        <Link href={`/mail/${row.original.id}`}>
+                        <Link href={`/mail-group/${row.original.id}`}>
                             {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()

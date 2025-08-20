@@ -2,28 +2,34 @@
 from rest_framework import serializers
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
-from core.models import Group, Document, GroupDocument, GroupFile, ISP
+from core.models import (Group, Document, GroupDocument, GroupFile, ISP,
+                         Section)
 from document.serializer import DocumentSerializer
 from user.serializer import UserSerializer
 from isp.serializer import ISPSerializer
+from section.serializer import SectionSerializer
 from .utils import create_document_file
 
 
 class GroupFileSerializer(serializers.ModelSerializer):
     isp_id = serializers.PrimaryKeyRelatedField(
+        source="isp",
         queryset=ISP.objects.all(),
         write_only=True
     )
     isp = ISPSerializer(read_only=True)
     size = serializers.SerializerMethodField()
+    all_isp = serializers.BooleanField(
+        allow_null=True,
+        required=False
+    )
 
     class Meta:
         model = GroupFile
         fields = ['id', 'isp_id', 'isp', 'original_filename',
-                  'created_at', 'modified_at', 'size']
+                  'created_at', 'modified_at', 'size', 'all_isp']
         read_only_fields = ['id', 'isp', 'file', 'created_at',
                             'modified_at', 'size']
-    
     
     def get_size(self, obj):
         if obj.file:
@@ -47,26 +53,39 @@ class GroupSerializer(serializers.ModelSerializer):
     body = serializers.CharField(allow_blank=True, required=False)
     speed = serializers.IntegerField(allow_null=True, required=False)
     secret = serializers.IntegerField(allow_null=True, required=False)
-    section = serializers.IntegerField(allow_null=True, required=False)
     documents = DocumentSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
     group_files = GroupFileSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
+    section_id = serializers.PrimaryKeyRelatedField(
+        queryset=Section.objects.all(),
+        source="section",
+        write_only=True,
+        required=False,
+        allow_null=True,  
+    )
+    section = SectionSerializer(
+        read_only=True
+    )
+
 
     class Meta:
         model = Group
         fields = [
             'id', 'name', 'documents', 'document_ids', 'user', 'body',
             'document_no', 'document_date', 'title', 'speed', 'secret',
-            'created_at', 'modified_at', 'group_files', 'section'
+            'created_at', 'modified_at', 'group_files', 'section', 'section_id'
             ]
         read_only_fields = ['documents', 'user', 'created_at', 'modified_at',
-                            'group_files']
+                            'group_files', 'section']
 
     def create(self, validated_data):
         user = self.context['request'].user
         documents = validated_data.pop('document_ids', [])
-        group = Group.objects.create(user=user, **validated_data)
+        section = validated_data.pop('section_id', None)
+        group = Group.objects.create(
+            user=user, section=section, **validated_data
+            )
         group.documents.set(documents)
         return group
 

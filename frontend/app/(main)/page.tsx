@@ -55,6 +55,7 @@ async function Content() {
     }
 
     const data = await res.json();
+
     return (
       <div className='w-full h-full flex flex-col px-2'>
         <DataTable data={data}/>

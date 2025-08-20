@@ -133,11 +133,6 @@ class GroupFileView(viewsets.ModelViewSet):
             raise PermissionDenied("You are not allowed to delete this group file.")
         instance.delete()
 
-    def delete(self, *args, **kwargs):
-        if self.file:
-            self.file.delete(save=False)
-        super().delete(*args, **kwargs)
-
     @action(
        detail=False,
        url_path='by-group/(?P<gid>[^/]+)',
@@ -185,16 +180,18 @@ class GroupFileView(viewsets.ModelViewSet):
     def upload(self, request):
         try:
             file_obj = request.FILES.get("file")
-            isp = request.POST.get("isp")
+            isp_id = request.POST.get("isp", None)
             group_id = request.POST.get("group")
+            all_isp = request.POST.get("all_isp", 'false')
 
             group = Group.objects.get(pk=int(group_id))
-            isp = ISP.objects.get(pk=int(isp))
+            isp = ISP.objects.get(pk=int(isp_id)) if isp_id else None
             group_file = GroupFile.objects.create(
                 isp=isp,
                 group=group,
                 original_filename=file_obj.name,
                 file=file_obj,
+                all_isp=True if all_isp == 'true' else False
             )
             serializer_data = GroupFileSerializer(group_file).data
             return Response(serializer_data)

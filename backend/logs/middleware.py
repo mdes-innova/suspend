@@ -25,7 +25,7 @@ class RequestLoggingMiddleware:
                 )
         except Exception as e:
             # Optional: log this to console or file logger
-            print(f"[LOGGING FAILED] {e}")
+            # print(f"[LOGGING FAILED] {e}")
             return HttpResponseNotFound("Resource not found")
 
         # Logging succeeded → continue to view

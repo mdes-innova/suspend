@@ -22,7 +22,7 @@ import {
   Row,
   Column,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, MailCheck } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility,
   setSorting, setPagination, setDocIds} 
   from "./store/features/dialog-list-ui-slice";
@@ -109,12 +109,15 @@ export const columns: ColumnDef<Document>[] = [
     },
     cell: ({ row }: { row: Row<Document> }) => 
     {
-      const original = row.original;
-      const id = original?.id?? '';
+      const { id, hasAllIsps } = row.original;
       return (<Link
         href={`/document-view/${id}`}
-        target="_blank" rel="noopener noreferrer"
-        className="text-left underline cursor-pointer hover:text-blue-400">{row.getValue('คำสั่งศาล')?? '-'}</Link>);
+        className="text-left underline cursor-pointer hover:text-blue-400 flex justify-start items-center">
+              <div className="w-4 h-4 block">
+                {hasAllIsps? <MailCheck size={16} color='green' />: <></>}
+              </div>
+              <div className="ml-1">{row.getValue('คำสั่งศาล')?? '-'}</div>
+          </Link>);
     }
   },
     {
@@ -194,7 +197,29 @@ export const columns: ColumnDef<Document>[] = [
           </div>
       );
     },
-  }, 
+  }, {
+    id: 'ประเภท',
+    accessorKey: "kindName",
+    header: ({ column }: { column: Column<Document> }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          ประเภท
+          <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }: { row: Row<Document> }) => {
+      return (
+        <div>
+          {row.getValue('ประเภท')?? '-'}
+          </div>
+      );
+    },
+  },
 ]
 
 export default function ContentDialog({data}: {data: Document[]}) {
@@ -204,6 +229,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
   const columnVisibility = useAppSelector((state: RootState) => state.dialogListUi.columnVisibility);
   const rowSelection = useAppSelector((state: RootState) => state.dialogListUi.rowSelection);
   const pagination = useAppSelector((state: RootState)=>state.dialogListUi.pagination); 
+  const paginations = [20, 50, 100];
 
   const table = useReactTable({
     data,
@@ -243,7 +269,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
   }, [rowSelection]);
 
   return (
-    <div className="block w-full">
+    <div className="block w-full max-lg:min-w-[600px]">
       <div className="flex items-center py-4 w-full">
         <Input
           placeholder="ค้นหาคำสั่งศาล..."
@@ -257,7 +283,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown />
+                คอลัมน์<ChevronDown />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -282,7 +308,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
           </DropdownMenu>
         </div>
       </div>
-      <div className="rounded-md border w-full">
+      <div className="rounded-md border w-full max-md:w-[350px]">
         <Table>
           <TableHeader className="block w-full">
             {table.getHeaderGroups().map((headerGroup: HeaderGroup<Document>) => (
@@ -337,12 +363,33 @@ export default function ContentDialog({data}: {data: Document[]}) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between py-4">
+        <div className="text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        <div className="space-x-2">
+        <div className="flex gap-x-2">
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize <= 20) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex <= 0) return;
+            dispatch(setPagination({...pagination, pageSize: paginations[currentPageIndex - 1]}));
+          }}>
+            <ChevronLeft/>
+          </Button>
+            <p className="flex flex-col justify-center items-center">{pagination.pageSize}</p>
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize >= 100) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex >= paginations.length - 1) return;
+            dispatch(setPagination({...pagination, pageSize: paginations[currentPageIndex + 1]}));
+          }}>
+            <ChevronRight />
+          </Button>
+        </div>
+        <div className="flex gap-x-2">
           <Button
             variant="outline"
             size="sm"

@@ -56,7 +56,7 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
     );
 
   } catch (error) {
-    console.log(error)
+    console.error(error)
     if (isAuthError(error)) {
       return <ReloadPage />;
     } else {

@@ -7,6 +7,7 @@ from core.models import (
         Mail, MailStatus, Group, GroupFile, MailFile, MailGroup,
         ISP
     )
+from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
@@ -143,8 +144,47 @@ class MailViews(viewsets.ModelViewSet):
     )
     def send_mail(self, request):
         mail_group_id = request.data.get('mail_group_id', None)
+        receiver_id = request.data.get('receiver_id', None)
+
+        try:
+            mail_group = MailGroup.objects.get(id=mail_group_id)
+            receiver = get_user_model().objects.get(id=receiver_id)
+        except MailGroup.DoesNotExist:
+            return Response({'error': 'Mail group not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except get_user_model().DoesNotExist:
+            return Response({'error': 'Receiver not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': 'Inputs fail.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            data = {
+                'receiver_id': receiver.id,
+                'mail_group_id': mail_group.id,
+            }
+            serializer = MailSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response({'error': 'Bad request.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # print(e)
+            return Response({'error': 'Send mail fail.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        url_path='send-isp-mail'
+    )
+    def send_isp_mail(self, request):
+        mail_group_id = request.data.get('mail_group_id', None)
         isp_id = request.data.get('isp_id', None)
-        section = request.data.get('section', 0)
+
         try:
             mail_group = MailGroup.objects.get(id=mail_group_id)
             isp = ISP.objects.get(id=isp_id)
@@ -162,9 +202,7 @@ class MailViews(viewsets.ModelViewSet):
             receiver = isp.users
             data = {
                 'receiver_id': receiver.id,
-                'isp_id': isp_id,
                 'mail_group_id': mail_group.id,
-                'section': section
             }
             serializer = MailSerializer(data=data)
             if serializer.is_valid():
@@ -174,7 +212,7 @@ class MailViews(viewsets.ModelViewSet):
                 return Response({'error': 'Bad request.'},
                                 status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            print(e)
+            # print(e)
             return Response({'error': 'Send mail fail.'},
                             status=status.HTTP_400_BAD_REQUEST)
 

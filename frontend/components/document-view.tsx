@@ -11,8 +11,10 @@ import {
 
 import { type Group, type Document } from "@/lib/types";
 import CategoryGroup from "./document-category";
-import { Date2Thai, Text2Thai } from "@/lib/utils";
-
+import { Date2Thai, Text2Thai } from "@/lib/client/utils";
+import { downloadPdf, downloadUrls } from "./actions/document";
+import { isAuthError } from "./exceptions/auth";
+import { redirectToLogin } from "./reload-page";
 
 export default function DocumentView(
   { docData, groupData }: { docData: Document, groupData: Group }) {
@@ -53,11 +55,44 @@ export default function DocumentView(
           </CardHeader>
           <CardContent>
             <ul className="list-decimal list-outside pl-6 underline cursor-pointer">
-              <li onClick={(e: React.MouseEvent<HTMLLIElement>) => {
+              <li onClick={async(e: React.MouseEvent<HTMLLIElement>) => {
                 e.preventDefault();
+                try {
+                  const blob = await downloadPdf(docData.id);
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.setAttribute("download", `${docData.orderFilename}`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch (error) {
+                  if (isAuthError(error))
+                    redirectToLogin();
+                }
               }}>PDF</li>
-              <li onClick={(e: React.MouseEvent<HTMLLIElement>) => {
+              <li onClick={async(e: React.MouseEvent<HTMLLIElement>) => {
                 e.preventDefault();
+                try {
+                  const orderFilename = docData.orderFilename;
+                  const orderFilenames = orderFilename?.split('.');
+                  const filename = 'urls_' +
+                    orderFilenames?.slice(0, orderFilenames.length - 1).join('.') +
+                    '.xlsx';
+                  const blob = await downloadUrls(docData.id);
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.setAttribute("download", `${filename}`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch (error) {
+                  if (isAuthError(error))
+                    redirectToLogin();
+                }
               }}>XLSX</li>
             </ul>
           </CardContent>

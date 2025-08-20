@@ -50,6 +50,58 @@ export async function getUsers() {
     }
 }
 
+export async function getUserFromIsp(ispId: number) {
+    try {
+        const access = await getAccess();
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/by-isp/${ispId}/`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${access}`
+            },
+        }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+            throw new AuthError('Authentication fail.')
+        throw new Error('Get a user from isp fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+    
+}
+
+export async function getUsersFromIspList(ispIds: number[]) {
+    try {
+        const access = await getAccess();
+        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/by-isps/`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+            },
+        body: JSON.stringify({
+            ispIds
+        })
+        }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+            throw new AuthError('Authentication fail.')
+        throw new Error('Get a user from isp fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+    
+}
+
 export async function registerUser(userRegisterParams: UserRegister) {
     try {
         const access = await getAccess(); 

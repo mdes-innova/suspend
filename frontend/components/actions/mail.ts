@@ -220,16 +220,12 @@ export async function downloadFile(fid: number) {
   }
 }
 
-export async function sendIspMail({
-  section,
+export async function sendMail({
   mailGroupId,
-  documentId,
-  ispId
+  receiverId
 }: {
-  section: number,
   mailGroupId: string,
-  documentId?: number,
-  ispId: number
+  receiverId: number
 }) {
   try {
     const access = await getAccess();
@@ -237,9 +233,42 @@ export async function sendIspMail({
     const res = await fetch(`${url}/mail/mails/send-mail/`, {
       method: 'POST',
       body: JSON.stringify({
-        section,
         mailGroupId,
-        documentId,
+        receiverId
+      }),
+      headers: {
+          "Authorization": `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+        if (res.status === 401)
+            throw new AuthError('Authentication fail.')
+        throw new Error('Send mail fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+    throw error; 
+  }
+}
+
+export async function sendIspMail({
+  mailGroupId,
+  ispId
+}: {
+  mailGroupId: string,
+  ispId: number
+}) {
+  try {
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/mail/mails/send-isp-mail/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        mailGroupId,
         ispId
       }),
       headers: {

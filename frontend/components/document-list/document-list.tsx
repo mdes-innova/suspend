@@ -297,7 +297,10 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     }
                     setOpenContent(open);
                 }}>
-                    <DialogContent className="max-w-none min-w-[800px]">
+                    <DialogContent className="max-w-[1000px] min-w-[1000px]
+                        max-lg:min-w-[700px] max-lg:max-w-[700px]
+                        max-md:min-w-[400px] max-md:max-w-[400px]
+                        overflow-auto">
                         <DialogHeader>
                             <DialogTitle>เพิ่มคำสั่งศาล</DialogTitle>
                         </DialogHeader>
@@ -337,7 +340,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                     setEdit((prev: boolean) => !prev);
                 }}>Edit</Button>
             </div>
-            <Card className="flex flex-row w-full px-8 border-0 shadow-none py-0"  id='document-list-header'>
+            <Card className="flex flex-row w-full px-8 border-0 shadow-none py-0 max-md:text-sm"  id='document-list-header'>
                 <div className="flex-[2] cursor-pointer">ลำดับที่</div>
                 <div className="flex-[6] cursor-pointer">ค้นหาคำสั่งศาล<span className="inline-block"><ArrowUpDown size={12} /></span></div>
                 <div className="flex-[6] cursor-pointer">วันที่<span className="inline-block"><ArrowUpDown size={12} /></span></div>

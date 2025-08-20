@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, ControllerRenderProps } from "react-hook-form"
 import {z } from "zod"
-
 import { Button } from "@/components/ui/button"
+import { PlusCircleIcon, Trash2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -16,24 +16,29 @@ import {
 import {closeModal, LOADINGUI, openModal} from './store/features/loading-ui-slice';
 import { Input } from "@/components/ui/input"
 import { useEffect, useRef, useState } from "react"
-import { type Group, type Mail, type Isp } from "@/lib/types"
+import { type Group, type Mail, type Isp, type Section } from "@/lib/types"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { createMailGroup, sendIspMail } from "./actions/mail"
+import { createMailGroup, sendMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
-import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret, 
-  updateDocumentSection, updateDocumentSpeed, updateDocumentTitle, updateBody } from "./actions/group"
-import { useRouter } from 'next/navigation';
+import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret,
+  updateDocumentSpeed, updateDocumentTitle, updateBody, 
+  updateSection} from "./actions/group"
 import { Card } from "./ui/card";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page"
 import { Textarea } from "./ui/textarea"
 import { useAppDispatch } from "./store/hooks"
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "./ui/playlist-dialog"
+import { createSection, getSections, removeSection } from "./actions/section"
+import { Label } from "./ui/label"
+import { getUsersFromIspList } from "./actions/user"
+import { usePathname } from 'next/navigation';
 
 
 const FormSchema = z.object({
   documentNo: z.string(),
-  title: z.string()
+  title: z.string(),
 })
 
 export function GroupForm({
@@ -47,11 +52,16 @@ export function GroupForm({
 }>) {
     const [speed, setSpeed] = useState('');
     const [secret, setSecret] = useState('');
-    const [section, setSection] = useState('');
+    const [sections, setSections] = useState<Section[]>([]);
     const [date, setDate] = useState<Date>();
     const [mailStatus, setMailStatus] = useState(2);
     const submitRef = useRef<HTMLButtonElement>(null);
     const [textareaValue, setTextareaValue] = useState("");
+    const [sectionErrorMsg, setSectionErrorMsg] = useState("");
+    const [prevSectionName, setPrevSectionName] = useState<string>('');
+    const [sectionName, setSectionName] = useState("");
+    const [sectionDeleteOpen, setSectionDeleteOpen] = useState(false);
+    const newSectionNameRef = useRef<HTMLInputElement>(null);
     const [mgId, setMgId] = useState('');
     const form = useForm<z.infer<typeof FormSchema>>({
       resolver: zodResolver(FormSchema),
@@ -60,9 +70,9 @@ export function GroupForm({
         title: "",
       },
   });
-  const router = useRouter();
   const [progresMails, setProgressMails] = useState<number[]>([]);
   const dispatch = useAppDispatch();
+  const pathname = usePathname();
 
   useEffect(() => {
     const getData = async() => {
@@ -70,12 +80,15 @@ export function GroupForm({
         const group: Group = await getGroup(groupId);
         if (group.speed != null || group.speed != undefined) setSpeed(`${group.speed}`);
         if (group.secret != null || group.secret != undefined) setSecret(`${group.secret}`);
-        if (group.section != null || group.section != undefined) setSection(`${group.section}`);
+        if (group.section != null || group.section != undefined) setSectionName(`${group.section.name}`);
         if (group.documentDate) setDate(new Date(group.documentDate));
         form.reset({
             documentNo: group.documentNo || '',
             title: group.title || '',
           });
+        
+        const sectionData = await getSections();
+        setSections(sectionData??[]);
       } catch (error) {
         if (isAuthError(error))
           redirectToLogin();
@@ -137,18 +150,23 @@ export function GroupForm({
 
   useEffect(() => {
     const updateSection = async() => {
+      const section = (sections as Section[]).find((e) => e.name === sectionName);
+      if (!section) return;
       try {
         await updateField({
           kind: 'section',
-          value: section
+          value: `${section.id}`
         });
       } catch (error) {
         if (isAuthError(error))
           redirectToLogin();
       }
     }
-    if (section != '') updateSection();
-  }, [section]);
+
+    if (sectionName != `${sections.length}`) setPrevSectionName(sectionName);
+
+    if (sectionName != '') updateSection();
+  }, [sectionName]);
 
   const updateField = async({kind, value}: {kind: string, value: string}) => {
     try {
@@ -197,9 +215,9 @@ export function GroupForm({
           break;
 
         case 'section':
-          await updateDocumentSection({
+          await updateSection({
             groupId,
-            section: parseInt(value)
+            sectionId: parseInt(value)
           }) 
           break;
       
@@ -219,6 +237,10 @@ export function GroupForm({
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => { 
     try {
+      if (sectionName === '' ) {
+          alert('Cannot send mails.');
+          return;
+      }
       if (values.title === '' || values.documentNo === '' || !date || speed === '' || secret === '') {
         alert('Cannot send mails.');
         return;
@@ -239,7 +261,6 @@ export function GroupForm({
         kind: 'body',
         value: textareaValue
       });
-
       const mailGroup = await createMailGroup({
         groupId
       });
@@ -248,33 +269,38 @@ export function GroupForm({
 
       const group: Group = await getGroup(groupId);
 
-      const groupFiles = group?.groupFiles?? [];
+      const groupFiles = group?.groupFiles?.filter((e) => !e.allIsp)?? [];
       if (groupFiles.length) {
         const ispIds = [...new Set(groupFiles.map((e) => e.isp?.id)
           .filter((e) => typeof e === 'number'))];
-        setProgressMails(Array.from({length: ispIds.length}).map(() => -1));
+        const receivers = await getUsersFromIspList(ispIds);
+        if (!receivers || !receivers.length) throw new Error("Receivers not found.");
+        setProgressMails(Array.from({length: receivers.length}).map(() => -1));
 
-        for (let ispIndex=0; ispIndex<ispIds.length; ispIndex++) {
+        for (let receiverIdx=0; receiverIdx<receivers.length; receiverIdx++) {
           if (mailStatus != 2) break;
           try {
-            const ispMail: Mail = await sendIspMail({
-              section: parseInt(section),
-              mailGroupId: mailGroup.id,
-              ispId: ispIds[ispIndex]
-            });
+            if (typeof mailGroup.id === 'string' && typeof receivers[receiverIdx].id === 'number') {
+                const ispMail: Mail = await sendMail({
+                  mailGroupId: mailGroup.id,
+                  receiverId: receivers[receiverIdx].id
+                });
 
-            if (ispMail.status != 'successful')
-              throw new Error("Fail to send a mail.");
+              if (ispMail.status != 'successful')
+                throw new Error("Fail to send a mail.");
 
-            setProgressMails((prev: number[]) => {
-              const updated = [...prev];
-              updated[ispIndex] = 0;
-              return updated;
-            });
+              setProgressMails((prev: number[]) => {
+                const updated = [...prev];
+                updated[receiverIdx] = 0;
+                return updated;
+              });
+            } else {
+              throw new Error("Invalid receiver or mail group.");
+            }
           } catch (error0) {
             setProgressMails((prev: number[]) => {
               const updated = [...prev];
-              updated[ispIndex] = 1;
+              updated[receiverIdx] = 1;
               return updated;
             });
             if (isAuthError(error0)) {
@@ -293,20 +319,21 @@ export function GroupForm({
     }
   }
 
-  useEffect(() => {
-    if (mailStatus != 2 && mgId != '') {
-      router.push(`/mail/${mgId}`);
-      setMailStatus(2);
-      setMgId('');
-    } 
-  }, [mailStatus, mgId]);
+  // useEffect(() => {
+  //   if (mailStatus != 2 && mgId != '') {
+      // router.push(`/mail-group/${mgId}`);
+  //     setMailStatus(2);
+  //     setMgId('');
+  //   } 
+  // }, [mailStatus, mgId]);
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
       {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
       <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
         -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
-        <div className={`w-full h-full flex justify-center items-center gap-x-2`}>
+        <div className={`w-[560px] max-md:w-[320px]
+          h-full grid grid-cols-12 max-md:grid-cols-6 justify-center items-center gap-x-2 gap-y-4`}>
         {
           progresMails.map((pmail: number, idx: number) => {
             const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
@@ -323,6 +350,8 @@ export function GroupForm({
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setMailStatus(0);
+              if(window)
+                window.location.href = `/mail-group/${mgId}`;
               setProgressMails([]);
             }}
           >
@@ -332,6 +361,8 @@ export function GroupForm({
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setMailStatus(1);
+              if(window)
+                window.location.href = pathname;
               setProgressMails([]);
             }}
           >
@@ -394,50 +425,50 @@ export function GroupForm({
                 <ThaiDatePicker date={date} setDate={setDate}/>
             </div>
             <FormField
-                control={form.control}
-                name="title"
-                render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "title">}) => (
-                <FormItem>
-                    <FormLabel className="inline-flex items-center gap-0.5">
-                        เรื่อง<span className="text-red-400">*</span>
-                    </FormLabel>
-                    <FormControl>
-                    <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        field.onChange(e)
-                    }}
-                      onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
-                        const title = e.currentTarget.value;
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          try {
-                            await updateField({
-                              kind: 'title',
-                              value: title 
-                            }); 
-                          } catch (error) {
-                            if (isAuthError(error))
-                              redirectToLogin();
-                          }
-                          e.currentTarget.blur();
-                        }
-                      }}
-                      onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
-                        const title = e.target.value;
+              control={form.control}
+              name="title"
+              render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "title">}) => (
+              <FormItem>
+                  <FormLabel className="inline-flex items-center gap-0.5">
+                      เรื่อง<span className="text-red-400">*</span>
+                  </FormLabel>
+                  <FormControl>
+                  <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      field.onChange(e)
+                  }}
+                    onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      const title = e.currentTarget.value;
+                      if (e.key === "Enter") {
+                        e.preventDefault();
                         try {
                           await updateField({
                             kind: 'title',
                             value: title 
-                          });
+                          }); 
                         } catch (error) {
-                          if (isAuthError(error))  
+                          if (isAuthError(error))
                             redirectToLogin();
                         }
-                      }}
-                    />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    onBlur={async(e: React.FocusEvent<HTMLInputElement>) => {
+                      const title = e.target.value;
+                      try {
+                        await updateField({
+                          kind: 'title',
+                          value: title 
+                        });
+                      } catch (error) {
+                        if (isAuthError(error))  
+                          redirectToLogin();
+                      }
+                    }}
+                  />
+                  </FormControl>
+                  <FormMessage />
+              </FormItem>
+              )}
             />
             <div className="flex flex-col">
               <FormLabel className="inline-flex items-center gap-0.5">
@@ -491,27 +522,27 @@ export function GroupForm({
                     <SelectLabel>ชั้นความลับ</SelectLabel>
                     <>
                       {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'].map((secret: string, idx: number) => (<SelectItem  
-                          key={`section-${idx}`} value={`${idx}`}> {secret}
+                          key={`secret-${idx}`} value={`${idx}`}> {secret}
                           </SelectItem>)
                       )}
                     </>
                     </SelectGroup>
                 </SelectContent>
-              </Select>
-
+              </Select> 
               </div>
             </div>
             <div className="flex flex-col">
               <FormLabel className="inline-flex items-center gap-0.5">
                   มาตรา<span className="text-red-400">*</span>
               </FormLabel>
-              <div className="mt-2">
+              <div className="mt-2 flex gap-x-4">
                 <Select
                   name="section"
                   required
-                  value={section}
+                  value={sectionName}
                   onValueChange={(value: string) => {
-                    setSection(value);
+                    if (value != '' && sectionName != `$${sections.length}`)
+                      setSectionName(value);
                   }}
                 >
                 <SelectTrigger className="w-full" >
@@ -521,23 +552,132 @@ export function GroupForm({
                     <SelectGroup>
                     <SelectLabel>มาตรา</SelectLabel>
                     <>
-                      {['ปกติ', 'มาตรา 15'].map((section: string, idx: number) => (<SelectItem  
-                          key={`section-${idx}`} value={`${idx}`}> {section}
-                          </SelectItem>)
-                      )}
+                      {Array.from({length: sections.length + 1}).map((_, idx) => {
+                        if (idx != sections.length)
+                          return <SelectItem  
+                            key={`section-${idx}`} value={`${sections[idx]?.name}`}> {sections[idx]?.name}
+                            </SelectItem>
+                          else
+                            return <SelectItem className="bg-muted"
+                              key={`section-${idx}`} value={`${idx}`}>
+                                <PlusCircleIcon />
+                              </SelectItem>
+                        })
+                      }
                     </>
                     </SelectGroup>
                 </SelectContent>
               </Select>
+              <Dialog open={sectionName === `${sections.length}`} onOpenChange={(open) => {
+                if (!open) setSectionName(prevSectionName);
+                setSectionErrorMsg('');
+              }}>
+                <DialogContent>
+                  <DialogTitle>สร้างมาตราใหม่</DialogTitle>
+                  <DialogDescription>ใส่ชื่อมาตราที่ท่านต้องการเพิ่มในระบบ</DialogDescription>
+                  <div className="grid gap-4">
+                    <div className="grid gap-3">
+                      <Label htmlFor="new-section-name">ชื่อมาตรา</Label>
+                      <Input id="new-section-name" name="new-section-name"
+                        ref={newSectionNameRef} placeholder="ใส่ชื่อมาตรา..."
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          e.preventDefault();
+                          setSectionErrorMsg('');
+                        }}
+                        />
+                    </div>
+                    <div className="text-destructive block h-8">{sectionErrorMsg}</div>
+                  </div>
+                  <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">ยกเลิก</Button>
+                  </DialogClose>
+                  <Button
+                    onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+                      e.preventDefault();
+                      try {
+                        const newSectionName = newSectionNameRef?.current?.value;
+                        if (!newSectionName || newSectionName === '') {
+                          setSectionErrorMsg("กรุณาใส่ชื่อมาตราให้ถูกต้อง");
+                          return;
+                        }
+                       else if ((sections as Section[]).map((e) => e.name).includes(newSectionName)) {
+                          setSectionErrorMsg("ชื่อมาตราซ้ำ");
+                          return;
+                       }
 
+                       const newSection: Section = await createSection({
+                        name: newSectionName
+                       });
+                       setSectionName(newSection.name);
+
+                       const newSections = await getSections();
+                       setSections(newSections??[]);
+
+                      } catch (error) {
+                        setSectionErrorMsg("ไม่สามารถสร้างมาตราใหม่ได้");
+                        if (isAuthError(error))
+                          redirectToLogin();
+                      }
+                    }}
+                  >ตกลง</Button>
+                </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={sectionDeleteOpen} onOpenChange={(open) => {
+                setSectionDeleteOpen(open);
+                setSectionErrorMsg('');
+              }}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogTitle>
+                    ลบมาตรา
+                  </DialogTitle>
+                  <DialogDescription>
+                    ท่านต้องการลบมาตรา &quot;{sectionName}&quot; หรือไม่?
+                  </DialogDescription>
+                  <div className="text-destructive block h-8">{sectionErrorMsg}</div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="outline">ยกเลิก</Button>
+                    </DialogClose>
+                    <Button variant="destructive"
+                      onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.preventDefault();
+                        const currentSectionName = sectionName;
+                        try {
+                          const rmvSection = (sections as Section[]).find((e) => e.name === currentSectionName);
+                          if (!rmvSection) {
+                            setSectionErrorMsg(`ไม่สามารถลบ "${currentSectionName}" ได้`);
+                            return;
+                          }
+                          await removeSection(rmvSection.id);
+                          setSectionDeleteOpen(false);
+                          const sectionData = await getSections();
+                          setSectionName('');
+                          setSections(sectionData?? []);
+                        } catch (error) {
+                          setSectionErrorMsg(`ไม่สามารถลบ "${currentSectionName}" ได้`);
+                          if (isAuthError(error)) 
+                            redirectToLogin();
+                        }
+                      }}
+                    >ยืนยัน</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               </div>
             </div>
             <Button type="submit" className="hidden" ref={submitRef}>Submit</Button>
         </form>
     </Form>
-      <BookCard ispData={isps} groupId={groupId}/>
-      { section != '1'? children: <></> }
-      { section === '1' && <Textarea className='h-64' placeholder="กรอกข้อความเพื่อส่งเมล..."
+      <BookCard ispData={isps} groupId={groupId} sectionName={sectionName}/>
+      { (sectionName === '' || sectionName === 'ปกติ')? children: <></> }
+      {(sectionName != '' && sectionName != 'ปกติ') && <Textarea className='h-64' placeholder="กรอกข้อความเพื่อส่งเมล..."
         value={textareaValue}
         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTextareaValue(e.target.value)}
         onKeyDown={async(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -584,6 +724,7 @@ export function GroupForm({
         }}
       />}
       <div className='w-full flex justify-center items-center gap-x-4'>
+        <Button variant="secondary">บันทึก</Button>
         <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           if (submitRef.current) {
