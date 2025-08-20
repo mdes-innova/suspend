@@ -1,6 +1,6 @@
 """Document serializer module."""
 from rest_framework import serializers
-from core.models import Document, Tag, Category, Url, DocumentFile
+from core.models import Document, ISP, DocumentFile
 from tag.serializer import TagSerializer
 from category.serializer import CategorySerializer
 from url.serializer import UrlSerializer
@@ -26,6 +26,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     group_id = serializers.SerializerMethodField()
     group_name = serializers.SerializerMethodField()
     document_file = DocumentFileSerializer(read_only=True)
+    has_all_isps = serializers.SerializerMethodField()
 
     class Meta:
         """Meta class for Document serializer."""
@@ -34,7 +35,7 @@ class DocumentSerializer(serializers.ModelSerializer):
                   'order_filename', 'orderred_no', 'orderred_date', 'document_file',
                   'kind_id', 'kind_name', 'active', 'group_id', 'group_name',
                   'orderblack_no', 'orderblack_date', 'isp_no', 'isp_date',
-                  'createdate', 'created_at']
+                  'createdate', 'created_at', 'has_all_isps']
         read_only_fields = fields
     
     def get_active(self, obj):
@@ -47,3 +48,8 @@ class DocumentSerializer(serializers.ModelSerializer):
     def get_group_name(self, obj):
         gd = getattr(obj, 'groupdocument', None)
         return gd.group.name if gd else None
+    
+    def get_has_all_isps(self, obj):
+        total_isps = ISP.objects.count()
+        linked_isps = obj.isps.count()
+        return linked_isps == total_isps

@@ -22,7 +22,7 @@ import {
   Row,
   Column,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, MailCheck } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility,
   setSorting, setPagination, setDocIds} 
   from "./store/features/dialog-list-ui-slice";
@@ -109,12 +109,15 @@ export const columns: ColumnDef<Document>[] = [
     },
     cell: ({ row }: { row: Row<Document> }) => 
     {
-      const original = row.original;
-      const id = original?.id?? '';
+      const { id, hasAllIsps } = row.original;
       return (<Link
         href={`/document-view/${id}`}
-        target="_blank" rel="noopener noreferrer"
-        className="text-left underline cursor-pointer hover:text-blue-400">{row.getValue('คำสั่งศาล')?? '-'}</Link>);
+        className="text-left underline cursor-pointer hover:text-blue-400 flex justify-start items-center">
+              <div className="w-4 h-4 block">
+                {hasAllIsps? <MailCheck size={16} color='green' />: <></>}
+              </div>
+              <div className="ml-1">{row.getValue('คำสั่งศาล')?? '-'}</div>
+          </Link>);
     }
   },
     {

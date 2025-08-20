@@ -23,7 +23,7 @@ import {
   Column,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal,
-  SlidersVertical, ChevronLeft, ChevronRight } from "lucide-react"
+  SlidersVertical, ChevronLeft, ChevronRight, MailCheck } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting, setPagination} 
   from "../store/features/content-list-ui-slice";
 import { Button } from "@/components/ui/button";
@@ -117,10 +117,15 @@ export const columns: ColumnDef<Document>[] = [
     },
     cell: ({ row }: { row: Row<Document> }) => 
     {
-      const { id } = row.original;
+      const { id, hasAllIsps } = row.original;
       return (<Link
         href={`/document-view/${id}`}
-        className="text-left underline cursor-pointer hover:text-blue-400">{row.getValue('คำสั่งศาล')?? '-'}</Link>);
+        className="text-left underline cursor-pointer hover:text-blue-400 flex justify-start items-center">
+              <div className="w-4 h-4 block">
+                {hasAllIsps? <MailCheck size={16} color='green' />: <></>}
+              </div>
+              <div className="ml-1">{row.getValue('คำสั่งศาล')?? '-'}</div>
+          </Link>);
     }
   },
     {

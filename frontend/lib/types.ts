@@ -21,7 +21,8 @@ export type Document = {
   active?: boolean,
   groupName?: string,
   groupId?: number,
-  documentFile?: DocumentFile
+  documentFile?: DocumentFile,
+  hasAllIsps?: boolean
 }
 
 export type Group = {
