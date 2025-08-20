@@ -43,6 +43,10 @@ def format_date_th_be(d, fmt='custom', thai_digits=False):
 
     return f"{base} {year_str}"
 
+def get_mail_file_name(document):
+    p = Path(document.order_filename)
+    return (f"คำสั่งศาล_{document.order_no}{p.suffix}").replace('/', '_')
+
 def generate_file(subject, date, user, group, documents):
     pdf_path =\
         f'/tmp/mail/{subject}-{date if date else ""}-{user.id}-{group.id}.pdf'
@@ -159,7 +163,7 @@ def send_email(mail, mail_group, section=False):
     if not section:
         for document in documents:
             file_path = document.document_file.file.path
-            filename = document.document_file.original_filename or\
+            filename = get_mail_file_name(document) or\
                 os.path.basename(file_path)
             encoded_filename = Header(filename, 'utf-8').encode()
             with open(file_path, 'rb') as attachment:
@@ -177,7 +181,7 @@ def send_email(mail, mail_group, section=False):
             encoders.encode_base64(part)
             filename = '_'.join(['urls', filename])
             p = Path(filename)
-            xlsx_filename = '.'.join([p.stem, 'xlsx'])
+            xlsx_filename = '.'.join([p.stem,'xlsx'])
             encoded_filename = Header(xlsx_filename, 'utf-8').encode()
             part.add_header('Content-Disposition',
                             f'attachment; filename={encoded_filename}')

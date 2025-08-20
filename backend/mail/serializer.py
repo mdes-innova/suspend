@@ -211,23 +211,24 @@ class MailGroupSerializer(serializers.ModelSerializer):
             )
         created_mailgroup.documents.set(group.documents.all())
 
-        all_group_files = group.group_files.filter(
-            all_isp=True
-        )
+        if created_mailgroup.section.name != 'ปกติ':
+            all_group_files = group.group_files.filter(
+                all_isp=True
+            )
 
-        if len(all_group_files):
-            for gf in all_group_files.all():
-                mail_file = MailFile.objects.create(
-                    mail_group=created_mailgroup,
-                    all_isp=True,
-                    original_filename=gf.original_filename
-                )
-                gf_file = gf.file
-                if gf_file:
-                    mail_file.file.save(
-                        gf.original_filename,
-                        gf_file.file,
-                        save=True
+            if len(all_group_files):
+                for gf in all_group_files.all():
+                    mail_file = MailFile.objects.create(
+                        mail_group=created_mailgroup,
+                        all_isp=True,
+                        original_filename=gf.original_filename
                     )
+                    gf_file = gf.file
+                    if gf_file:
+                        mail_file.file.save(
+                            gf.original_filename,
+                            gf_file.file,
+                            save=True
+                        )
 
         return created_mailgroup
