@@ -38,7 +38,7 @@ import {
   } from "@/components/ui/table";
 import { useRef, useState,  ChangeEvent, useEffect, useCallback } from "react";
 import {  type GroupFile, type Isp, type GroupFileTable, type Group } from "@/lib/types";
-import { downloadFile, GetFilesFromGroup, RemoveFile } from "../actions/group-file";
+import { downloadFile, GetFilesFromGroup, RemoveFile, updateGroupFileIsp } from "../actions/group-file";
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "../reload-page";
 import { useAppSelector } from "../store/hooks";
@@ -103,6 +103,7 @@ export function BookCard({ispData, groupId, sectionName}:
   const [tableData, setTableData] = useState<GroupFileTable[]>([]);
   const [openNew, setOpenNew] = useState<number | null>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [editTable, setEditTable] = useState<GroupFileTable | null>(null);
   const [ispFilesAll, setIspFilesAll] = useState<GroupFile[]>([]);
 
   const groupDocuments = useAppSelector((state: RootState) => state.groupUi.documents);
@@ -128,6 +129,7 @@ export function BookCard({ispData, groupId, sectionName}:
 
   useEffect(() => {
     if (openNew === null || openNew === -1) {
+      setEditTable(null);
       setIspSelected(null);
       const ispList = tableData
         ?.map((e: GroupFileTable) => e?.isp)
@@ -139,6 +141,7 @@ export function BookCard({ispData, groupId, sectionName}:
     } else {
       const currentRow = tableData?.[openNew];
       if (!currentRow) return;
+      setEditTable(currentRow);
       const currentIsp = currentRow.isp;
       setIspSelected(currentIsp?? null);
       if (currentIsp)
@@ -195,7 +198,7 @@ export function BookCard({ispData, groupId, sectionName}:
           <EditDialog groupId={groupId} ispData={ispData} ispSelected={ispSelected} openNew={openNew} 
             selectedIsps={selectedIsps} setIspSelected={setIspSelected} 
             setOpenNew={setOpenNew} setSelectedIsps={setSelectedIsps} setTableData={setTableData} 
-            tableData={tableData} uploadRef={uploadRef}
+            tableData={tableData} uploadRef={uploadRef} editTable={editTable} setEditTable={setEditTable}
             newFiles={newFiles} setNewFiles={setNewFiles} uploadFile={uploadFile}
             />
           {
@@ -417,7 +420,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
 
 function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
   ispData, selectedIsps, uploadRef, tableData, setTableData,
-  newFiles, setNewFiles, uploadFile
+  newFiles, setNewFiles, uploadFile, editTable, setEditTable 
 }:
   {
     groupId: number,
@@ -433,7 +436,9 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
     setTableData: React.Dispatch<React.SetStateAction<GroupFileTable[]>>,
     newFiles: File[],
     setNewFiles: React.Dispatch<React.SetStateAction<File[]>>,
-    uploadFile: (form: FormData) => Promise<void>
+    uploadFile: (form: FormData) => Promise<void>,
+    editTable: GroupFileTable | null,
+    setEditTable: React.Dispatch<React.SetStateAction<GroupFileTable | null>>
   }) {
  return (
    <Dialog open={openNew != null? true: false} onOpenChange={(open: boolean) => {
@@ -481,12 +486,11 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                     </Select>
                   </div>
                   <div className="grid gap-3">
-                    {
-                      openNew === -1 || !tableData ?
-                      <></>
-                      :
-                      tableData[openNew as number]?.groupFiles?.map((gf, gfIdx) => {
-                        return (
+                  {
+                    (editTable != null && editTable.groupFiles != null) && 
+                    (editTable.groupFiles != undefined && editTable.groupFiles.length > 0) &&
+                    editTable.groupFiles.map((gf, gfIdx) => {
+                      return (
                           <div className="w-96 flex justify-between" key={`gf-${gfIdx}`}>
                             <Tooltip>
                             <TooltipTrigger asChild>
@@ -517,18 +521,18 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             <CircleX className='hover:text-red-400' size={24}
                               onClick={(evt: React.MouseEvent<SVGSVGElement>) => {
                               evt.preventDefault();
-                              setTableData((prev: GroupFileTable[]) => {
-                                const idx = typeof openNew === "number" ? openNew : -1;
-                                if (idx < 0 || idx >= prev.length) return prev;
-                                
-                                const row = prev[idx];
-                                if (!row) return prev;
-                                const filtered = row.groupFiles.filter(e => e.id !== gf.id);
-                                if (filtered.length === row.groupFiles.length) return prev;
+                              setEditTable((prev: GroupFileTable | null) => {
+                                if (prev && prev?.groupFiles && prev?.groupFiles?.length > 0) {
+                                  const filteredGroupFiles = prev?.groupFiles.filter(
+                                    (_, etIdx) => etIdx != gfIdx);
 
-                                const updated = [...prev];
-                                updated[idx] = { ...row, groupFiles: filtered };
-                                return updated;
+                                    return {
+                                      ...prev,
+                                      groupFiles: filteredGroupFiles
+                                    }
+                                } else {
+                                  return null;
+                                }
                               });
                             }}
                             />
@@ -636,7 +640,6 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                             return;
                           formData.append("isp", `${ispSelected?.id}`);
                           formData.append("group", `${groupId}`);
-                          console.log(formData.get('isp'))
                           await uploadFile(formData);
                         }
                         const newData: GroupFileTable[] = await getTableData(groupId, ispData);
@@ -656,18 +659,30 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         const idx = typeof openNew === 'number'? openNew: -1;
                         if (idx < 0 || idx >= tableData.length) return;
 
-                        const row = tableData[idx];
-                        const orgGroupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
-                        const orgGroupFileIsp = orgGroupFiles.filter((e) => e.isp?.id === row.isp.id);
-                        const tableGroupFilesids = row.groupFiles.map((e) => e?.id);
-                        const rmvGroupFiles = orgGroupFileIsp.filter((e) => !(tableGroupFilesids.includes(e.id)));
+                        const rowGroupFiles = tableData[openNew]?.groupFiles;
+                        if (!rowGroupFiles) return;
 
-                        for (const gf of rmvGroupFiles) {
-                          if (gf && gf?.id)
-                            await RemoveFile(gf.id);
+                        if ((editTable?.isp?.id != ispSelected?.id) &&
+                          (editTable && editTable?.groupFiles && editTable?.groupFiles?.length > 0)) {
+                          await Promise.all(editTable.groupFiles.map(async(e) => {
+                            if (typeof e?.id === 'number' && typeof ispSelected?.id === 'number')
+                              await updateGroupFileIsp({
+                                ispId: ispSelected?.id,
+                                groupFileId: e.id
+                              });
+                          }));
                         }
+                        const editTableGroupFilesIds = editTable?.groupFiles
+                          .map((e) => e?.id).filter((e) => typeof e === 'number')
+                        const rmvGroupFiles = rowGroupFiles.filter((e) => (typeof e.id === 'number') &&
+                          !(editTableGroupFilesIds?.includes(e.id)));
                         
-                         for (const nf of newFiles) {
+                        await Promise.all(rmvGroupFiles.map(async(e) => {
+                          if (typeof e.id === 'number')
+                            await RemoveFile(e.id);
+                        }));
+
+                        for (const nf of newFiles) {
                           const formData = new FormData();
                           formData.append("file", nf);
                           if (!ispSelected)
@@ -677,10 +692,13 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                           await uploadFile(formData);
                         }
 
+                        
+
                         const newData: GroupFileTable[] = await getTableData(groupId, ispData);
                         setTableData((newData?? []) as GroupFileTable[]);
                         setOpenNew(null);
                       } catch (error) {
+                        console.error(error)
                         if (isAuthError(error))
                           redirectToLogin(); 
                       }

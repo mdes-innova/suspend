@@ -8,6 +8,10 @@ class ISP(models.Model):
     isp_id = models.IntegerField(unique=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    documents = models.ManyToManyField(
+        'Document',
+        related_name='isps'
+    )
 
     def __str__(self):
         """Str return."""

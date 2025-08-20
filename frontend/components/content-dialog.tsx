@@ -266,7 +266,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
   }, [rowSelection]);
 
   return (
-    <div className="block w-full">
+    <div className="block w-full max-lg:min-w-[600px]">
       <div className="flex items-center py-4 w-full">
         <Input
           placeholder="ค้นหาคำสั่งศาล..."
@@ -305,7 +305,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
           </DropdownMenu>
         </div>
       </div>
-      <div className="rounded-md border w-full">
+      <div className="rounded-md border w-full max-md:w-[350px]">
         <Table>
           <TableHeader className="block w-full">
             {table.getHeaderGroups().map((headerGroup: HeaderGroup<Document>) => (

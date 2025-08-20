@@ -251,7 +251,7 @@ export async function sendMail({
       const content = await res.json();
       return content;
   } catch (error) {
-      throw error; 
+    throw error; 
   }
 }
 

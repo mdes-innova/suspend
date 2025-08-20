@@ -1,5 +1,5 @@
 'use client';
-import {type Mail, Document, MailGroup } from "@/lib/types"
+import {type Mail, type Document, type Isp, type MailFile, type MailGroup } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { Date2Thai, Datetime2Thai } from "@/lib/client/utils"
 import { ArrowDownToLine} from "lucide-react";
@@ -11,14 +11,47 @@ import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
 import {useRouter} from 'next/navigation';
 import { Button } from "./ui/button";
+import { useState, useEffect } from 'react';
+
+type IspMail = {
+    isp: Isp | undefined,
+    mailFiles: MailFile[],
+    mails: Mail[]
+}
 
 export default function MailGroupView({
-    mailGroup
+    mailGroup,
+    ispData
 }: {
-    mailGroup: MailGroup
+    mailGroup: MailGroup,
+    ispData: Isp[]
 }) {
     const router = useRouter();
-    console.log(mailGroup)
+    const [ispMails, setIspMails] = useState<IspMail[]>([]);
+
+    useEffect(() => {
+        const getIspMails = () => {
+            const allIspIds = mailGroup.mails.filter((e) => e != null && e != undefined)
+                .map((e) => e?.receiver?.isp?.id).filter((e) => typeof e === 'number');
+            const uniqueIspIds = [...new Set(allIspIds)];
+            const newData = uniqueIspIds.map((eIspId) => {
+                const isp = ispData.find((eIspData) => eIspData.id === eIspId);
+                const mailFiles = mailGroup.mails.find((e) => e.receiver.isp?.id === eIspId)?.mailFiles;
+                const mails = mailGroup.mails.filter((e) => e?.receiver?.isp?.id === eIspId)
+
+                return {
+                    isp,
+                    mails: mails?? [],
+                    mailFiles: mailFiles?? []
+                }
+            });
+
+            setIspMails(newData?? []);
+        }
+
+        getIspMails();
+    }, []);
+
     return (
         <div className="w-full h-full flex flex-col gap-y-2">
             <div className="grid grid-cols-2 py-4">
@@ -87,15 +120,15 @@ export default function MailGroupView({
                     </TableHeader>
                     <TableBody>
                         {
-                            mailGroup != undefined && mailGroup?.mails && mailGroup?.mails?.length > 0?
-                            mailGroup?.mails.map((e: Mail, idx: number) => 
+                            ispMails && ispMails.length > 0 ?
+                            ispMails?.map((e: IspMail, idx: number) => 
                             <TableRow key={`table-row-${idx}`}>
                                 <TableCell>
                                     {idx + 1} 
                                 </TableCell>
                                 <TableCell className='max-w-[400px] flex flex-col items-start'>
                                 {
-                                    e.mailFiles.map((ee, idx2) => 
+                                    e?.mailFiles?.map((ee, idx2) => 
                                     <div className='w-full h-full flex' key={`isp-file-${idx}-${idx2}`}>
                                         <ArrowDownToLine size={16} className='cursor-pointer'
                                         onClick={async(evt: React.MouseEvent<SVGSVGElement>) => {
@@ -133,13 +166,31 @@ export default function MailGroupView({
                                 }
                                 </TableCell>
                                 <TableCell>
-                                    {e?.isp?.name} 
+                                    {
+                                        e.mails.map((_, eMailIdx) => 
+                                            <div key={`isp-name-mail-${idx}-${eMailIdx}`}>
+                                                {e?.isp?.name?? '-'} {eMailIdx? `(${eMailIdx})`: ''}
+                                            </div>
+                                        )
+                                    }
                                 </TableCell>
                                 <TableCell>
-                                    {e.status === "successful"? Datetime2Thai(e.datetime as string): '-'} 
+                                    {
+                                        e.mails.map((eMail, eMailIdx) => 
+                                            <div key={`isp-send-mail-${idx}-${eMailIdx}`}>
+                                                {eMail.datetime? Datetime2Thai(eMail.datetime): '-'}
+                                            </div>
+                                        )
+                                    }
                                 </TableCell>
                                 <TableCell>
-                                    {e.confirmed? Datetime2Thai(e.confirmedDate as string): '-'} 
+                                    {
+                                        e.mails.map((eMail, eMailIdx) => 
+                                            <div key={`isp-send-mail-${idx}-${eMailIdx}`}>
+                                                {eMail.confirmedDate? Datetime2Thai(eMail.confirmedDate): '-'}
+                                            </div>
+                                        )
+                                    }
                                 </TableCell>
                             </TableRow>):(
                             <TableRow>
@@ -166,7 +217,8 @@ export default function MailGroupView({
                     </TableHeader>
                     <TableBody>
                         {
-                            mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0?
+                            (mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0) &&
+                                (mailGroup.section.name === 'ปกติ')?
                             mailGroup.documents.map((e: Document, idx: number) => 
                             <TableRow key={`table-row-${idx}`} className="cursor-default"
                                 onClick={(evt: React.MouseEvent<HTMLTableRowElement>) => {

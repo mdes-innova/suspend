@@ -4,18 +4,12 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenu,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
 import { Button } from "./ui/button";
-import { useRouter } from 'next/navigation';
 import { useState } from 'react'
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setUser } from "./store/features/user-auth-slice";
@@ -23,15 +17,14 @@ import { logoutUser } from "./actions/user";
 import { RootState } from "./store";
 
 export function DropdownMenuUser() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false)
+  const [userOpen, setUserOpen] = useState(false);
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
 
   if (!user) return null;
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={userOpen} onOpenChange={setUserOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="text-xl">{user?.username}</Button>
       </DropdownMenuTrigger>
@@ -41,8 +34,8 @@ export function DropdownMenuUser() {
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={(e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
-              setOpen(false);
-              router.push('/profile-view');
+              if (window)
+                window.location.href = '/profile-view';
           }}>
             โปรไฟล์ 
           </DropdownMenuItem>
@@ -50,8 +43,8 @@ export function DropdownMenuUser() {
             user?.isStaff &&
             <DropdownMenuItem onClick={(e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
-              setOpen(false);
-              router.push('/register');
+              if (window)
+                window.location.href = '/register';
             }}>
               เพิ่มผู้ใช้งาน 
             </DropdownMenuItem>
@@ -76,59 +69,4 @@ export function DropdownMenuUser() {
       </DropdownMenuContent>
     </DropdownMenu>
   )
-}
-
-export default function UserDropdown() {
-    return (
-       <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Keyboard shortcuts
-            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem>Email</DropdownMenuItem>
-                <DropdownMenuItem>Message</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>More...</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
-          <DropdownMenuItem>
-            New Team
-            <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>GitHub</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
-        <DropdownMenuItem disabled>API</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent> 
-    );
 }

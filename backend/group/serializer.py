@@ -13,6 +13,7 @@ from .utils import create_document_file
 
 class GroupFileSerializer(serializers.ModelSerializer):
     isp_id = serializers.PrimaryKeyRelatedField(
+        source="isp",
         queryset=ISP.objects.all(),
         write_only=True
     )

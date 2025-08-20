@@ -83,6 +83,11 @@ class Mail(models.Model):
         related_name='received_mails'
     )
 
+    mail_files = models.ManyToManyField(
+        'MailFile',
+        related_name='mails'
+    )
+
     confirmed = models.BooleanField(default=False)
     confirmed_uuid = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True
@@ -96,9 +101,6 @@ class Mail(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.subject} ({self.datetime})"
-
 
 class MailFile(models.Model):
     mail_group = models.ForeignKey(
@@ -109,9 +111,7 @@ class MailFile(models.Model):
     )
     isp = models.ForeignKey('ISP', on_delete=models.SET_NULL,
                             null=True, default=None)
-    mail = models.ForeignKey('Mail', on_delete=models.SET_NULL,
-                              null=True, default=None,
-                              related_name='mail_files')
+
     file = models.FileField(
         upload_to=mail_file_path,
         validators=[

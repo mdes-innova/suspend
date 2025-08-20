@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, ControllerRenderProps } from "react-hook-form"
 import {z } from "zod"
 import { Button } from "@/components/ui/button"
-import { PlusCircleIcon, Trash2} from "lucide-react";
+import { PlusCircleIcon, Trash2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -16,15 +16,14 @@ import {
 import {closeModal, LOADINGUI, openModal} from './store/features/loading-ui-slice';
 import { Input } from "@/components/ui/input"
 import { useEffect, useRef, useState } from "react"
-import { type Group, type Mail, type Isp, Section } from "@/lib/types"
+import { type Group, type Mail, type Isp, type Section } from "@/lib/types"
 import { ThaiDatePicker } from "./date-picker"
 import { BookCard } from "./court-order/book-card"
-import { createMailGroup, sendIspMail, sendMail } from "./actions/mail"
+import { createMailGroup, sendMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret,
   updateDocumentSpeed, updateDocumentTitle, updateBody, 
   updateSection} from "./actions/group"
-import { useRouter } from 'next/navigation';
 import { Card } from "./ui/card";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page"
@@ -33,7 +32,8 @@ import { useAppDispatch } from "./store/hooks"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "./ui/playlist-dialog"
 import { createSection, getSections, removeSection } from "./actions/section"
 import { Label } from "./ui/label"
-import { getUserFromIsp, getUsersFromIspList } from "./actions/user"
+import { getUsersFromIspList } from "./actions/user"
+import { usePathname } from 'next/navigation';
 
 
 const FormSchema = z.object({
@@ -70,9 +70,9 @@ export function GroupForm({
         title: "",
       },
   });
-  const router = useRouter();
   const [progresMails, setProgressMails] = useState<number[]>([]);
   const dispatch = useAppDispatch();
+  const pathname = usePathname();
 
   useEffect(() => {
     const getData = async() => {
@@ -280,19 +280,23 @@ export function GroupForm({
         for (let receiverIdx=0; receiverIdx<receivers.length; receiverIdx++) {
           if (mailStatus != 2) break;
           try {
-            const ispMail: Mail = await sendMail({
-              mailGroupId: mailGroup.id,
-              receiverId: receivers[receiverIdx]
-            });
+            if (typeof mailGroup.id === 'string' && typeof receivers[receiverIdx].id === 'number') {
+                const ispMail: Mail = await sendMail({
+                  mailGroupId: mailGroup.id,
+                  receiverId: receivers[receiverIdx].id
+                });
 
-            if (ispMail.status != 'successful')
-              throw new Error("Fail to send a mail.");
+              if (ispMail.status != 'successful')
+                throw new Error("Fail to send a mail.");
 
-            setProgressMails((prev: number[]) => {
-              const updated = [...prev];
-              updated[receiverIdx] = 0;
-              return updated;
-            });
+              setProgressMails((prev: number[]) => {
+                const updated = [...prev];
+                updated[receiverIdx] = 0;
+                return updated;
+              });
+            } else {
+              throw new Error("Invalid receiver or mail group.");
+            }
           } catch (error0) {
             setProgressMails((prev: number[]) => {
               const updated = [...prev];
@@ -315,20 +319,21 @@ export function GroupForm({
     }
   }
 
-  useEffect(() => {
-    if (mailStatus != 2 && mgId != '') {
-      router.push(`/mail-group/${mgId}`);
-      setMailStatus(2);
-      setMgId('');
-    } 
-  }, [mailStatus, mgId]);
+  // useEffect(() => {
+  //   if (mailStatus != 2 && mgId != '') {
+      // router.push(`/mail-group/${mgId}`);
+  //     setMailStatus(2);
+  //     setMgId('');
+  //   } 
+  // }, [mailStatus, mgId]);
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center px-6 gap-y-4">
       {progresMails.length > 0 && mgId != '' && mailStatus == 2 &&
       <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 min-w-54 
         -translate-y-1/2 z-50 p-10 flex flex-col gap-y-6 justify-center">
-        <div className={`w-full h-full grid grid-cols-12 justify-center items-center gap-x-2 gap-y-4`}>
+        <div className={`w-[560px] max-md:w-[320px]
+          h-full grid grid-cols-12 max-md:grid-cols-6 justify-center items-center gap-x-2 gap-y-4`}>
         {
           progresMails.map((pmail: number, idx: number) => {
             const bg = ['bg-muted', 'bg-green-400', 'bg-red-400'][pmail + 1];
@@ -345,6 +350,8 @@ export function GroupForm({
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setMailStatus(0);
+              if(window)
+                window.location.href = `/mail-group/${mgId}`;
               setProgressMails([]);
             }}
           >
@@ -354,6 +361,8 @@ export function GroupForm({
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setMailStatus(1);
+              if(window)
+                window.location.href = pathname;
               setProgressMails([]);
             }}
           >
@@ -715,6 +724,7 @@ export function GroupForm({
         }}
       />}
       <div className='w-full flex justify-center items-center gap-x-4'>
+        <Button variant="secondary">บันทึก</Button>
         <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           if (submitRef.current) {

@@ -144,7 +144,7 @@ class MailViews(viewsets.ModelViewSet):
     )
     def send_mail(self, request):
         mail_group_id = request.data.get('mail_group_id', None)
-        receiver_id = request.data.get('user_id', None)
+        receiver_id = request.data.get('receiver_id', None)
 
         try:
             mail_group = MailGroup.objects.get(id=mail_group_id)
@@ -155,7 +155,7 @@ class MailViews(viewsets.ModelViewSet):
         except get_user_model().DoesNotExist:
             return Response({'error': 'Receiver not found.'},
                             status=status.HTTP_400_BAD_REQUEST)
-        except:
+        except Exception as e:
             return Response({'error': 'Inputs fail.'},
                             status=status.HTTP_400_BAD_REQUEST)
 

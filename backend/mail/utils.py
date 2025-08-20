@@ -144,7 +144,6 @@ def send_email(mail, mail_group, section=False):
     msg.attach(body_part)
 
     for mail_file in mail.mail_files.all():
-        print(mail_file)
         file_path = mail_file.file.path
         filename = mail_file.original_filename or\
             os.path.basename(file_path)

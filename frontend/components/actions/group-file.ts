@@ -132,3 +132,33 @@ export async function Edit({
     throw error;
   }
 }
+
+export async function updateGroupFileIsp({ ispId, groupFileId}: {
+    ispId: number, groupFileId: number
+}) {
+
+  try {
+    const access = await getAccess();
+    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/group/files/${groupFileId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        ispId
+      }),
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update isp for a group file fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}
