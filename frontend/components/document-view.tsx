@@ -14,7 +14,7 @@ import CategoryGroup from "./document-category";
 import { Date2Thai, Text2Thai } from "@/lib/client/utils";
 import { downloadPdf, downloadUrls } from "./actions/document";
 import { isAuthError } from "./exceptions/auth";
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
 
 export default function DocumentView(
   { docData, groupData }: { docData: Document, groupData: Group }) {
@@ -69,7 +69,7 @@ export default function DocumentView(
                   window.URL.revokeObjectURL(url);
                 } catch (error) {
                   if (isAuthError(error))
-                    redirectToLogin();
+                    RedirectToLogin();
                 }
               }}>PDF</li>
               <li onClick={async(e: React.MouseEvent<HTMLLIElement>) => {
@@ -91,7 +91,7 @@ export default function DocumentView(
                   window.URL.revokeObjectURL(url);
                 } catch (error) {
                   if (isAuthError(error))
-                    redirectToLogin();
+                    RedirectToLogin();
                 }
               }}>XLSX</li>
             </ul>

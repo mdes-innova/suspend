@@ -47,7 +47,8 @@ export type User = {
   isStaff: boolean,
   isActive: boolean,
   isSuperuser: boolean,
-  isp?: Isp 
+  isp?: Isp,
+  email?: string
 };
 
 export type File = {
@@ -66,7 +67,10 @@ export type Kind = {
 export type Isp = {
   id: number,
   name: string,
-  ispId: number
+  ispId: number,
+  mailCount: number,
+  createdAt?: string,
+  documents?: number[]
 }
 
 export type UserRegister = {

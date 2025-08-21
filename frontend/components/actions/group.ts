@@ -498,3 +498,44 @@ export async function updateBody({
       throw error; 
   }
 }
+
+type SaveProps = {
+  groupId: number | undefined,
+  documentNo: string,
+  documentDate: string | null,
+  title: string,
+  speed: number | null,
+  secret: number | null,
+  sectionId: number | null,
+  body: string,
+}
+
+export async function saveGroup(saveProps: SaveProps) {
+
+  try {
+    const groupId = saveProps.groupId;
+    saveProps = {...saveProps, groupId: undefined};
+    const access = await getAccess();
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD
+    const res = await fetch(`${url}/group/groups/${groupId}/`, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${access}`,
+          "Content-Type": "application/json"
+        },
+      body: JSON.stringify(
+        saveProps
+      )
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Update for a group fail.');
+      }
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}

@@ -19,6 +19,9 @@ class UserSerializer(serializers.ModelSerializer):
     )
     email = serializers.EmailField(required=False, allow_blank=True)
     is_superuser = serializers.BooleanField(read_only=True)
+    password = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
 
     class Meta:
         model = get_user_model()

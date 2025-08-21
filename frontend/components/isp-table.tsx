@@ -1,6 +1,7 @@
 'use client';
 
-import { Mail, MailGroup } from "@/lib/types";
+import { Isp, User } from "@/lib/types";
+import { ArrowUpDown, ChevronDown } from "lucide-react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -18,29 +19,25 @@ import {
   HeaderGroup,
   Header
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown } from "lucide-react"
+import Link from 'next/link';
+import { useState } from 'react';
 import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import {useState} from 'react';
-import Link from 'next/link';
-import { Datetime2Thai } from "@/lib/client/utils";
+import { Date2Thai } from "@/lib/client/utils";
 
-const staffColumns: ColumnDef<MailGroup>[] = [
- {
-    id: 'วันที่',
-    accessorKey: "createdAt",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
-    header: ({ column }: { column: Column<MailGroup> }) => {
+type IspUsers = Isp & { users: User[]};
+
+const columns: ColumnDef<IspUsers>[] = [
+{
+    id: 'ชื่อ',
+    accessorKey: "name",
+    header: ({ column }: { column: Column<IspUsers> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-          วันที่
+            ชื่อ
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -49,45 +46,22 @@ const staffColumns: ColumnDef<MailGroup>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<MailGroup> }) => {
+    cell: ({ row }: { row: Row<IspUsers> }) => {
       return (
         <div>
-          {row.getValue('วันที่')? Datetime2Thai(row.getValue('วันที่')): '-'}
-          </div>
-      );
-    },
-  }, {
-    id: 'เลขหนังสือ',
-    accessorKey: "documentNo",
-    header: ({ column }: { column: Column<MailGroup> }) => {
-      return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
-            เลขหนังสือ
-          <ArrowUpDown size={16} className="cursor-pointer"
-          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
-            e.preventDefault();
-            column.toggleSorting(column.getIsSorted() === "asc");
-          }}/>
-        </div>
-      )
-    },
-    cell: ({ row }: { row: Row<MailGroup> }) => {
-      return (
-        <div>
-          {row.getValue('เลขหนังสือ')?? '-'}
+          {row.getValue('ชื่อ')?? '-'}
           </div>
       );
     },
   }, {
     id: 'จำนวนคำสั่งศาล',
     accessorKey: "documents",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
+    sortingFn: (rowA: Row<IspUsers>, rowB: Row<IspUsers>, columnId: string) => {
       const numA = (rowA.getValue(columnId) as Document[]).length?? 0;
       const numB = (rowB.getValue(columnId) as Document[]).length?? 0;
       return numA - numB; // ascending
     },
-    header: ({ column }: { column: Column<MailGroup>}) => {
+    header: ({ column }: { column: Column<IspUsers>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
@@ -100,7 +74,7 @@ const staffColumns: ColumnDef<MailGroup>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<MailGroup> }) => {
+    cell: ({ row }: { row: Row<IspUsers> }) => {
       const original = row.original;
       const noDocuments = original?.documents?.length?? '-';
       return (
@@ -110,31 +84,13 @@ const staffColumns: ColumnDef<MailGroup>[] = [
       );
     },
   }, {
-    id: 'ส่ง',
-    accessorKey: "mails",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      let valueA = -1;
-      let valueB = -1;
-      
-      const mailsA = rowA.getValue(columnId) as Mail[];
-      const mailsB = rowB.getValue(columnId) as Mail[];
-
-      if (mailsA.length > 0) {
-        const numConfirms = (mailsA.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
-        valueA = numConfirms/mailsA.length;
-      }
-      if (mailsB.length > 0) {
-        const numConfirms = (mailsB.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
-        valueB = numConfirms/mailsB.length;
-      }
-
-      return valueA - valueB; // ascending
-    },
-    header: ({ column }: { column: Column<MailGroup> }) => {
+    id: 'จำนวนอีเมล',
+    accessorKey: "mailCount",
+    header: ({ column }: { column: Column<IspUsers>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ส่ง
+          จำนวนอีเมล  
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -143,46 +99,26 @@ const staffColumns: ColumnDef<MailGroup>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<MailGroup> }) => {
-      const original = row.original;
-      const mails = original?.mails as Mail[];
-      let sends = '-';
-      if (mails && mails?.length) {
-        const numSends = (mails.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
-        sends = `${numSends}/${mails.length}`
-      }
+    cell: ({ row }: { row: Row<IspUsers> }) => {
       return (
         <div>
-          {sends}
+          {row.getValue('จำนวนอีเมล')?? '-'}
           </div>
       );
     },
   }, {
-    id: 'ยืนยัน',
-    accessorKey: "mails",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      let valueA = -1;
-      let valueB = -1;
-      
-      const mailsA = rowA.getValue(columnId) as Mail[];
-      const mailsB = rowB.getValue(columnId) as Mail[];
-
-      if (mailsA.length > 0) {
-        const numConfirms = (mailsA.filter((e: Mail) => e?.confirmed)).length;
-        valueA = numConfirms/mailsA.length;
-      }
-      if (mailsB.length > 0) {
-        const numConfirms = (mailsB.filter((e: Mail) => e?.confirmed)).length;
-        valueB = numConfirms/mailsB.length;
-      }
-
-      return valueA - valueB; // ascending
+    id: 'วันที่สร้าง',
+    accessorKey: "createdAt",
+    sortingFn: (rowA: Row<IspUsers>, rowB: Row<IspUsers>, columnId: string) => {
+      const dateA = new Date(rowA.getValue(columnId));
+      const dateB = new Date(rowB.getValue(columnId));
+      return dateA.getTime() - dateB.getTime(); // ascending
     },
-    header: ({ column }: { column: Column<MailGroup>}) => {
+    header: ({ column }: { column: Column<IspUsers> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            ยืนยัน
+            วันที่สร้าง
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -191,30 +127,21 @@ const staffColumns: ColumnDef<MailGroup>[] = [
         </div>
       )
     },
-    cell: ({ row }: { row: Row<MailGroup> }) => {
-      const original = row.original;
-      const mails = original?.mails as Mail[];
-      let confirms = '-';
-      if (mails && mails?.length) {
-        const numConfirms = (mails.filter((e: Mail) => e?.confirmed)).length;
-        confirms = `${numConfirms}/${mails.length}`
-      }
-
+    cell: ({ row }: { row: Row<IspUsers> }) => {
       return (
         <div>
-          {confirms}
+          {row.getValue('วันที่สร้าง')? Date2Thai(row.getValue('วันที่สร้าง')): '-'}
           </div>
       );
     },
   }
 ]
 
-export default function MailTable({ data }: { data: MailGroup[] }) {
+export default function IspTable({ data }: { data: IspUsers[] }) {
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    const columns = staffColumns;
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
@@ -237,15 +164,14 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
         },
   })
 
-
-    return (
+  return (
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="ค้นหาเลขหนังสือ..."
-          value={(table.getColumn("เลขหนังสือ")?.getFilterValue() as string) ?? ""}
+          placeholder="ค้นหา ISP..."
+          value={(table.getColumn("ชื่อ")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("เลขหนังสือ")?.setFilterValue(event.target.value)
+            table.getColumn("ชื่อ")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -259,8 +185,8 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column: Column<MailGroup>) => column.getCanHide())
-                .map((column: Column<MailGroup>) => {
+                .filter((column: Column<IspUsers>) => column.getCanHide())
+                .map((column: Column<IspUsers>) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -281,9 +207,12 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup: HeaderGroup<MailGroup>) => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<IspUsers>) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header: Header<MailGroup, unknown>) => {
+                <TableHead>
+                    ลำดับที่
+                </TableHead>
+                {headerGroup.headers.map((header: Header<IspUsers, unknown>) => {
                   return (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
@@ -300,15 +229,18 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row: Row<MailGroup>) => {
+              table.getRowModel().rows.map((row: Row<IspUsers>, idx: number) => {
                 return (
                 <TableRow
                   key={row.id}
                   className="cursor-pointer"
                 >
-                  {row.getVisibleCells().map((cell: Cell<MailGroup, unknown>) => (
+                    <TableCell>
+                        {idx + 1}
+                    </TableCell>
+                  {row.getVisibleCells().map((cell: Cell<IspUsers, unknown>) => (
                     <TableCell key={cell.id}>
-                        <Link href={`/mail-group/${row.original.id}`}>
+                        <Link href={`/profile-view/isp/${row?.original?.id}/user`}>
                             {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()
@@ -357,5 +289,6 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
         </div>
       </div>
     </div>
-    );
+  );
+
 }

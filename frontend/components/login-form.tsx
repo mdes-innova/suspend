@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { PasswordInput } from "./password-input";
 import { useSearchParams } from "next/navigation";
 import { getProfile, loginUser } from "./actions/user";
@@ -32,7 +31,6 @@ export default function LoginForm() {
 
   const params = useSearchParams();
   const [errorMessage, setErrorMessage] = useState('');
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
 
@@ -47,9 +45,8 @@ export default function LoginForm() {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      router.push(params.get('pathname')?? '/');
-      router.refresh();
+    if (user && window) {
+      window.location.href = params.get('pathname')?? '/';
     }
   }, [user]);
 

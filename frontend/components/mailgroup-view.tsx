@@ -8,7 +8,7 @@ import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
 import {useRouter} from 'next/navigation';
 import { Button } from "./ui/button";
 import { useState, useEffect } from 'react';
@@ -99,7 +99,7 @@ export default function MailGroupView({
                                 } catch (error) {
                                 console.error(error);
                                 if (isAuthError(error))
-                                redirectToLogin(); 
+                                RedirectToLogin(); 
                                 }
                             }}  
                             >
@@ -148,7 +148,7 @@ export default function MailGroupView({
                                         } catch (error) {
                                         console.error(error);
                                         if (isAuthError(error))
-                                            redirectToLogin(); 
+                                            RedirectToLogin(); 
                                         }
                                         }}/>
                                         <Tooltip>

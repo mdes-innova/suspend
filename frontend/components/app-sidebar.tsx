@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Inbox, Search, Settings, Plus, ChevronUp } from "lucide-react"
+import { Home, Inbox, Search, Settings, Plus, ChevronUp, Network } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -41,6 +41,11 @@ const items = [
     title: "กล่องข้อความ",
     url: "/mail-group",
     icon: Inbox,
+  },
+  {
+    title: "ISP",
+    url: "/isps",
+    icon: Network,
   },
   {
     title: "ค้นหา",

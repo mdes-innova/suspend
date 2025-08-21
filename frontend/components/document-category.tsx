@@ -1,7 +1,6 @@
 'use client';
 
 import { Ban } from "lucide-react";
-import { Button } from "./ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +24,7 @@ import { toggleDataChanged as toggleDataChangedDocumentList} from "./store/featu
 import { toggleDataChanged as toggleDataChangedGroupList } from "./store/features/group-list-ui-slice";
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
-import { AlertCircleIcon, BadgeCheckIcon, CheckIcon } from "lucide-react"
+import { RedirectToLogin } from "./reload-page";
 import { Badge } from "@/components/ui/badge"
 
 export default function CategoryGroup({ doc, group }:
@@ -71,7 +69,7 @@ export default function CategoryGroup({ doc, group }:
                 setGroupData(Object.keys(fetchGroup).length === 0? null: fetchGroup);
             } catch (error) {
                 if (isAuthError(error)) {
-                    redirectToLogin();
+                    RedirectToLogin();
                 }
                 else
                     setGroupData(null);
@@ -143,7 +141,7 @@ export default function CategoryGroup({ doc, group }:
                                         setGroupData(null);
                                     } catch (error) {
                                         if (isAuthError(error))
-                                            redirectToLogin();
+                                            RedirectToLogin();
                                        console.error(error);
                                     }
                                    
