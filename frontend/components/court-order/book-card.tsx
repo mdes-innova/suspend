@@ -72,7 +72,6 @@ async function getTableData(
       const groupFilesIsp = groupFilesData.filter((e) => e?.isp?.id === ispId);
       for (const f of groupFilesIsp) size += (f?.size ?? 0);
       if (sectionName != undefined && sectionName != '' && sectionName != 'ปกติ') {
-        console.log(sectionName)
         const ispFilesAll = groupFilesData.filter((e) => e?.allIsp);
         for (const f of ispFilesAll) size += (f?.size ?? 0);
       }

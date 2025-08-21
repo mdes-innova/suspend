@@ -213,9 +213,8 @@ const staffColumns: ColumnDef<MailGroup>[] = [
   }
 ]
 
-export default function MailTable() {
+export default function MailTable({ data }: { data: MailGroup[] }) {
     const [sorting, setSorting] = useState<SortingState>([])
-    const [tableData, setTableData] = useState([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
@@ -224,7 +223,7 @@ export default function MailTable() {
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
     const table = useReactTable({
-        data: tableData,
+        data: data?? [],
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -241,23 +240,6 @@ export default function MailTable() {
         rowSelection,
         },
   })
-
-  useEffect(() => {
-    const getData = async() => {
-      try {
-        const data = await getMailGroups(); 
-        setTableData(data);
-      } catch (error) {
-        console.error(error);
-        setTableData([]);
-
-        if (isAuthError(error))
-          redirectToLogin(); 
-      }
-    }
-
-    getData();
-  }, []);
 
 
     return (

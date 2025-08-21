@@ -26,6 +26,8 @@ import { toggleDataChanged as toggleDataChangedGroupList } from "./store/feature
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { redirectToLogin } from "./reload-page";
+import { AlertCircleIcon, BadgeCheckIcon, CheckIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 export default function CategoryGroup({ doc, group }:
     { doc: Document, group: Group }) {
@@ -87,9 +89,9 @@ export default function CategoryGroup({ doc, group }:
 
     return (
         <>
-            <Button className={`${bgColors[doc?.kindId?? 0]} rounded-xl px-2 py-1 hover:${bgColors[doc?.kindId?? 0]}`}>
+            <Badge className={`${bgColors[doc?.kindId?? 0]} rounded-xl px-2 py-1 hover:${bgColors[doc?.kindId?? 0]}`}>
                 {label}
-            </Button>
+            </Badge>
             {
                 groupData &&
                 <div className="px-2 flex justify-center items-center">
