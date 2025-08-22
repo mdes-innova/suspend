@@ -93,9 +93,11 @@ export const columns: ColumnDef<Document>[] = [
               checked={row.getIsSelected()}
               onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
               aria-label="Select row"
-              disabled={!active}
             />
           );
+        else {
+          return null;
+        }
     },
     enableSorting: false,
     enableHiding: false,
@@ -431,7 +433,11 @@ export default function DataTable({ data }: { data: Document[] }) {
       </div>
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredSelectedRowModel()
+            .rows.filter((row: Row<Document>) => {
+              const active = row?.original?.active?? false;
+              return active;
+            }).length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         <div className="flex gap-x-2">
