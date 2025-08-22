@@ -40,7 +40,7 @@ import { useRef, useState,  ChangeEvent, useEffect, useCallback } from "react";
 import {  type GroupFile, type Isp, type GroupFileTable, type Group } from "@/lib/types";
 import { downloadFile, GetFilesFromGroup, RemoveFile, updateGroupFileIsp } from "../actions/group-file";
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "../reload-page";
+import { RedirectToLogin } from "../reload-page";
 import { useAppSelector } from "../store/hooks";
 import { RootState } from "../store";
 import { getGroup } from "../actions/group";
@@ -86,7 +86,7 @@ async function getTableData(
     return rows;
   } catch (error) {
     if (isAuthError(error)) {
-      redirectToLogin();
+      RedirectToLogin();
     }
     return [];
   }
@@ -181,7 +181,7 @@ export function BookCard({ispData, groupId, sectionName}:
         throw new Error('Upload fail.');
       }
     } catch (error) {
-      if (isAuthError(error)) redirectToLogin();
+      if (isAuthError(error)) RedirectToLogin();
       else throw new Error("Upload fail.");
       
     }
@@ -233,7 +233,7 @@ export function BookCard({ispData, groupId, sectionName}:
                   } catch (error) {
                     console.error(error);
                     if (isAuthError(error)) 
-                      redirectToLogin();
+                      RedirectToLogin();
                   }
                 }}
                 className="hidden"
@@ -264,7 +264,7 @@ export function BookCard({ispData, groupId, sectionName}:
                         } catch (error) {
                         console.error(error);
                         if (isAuthError(error))
-                          redirectToLogin(); 
+                          RedirectToLogin(); 
                         }
                       }}  
                       >
@@ -365,7 +365,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
                       } catch (error) {
                       console.error(error);
                       if (isAuthError(error))
-                        redirectToLogin(); 
+                        RedirectToLogin(); 
                       }
                     }}/>
                     <Tooltip>
@@ -403,7 +403,7 @@ function TableData({groupId, tableData, setTableData, setOpenNew, ispData}:
                     setTableData((newData?? []) as GroupFileTable[]);
                   } catch (error) {
                     if (isAuthError(error))
-                      redirectToLogin(); 
+                      RedirectToLogin(); 
                   }
                 }}
                 />
@@ -508,7 +508,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                                     window.URL.revokeObjectURL(url);
                                   } catch (error) {
                                     if (isAuthError(error))
-                                      redirectToLogin();
+                                      RedirectToLogin();
                                     
                                   }
                               }}>{gf.originalFilename}</p>
@@ -637,6 +637,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                           formData.append("file", nf);
                           if (!ispSelected)
                             return;
+
                           formData.append("isp", `${ispSelected?.id}`);
                           formData.append("group", `${groupId}`);
                           await uploadFile(formData);
@@ -646,7 +647,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                         setOpenNew(null);
                       } catch (error) {
                         if (isAuthError(error))  
-                          redirectToLogin(); 
+                          RedirectToLogin(); 
                       }
                     }}>เพิ่ม</Button>
                   }
@@ -699,7 +700,7 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                       } catch (error) {
                         console.error(error)
                         if (isAuthError(error))
-                          redirectToLogin(); 
+                          RedirectToLogin(); 
                       }
                     }}>แก้ไข</Button>
                   }

@@ -8,7 +8,7 @@ import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
 import {useRouter} from 'next/navigation';
 import { Button } from "./ui/button";
 import { useState, useEffect } from 'react';
@@ -99,7 +99,7 @@ export default function MailGroupView({
                                 } catch (error) {
                                 console.error(error);
                                 if (isAuthError(error))
-                                redirectToLogin(); 
+                                RedirectToLogin(); 
                                 }
                             }}  
                             >
@@ -148,7 +148,7 @@ export default function MailGroupView({
                                         } catch (error) {
                                         console.error(error);
                                         if (isAuthError(error))
-                                            redirectToLogin(); 
+                                            RedirectToLogin(); 
                                         }
                                         }}/>
                                         <Tooltip>
@@ -167,8 +167,14 @@ export default function MailGroupView({
                                 </TableCell>
                                 <TableCell>
                                     {
-                                        e.mails.map((_, eMailIdx) => 
-                                            <div key={`isp-name-mail-${idx}-${eMailIdx}`}>
+                                        e.mails.map((eMail, eMailIdx) => 
+                                            <div key={`isp-name-mail-${idx}-${eMailIdx}`} 
+                                                className="cursor-default hover:underline"
+                                                onClick={(evt: React.MouseEvent<HTMLDivElement>) => {
+                                                    evt.preventDefault();
+                                                    router.push(`/profile-view/isp/${eMail?.receiver?.id}/user`)
+                                                }}
+                                            >
                                                 {e?.isp?.name?? '-'} {eMailIdx? `(${eMailIdx})`: ''}
                                             </div>
                                         )
@@ -219,7 +225,7 @@ export default function MailGroupView({
                         {
                             (mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0) &&
                                 (mailGroup?.section?.name === 'ปกติ')?
-                            mailGroup?.documents?.map((e: Document, idx: number) => 
+                            mailGroup.documents.map((e: Document, idx: number) => 
                             <TableRow key={`table-row-${idx}`} className="cursor-default"
                                 onClick={(evt: React.MouseEvent<HTMLTableRowElement>) => {
                                     evt.preventDefault();

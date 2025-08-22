@@ -10,7 +10,7 @@ import { useAppDispatch } from "./store/hooks";
 import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { redirect } from 'next/navigation';
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
 import { Date2Thai, Text2Thai } from "@/lib/client/utils";
 import { Button } from "./ui/button";
 import { PencilLine } from "lucide-react";
@@ -42,7 +42,7 @@ export default function GroupView(
           });
         } catch (error) {
           if (isAuthError(error))
-            redirectToLogin();
+            RedirectToLogin();
         }
       };
 

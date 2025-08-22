@@ -30,8 +30,9 @@ class MailGroupViews(viewsets.ModelViewSet):
         if user.is_staff:
             return super().get_queryset()
         else:
-            return Mail.objects.filter(receiver=user,
-                                       statsu=MailStatus.SUCCESSFUL).distinct()
+            return self.queryset.filter(receiver=user,
+                                        mail_status=MailStatus.SUCCESSFUL)\
+                                            .distinct()
     
     def perform_update(self, serializer):
         mail_group = serializer.instance
@@ -39,8 +40,26 @@ class MailGroupViews(viewsets.ModelViewSet):
 
         if user != mail_group.user or not user.is_superuser:
             raise PermissionDenied("You are not allowed to update this mail group.")
-
         serializer.save() 
+    
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='by-isp/(?P<isp>[^/]+)'
+    )
+    def by_isp(self, request, isp=None):
+        queryset = self.queryset
+        try:
+            isp = ISP.objects.get(id=isp)
+            data = queryset.filter(mails_isp=isp)
+            return Response(self.serializer_class(data).data)
+        except ISP.DoesNotExist:
+            return Response({'error': 'Isp not found.'},
+                            status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'error': 'Isp not found.'},
+                            status.HTTP_400_BAD_REQUEST)
+
 
 class MailViews(viewsets.ModelViewSet):
     serializer_class = MailSerializer
@@ -172,7 +191,7 @@ class MailViews(viewsets.ModelViewSet):
                 return Response({'error': 'Bad request.'},
                                 status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            # print(e)
+            print(e)
             return Response({'error': 'Send mail fail.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -212,7 +231,7 @@ class MailViews(viewsets.ModelViewSet):
                 return Response({'error': 'Bad request.'},
                                 status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            # print(e)
+            print(e)
             return Response({'error': 'Send mail fail.'},
                             status=status.HTTP_400_BAD_REQUEST)
 

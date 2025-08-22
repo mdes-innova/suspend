@@ -1,7 +1,6 @@
 'use client';
 
 import { Ban } from "lucide-react";
-import { Button } from "./ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +24,8 @@ import { toggleDataChanged as toggleDataChangedDocumentList} from "./store/featu
 import { toggleDataChanged as toggleDataChangedGroupList } from "./store/features/group-list-ui-slice";
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
+import { Badge } from "@/components/ui/badge"
 
 export default function CategoryGroup({ doc, group }:
     { doc: Document, group: Group }) {
@@ -69,7 +69,7 @@ export default function CategoryGroup({ doc, group }:
                 setGroupData(Object.keys(fetchGroup).length === 0? null: fetchGroup);
             } catch (error) {
                 if (isAuthError(error)) {
-                    redirectToLogin();
+                    RedirectToLogin();
                 }
                 else
                     setGroupData(null);
@@ -87,9 +87,9 @@ export default function CategoryGroup({ doc, group }:
 
     return (
         <>
-            <Button className={`${bgColors[doc?.kindId?? 0]} rounded-xl px-2 py-1 hover:${bgColors[doc?.kindId?? 0]}`}>
+            <Badge className={`${bgColors[doc?.kindId?? 0]} rounded-xl px-2 py-1 hover:${bgColors[doc?.kindId?? 0]}`}>
                 {label}
-            </Button>
+            </Badge>
             {
                 groupData &&
                 <div className="px-2 flex justify-center items-center">
@@ -141,7 +141,7 @@ export default function CategoryGroup({ doc, group }:
                                         setGroupData(null);
                                     } catch (error) {
                                         if (isAuthError(error))
-                                            redirectToLogin();
+                                            RedirectToLogin();
                                        console.error(error);
                                     }
                                    

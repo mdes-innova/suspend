@@ -238,6 +238,7 @@ class DocumentView(viewsets.ModelViewSet):
                     urls = get_urls(res.content, is_path=False) 
                     xlsx_bytes = gen_xlsx_bytes(urls, document.order_no)
                 except Exception as e:
+                    print(e)
                     return Response({'detail': "File not available"},
                                     status.HTTP_404_NOT_FOUND)
                 else:

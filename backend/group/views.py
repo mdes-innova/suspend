@@ -128,7 +128,6 @@ class GroupFileView(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         user = self.request.user
-
         if user != instance.group.user and not user.is_superuser:
             raise PermissionDenied("You are not allowed to delete this group file.")
         instance.delete()

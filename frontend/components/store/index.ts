@@ -10,6 +10,7 @@ import documentListUiReducer from './features/document-list-ui-slice';
 import loadingUiReducer from './features/loading-ui-slice';
 import groupListUiReducer from './features/group-list-ui-slice';
 import groupUiReducer from './features/group-ui-slice';
+import alertUiReducer from './features/alert-ui-slice';
 
 export const store = configureStore({
   reducer: {
@@ -23,7 +24,8 @@ export const store = configureStore({
     documentListUi: documentListUiReducer,
     loadingUi: loadingUiReducer,
     groupListUi: groupListUiReducer,
-    groupUi: groupUiReducer
+    groupUi: groupUiReducer,
+    alertUi: alertUiReducer
   },
 });
 

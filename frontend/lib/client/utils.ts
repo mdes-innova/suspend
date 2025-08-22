@@ -2,12 +2,12 @@
 
 export function Date2Thai(date: string) {
   const newDate = new Date(date);
-  return Text2Thai(new Intl.DateTimeFormat('th-TH', {
+  return new Intl.DateTimeFormat('th-TH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     timeZone: 'Asia/Bangkok',
-  }).format(newDate));
+  }).format(newDate);
 }
 
 export function Datetime2Thai(date: string) {

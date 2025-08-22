@@ -42,7 +42,8 @@ import {
 import { Label } from "./ui/label";
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -178,17 +179,57 @@ function GroupActions({
 }) {
   const dispatch = useAppDispatch();
  const [uiOpen, setUiOpen] = useState(false);
+ const [deleteDailogOpen, setDeleteDailogOpen] = useState(false);
  const rename = useAppSelector((state: RootState) => state.groupListUi.rename);
  const nameRef = useRef<HTMLInputElement>(null);
+ const [deleteErrorMsg, setDeleteErrorMsg] = useState('');
 
   return (
     <div className="w-full text-right flex justify-end">
+      <Dialog open={deleteDailogOpen} onOpenChange={(open) => {
+        if (!open) setUiOpen(false);
+        setDeleteErrorMsg('');
+        setDeleteDailogOpen(open);
+      }}>
+        <DialogContent>
+          <DialogTitle>
+            ลบฉบับร่าง
+          </DialogTitle>
+          <DialogDescription>
+            ท่านต้องการลบฉบับร่าง &quot;{name}&quot; หรือไม่?
+          </DialogDescription>
+          <div className="text-destructive block h-8">{deleteErrorMsg}</div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">ยกเลิก</Button>
+            </DialogClose>
+            <Button variant="destructive"
+              onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+              try {
+                await RemoveGroup(id);
+                dispatch(toggleDataChanged())
+                setUiOpen(false);
+                setDeleteDailogOpen(false);
+              } catch (error) {
+                if (isAuthError(error)) 
+                  RedirectToLogin(); 
+                else
+                  setDeleteErrorMsg(`ไม่สามารถลบฉบับร่าง "${name}" ได้`);
+              }
+            }}
+            >ยืนยัน</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <DropdownMenu open={uiOpen} onOpenChange={setUiOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation();
+              setDeleteErrorMsg('');
+              setDeleteDailogOpen(false);
               setUiOpen(true);
             }}
           >
@@ -214,15 +255,9 @@ function GroupActions({
           <DropdownMenuItem
           onClick={async (e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
-              e.stopPropagation();
-              try {
-                await RemoveGroup(id);
-              } catch (error) {
-                if (isAuthError(error)) 
-                  redirectToLogin(); 
-              }
-              dispatch(toggleDataChanged())
-              setUiOpen(false)
+              setDeleteErrorMsg('');
+              setDeleteDailogOpen(true);
+              setUiOpen(false);
             }}
           >
             <Trash2 /><span>ลบฉบับร่าง</span>
@@ -248,7 +283,7 @@ function GroupActions({
                             await RenameGroup({name: nameRef?.current?.value, groupId: rename});
                           } catch (error) {
                             if (isAuthError(error))  
-                              redirectToLogin();
+                              RedirectToLogin();
                           }
                         dispatch(toggleDataChanged());
                         dispatch(setRename(-1));
@@ -307,7 +342,7 @@ export default function GroupTable() {
         console.error(error);
         setTableData([]);
         if (isAuthError(error))
-          redirectToLogin();
+          RedirectToLogin();
       }
     }
 

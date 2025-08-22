@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import Providers from './providers';
+import MyAlert from "@/components/alerts/alert";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +51,7 @@ export default function RootLayout({
   return (
   <html lang="th" className={notoThai.className} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
       >
       <ThemeProvider
         attribute="class"
@@ -59,11 +60,12 @@ export default function RootLayout({
         forcedTheme="light" // Force the theme to always be light
         disableTransitionOnChange
       >
-          <div className="w-full min-h-full relative">
-              <Providers>
-                {children} 
-              </Providers>
-          </div>
+        <div className="w-full min-h-full relative">
+            <Providers>
+              <MyAlert />
+              {children} 
+            </Providers>
+        </div>
         </ThemeProvider>
       </body>
     </html>

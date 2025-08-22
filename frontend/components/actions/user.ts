@@ -50,10 +50,34 @@ export async function getUsers() {
     }
 }
 
+export async function getUser(userId: number) {
+
+    try {
+        const access = await getAccess();
+        const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+        const res = await fetch(`${url}/user/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${access}`
+        },
+      });
+        
+        if (!res.ok) {
+            if (res.status === 401)
+                throw new AuthError('Authentication fail.')
+        }
+
+        const profile = await res.json();
+        return profile;
+    } catch (error) {
+       throw error; 
+    }
+}
+
 export async function getUserFromIsp(ispId: number) {
     try {
         const access = await getAccess();
-        const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/by-isp/${ispId}/`, {
+        const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+        const res = await fetch(`${baseUrl}/user/users/by-isp/${ispId}/`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${access}`
@@ -100,6 +124,46 @@ export async function getUsersFromIspList(ispIds: number[]) {
       throw error; 
   }
     
+}
+
+export async function updateUser({
+    userId,
+    username,
+    password,
+    email
+}: {
+    userId: number,
+    username: string | undefined,
+    password: string | undefined,
+    email: string | undefined
+}) {
+    try {
+        const access = await getAccess();
+        const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+        const res = await fetch(`${baseUrl}/user/users/${userId}/`, {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${access}`,
+                "Content-Type": "application/json"
+                },
+            body: JSON.stringify({
+                username,
+                password,
+                email
+            })
+        }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+            throw new AuthError('Authentication fail.')
+        throw new Error('Update user fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
 }
 
 export async function registerUser(userRegisterParams: UserRegister) {

@@ -154,7 +154,7 @@ class MailSerializer(serializers.ModelSerializer):
             documents = mail_group.documents.all()
             receiver.isp.documents.add(*documents)
         except Exception as e:
-            # print(e)
+            print(e)
             mail.status = MailStatus.FAIL
 
         mail.save(update_fields=['status', 'datetime'])

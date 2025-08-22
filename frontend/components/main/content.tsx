@@ -55,7 +55,7 @@ import { Document } from "@/lib/types";
 import { Date2Thai } from "@/lib/utils";
 import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "../reload-page";
+import { RedirectToLogin } from "../reload-page";
 
 // function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
 //   return typeof updater === 'function';
@@ -287,7 +287,7 @@ export default function DataTable({ data }: { data: Document[] }) {
         console.error(error);
         setTableData([]);
         if (isAuthError(error))
-          redirectToLogin();
+          RedirectToLogin();
       }
     };
 
@@ -303,7 +303,7 @@ export default function DataTable({ data }: { data: Document[] }) {
         console.error(error);
         setTableData([]);
         if (isAuthError(error))
-          redirectToLogin(); 
+          RedirectToLogin(); 
       }
     };
 

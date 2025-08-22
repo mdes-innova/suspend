@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {closeModal, LOADINGUI, openModal} from './store/features/loading-ui-slice';
+import { ALERTUI, openModal as openAlertModal } from './store/features/alert-ui-slice';
 import { Input } from "@/components/ui/input"
 import { useEffect, useRef, useState } from "react"
 import { type Group, type Mail, type Isp, type Section } from "@/lib/types"
@@ -23,10 +24,11 @@ import { createMailGroup, sendMail } from "./actions/mail"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
 import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret,
   updateDocumentSpeed, updateDocumentTitle, updateBody, 
-  updateSection} from "./actions/group"
+  updateSection,
+  saveGroup} from "./actions/group"
 import { Card } from "./ui/card";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page"
+import { RedirectToLogin } from "./reload-page"
 import { Textarea } from "./ui/textarea"
 import { useAppDispatch } from "./store/hooks"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "./ui/playlist-dialog"
@@ -91,7 +93,7 @@ export function GroupForm({
         setSections(sectionData??[]);
       } catch (error) {
         if (isAuthError(error))
-          redirectToLogin();
+          RedirectToLogin();
       }
     }
 
@@ -108,7 +110,7 @@ export function GroupForm({
           });
         } catch (error) {
           if (isAuthError(error))
-            redirectToLogin();
+            RedirectToLogin();
         }
       }
     }
@@ -125,7 +127,7 @@ export function GroupForm({
         });
       } catch (error) {
         if (isAuthError(error))
-          redirectToLogin();
+          RedirectToLogin();
       }
     }
     if (secret != '') updateSecret();
@@ -142,7 +144,7 @@ export function GroupForm({
         });
       } catch (error) {
         if (isAuthError(error))
-          redirectToLogin();
+          RedirectToLogin();
       }
     }
     if (speed != '') updateSpeed();
@@ -159,7 +161,7 @@ export function GroupForm({
         });
       } catch (error) {
         if (isAuthError(error))
-          redirectToLogin();
+          RedirectToLogin();
       }
     }
 
@@ -231,7 +233,7 @@ export function GroupForm({
       }
     } catch (error) {
       if (isAuthError(error))
-        redirectToLogin();
+        RedirectToLogin();
     }
   }
 
@@ -304,7 +306,7 @@ export function GroupForm({
               return updated;
             });
             if (isAuthError(error0)) {
-              redirectToLogin();
+              RedirectToLogin();
             }
           }
         }
@@ -315,7 +317,7 @@ export function GroupForm({
       setMgId('');
       setProgressMails([]);
       if (isAuthError(error))
-        redirectToLogin();
+        RedirectToLogin();
     }
   }
 
@@ -381,9 +383,7 @@ export function GroupForm({
                         เลขหนังสือ<span className="text-red-400">*</span>
                     </FormLabel>
                     <FormControl>
-                    <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        field.onChange(e)
-                    }} 
+                    <Input {...field}
                       onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
                         const documentNo = e.currentTarget.value;
                         if (e.key === "Enter") {
@@ -395,7 +395,7 @@ export function GroupForm({
                             }); 
                           } catch (error) {
                             if (isAuthError(error))
-                              redirectToLogin();
+                              RedirectToLogin();
                           }
                           e.currentTarget.blur();
                         }
@@ -409,7 +409,7 @@ export function GroupForm({
                           });
                         } catch (error) {
                           if (isAuthError(error))
-                            redirectToLogin(); 
+                            RedirectToLogin(); 
                         }
                       }}
                     />
@@ -433,9 +433,7 @@ export function GroupForm({
                       เรื่อง<span className="text-red-400">*</span>
                   </FormLabel>
                   <FormControl>
-                  <Input {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      field.onChange(e)
-                  }}
+                  <Input {...field}
                     onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
                       const title = e.currentTarget.value;
                       if (e.key === "Enter") {
@@ -447,7 +445,7 @@ export function GroupForm({
                           }); 
                         } catch (error) {
                           if (isAuthError(error))
-                            redirectToLogin();
+                            RedirectToLogin();
                         }
                         e.currentTarget.blur();
                       }
@@ -461,7 +459,7 @@ export function GroupForm({
                         });
                       } catch (error) {
                         if (isAuthError(error))  
-                          redirectToLogin();
+                          RedirectToLogin();
                       }
                     }}
                   />
@@ -617,7 +615,7 @@ export function GroupForm({
                       } catch (error) {
                         setSectionErrorMsg("ไม่สามารถสร้างมาตราใหม่ได้");
                         if (isAuthError(error))
-                          redirectToLogin();
+                          RedirectToLogin();
                       }
                     }}
                   >ตกลง</Button>
@@ -663,7 +661,7 @@ export function GroupForm({
                         } catch (error) {
                           setSectionErrorMsg(`ไม่สามารถลบ "${currentSectionName}" ได้`);
                           if (isAuthError(error)) 
-                            redirectToLogin();
+                            RedirectToLogin();
                         }
                       }}
                     >ยืนยัน</Button>
@@ -704,7 +702,7 @@ export function GroupForm({
               });
             } catch (error) {
               if (isAuthError(error))
-                redirectToLogin();
+                RedirectToLogin();
             }
             e.currentTarget.blur();
           } 
@@ -724,7 +722,41 @@ export function GroupForm({
         }}
       />}
       <div className='w-full flex justify-center items-center gap-x-4'>
-        <Button variant="secondary">บันทึก</Button>
+        <Button variant="secondary"
+          onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            try {
+              
+              const saveDocumentNo = form.watch('documentNo')?? '';
+              const saveDate = date?.toString()?? null;
+              const saveTitle = form.watch('title')?? '';
+              const saveSpeed = typeof speed === 'string' && speed != ''? parseInt(speed): null;
+              const saveSecret = typeof secret === 'string' && secret != ''? parseInt(secret): null;
+              const saveSectionId = typeof sectionName === 'string' && sectionName != ''? 
+                (sections as Section[]).find((e) => typeof e?.name === 'string' && e?.name === sectionName)?.id?? null: null;
+              const saveBody = textareaValue;
+
+              await saveGroup({
+                groupId,
+                documentNo: saveDocumentNo,
+                title: saveTitle,
+                documentDate: saveDate,
+                speed: saveSpeed,
+                secret: saveSecret,
+                body: saveBody,
+                sectionId: saveSectionId
+              })
+           
+                dispatch(openAlertModal(ALERTUI.successful_groupsave));
+            } catch (error) {
+              console.log(error)
+              if (isAuthError(error)) RedirectToLogin();
+              else {
+                dispatch(openAlertModal(ALERTUI.fail_groupsave));
+              }
+            }
+          }}
+        >บันทึก</Button>
         <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
           e.preventDefault();
           if (submitRef.current) {
