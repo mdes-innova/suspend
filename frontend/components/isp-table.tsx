@@ -240,7 +240,7 @@ export default function IspTable({ data }: { data: IspUsers[] }) {
                     </TableCell>
                   {row.getVisibleCells().map((cell: Cell<IspUsers, unknown>) => (
                     <TableCell key={cell.id}>
-                        <Link href={`/profile-view/isp/${row?.original?.id}/user`}>
+                        <Link href={`/profile-view/isp/${row?.original?.id}/`}>
                             {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext()

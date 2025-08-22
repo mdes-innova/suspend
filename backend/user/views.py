@@ -21,16 +21,16 @@ class UserViewSet(viewsets.ModelViewSet):
             return super().get_permissions()
     
     def perform_update(self, serializer):
-        group = serializer.instance
+        inst_user = serializer.instance
         user = self.request.user
-        if user != group.user and not user.is_superuser:
+        if user != inst_user and not user.is_superuser:
             raise PermissionDenied("You are not allowed to update this user.")
         serializer.save()
 
     def perform_destroy(self, instance):
         user = self.request.user
 
-        if user != instance.user and not user.is_superuser:
+        if user != instance and not user.is_superuser:
             raise PermissionDenied("You are not allowed to delete this user.")
         instance.delete()
     

@@ -167,8 +167,14 @@ export default function MailGroupView({
                                 </TableCell>
                                 <TableCell>
                                     {
-                                        e.mails.map((_, eMailIdx) => 
-                                            <div key={`isp-name-mail-${idx}-${eMailIdx}`}>
+                                        e.mails.map((eMail, eMailIdx) => 
+                                            <div key={`isp-name-mail-${idx}-${eMailIdx}`} 
+                                                className="cursor-default hover:underline"
+                                                onClick={(evt: React.MouseEvent<HTMLDivElement>) => {
+                                                    evt.preventDefault();
+                                                    router.push(`/profile-view/isp/${eMail?.receiver?.id}/user`)
+                                                }}
+                                            >
                                                 {e?.isp?.name?? '-'} {eMailIdx? `(${eMailIdx})`: ''}
                                             </div>
                                         )

@@ -11,7 +11,7 @@ export default function ProfileIspsView({ data }: { data: User[] }) {
             data?.map((e, idx) => {
                 return (
                     <div key={`user-isp-profile-${idx}`}>
-                        <ProfileIspView orgUser={e} />
+                        <ProfileIspView orgUser={e} isIsps={true}/>
                     </div>
                 );
             })

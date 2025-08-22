@@ -140,8 +140,8 @@ export async function updateUser({
     try {
         const access = await getAccess();
         const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
-        const res = await fetch(`${baseUrl}/user/users/${userId}/update-user/`, {
-            method: 'POST',
+        const res = await fetch(`${baseUrl}/user/users/${userId}/`, {
+            method: 'PATCH',
             headers: {
                 Authorization: `Bearer ${access}`,
                 "Content-Type": "application/json"
