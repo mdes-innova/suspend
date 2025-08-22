@@ -71,7 +71,7 @@ export default function MailGroupView({
                     ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][mailGroup.secret as number]}
                 </div>
                 <div>
-                    มาตรา: {mailGroup.section?.name?? '-'}
+                    มาตรา: {mailGroup?.section?.name?? '-'}
                 </div>
             </div>
             <Card>
