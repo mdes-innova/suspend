@@ -728,7 +728,7 @@ export function GroupForm({
             try {
               
               const saveDocumentNo = form.watch('documentNo')?? '';
-              const saveDate = date?.toString()?? null;
+              const saveDate = date ? date.toISOString() : null;
               const saveTitle = form.watch('title')?? '';
               const saveSpeed = typeof speed === 'string' && speed != ''? parseInt(speed): null;
               const saveSecret = typeof secret === 'string' && secret != ''? parseInt(secret): null;
