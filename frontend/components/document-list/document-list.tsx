@@ -306,7 +306,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                         </DialogHeader>
                             <ContentDialog data={contentData?? []}/>
                     <DialogFooter>
-                        <div className="flex gap-x-2">
+                        <div className="flex gap-x-2 max-md:w-[400px]">
                             <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.preventDefault();
                                 try {

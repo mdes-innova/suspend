@@ -85,7 +85,7 @@ export default function ProfileView() {
     <div className="w-full h-full flex justify-start p-4 pt-10">
       <div className="flex h-40">
         <div className="flex flex-col justify-center items-center">
-          <Avatar className="w-40 h-full p-1">
+          <Avatar className="w-40 h-full p-1 max-lg:w-20">
             <AvatarImage src="/images/avatars/user.png" alt="suspend-user-avatar" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
@@ -241,9 +241,9 @@ export function ProfileIspView({ orgUser, isIsps = false }:
 
   return (
     <div className="w-full h-full flex justify-start p-4 pt-10">
-      <div className="flex h-40">
+      <div className="flex h-40 max-lg:h-32">
         <div className="flex flex-col justify-center items-center">
-          <Avatar className="w-40 h-full p-1">
+          <Avatar className="w-40 h-full p-1 max-lg:w-32">
             <AvatarImage src="/images/avatars/user.png" alt="suspend-user-avatar" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>

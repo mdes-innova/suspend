@@ -269,8 +269,8 @@ export default function ContentDialog({data}: {data: Document[]}) {
   }, [rowSelection]);
 
   return (
-    <div className="block w-full max-lg:min-w-[600px]">
-      <div className="flex items-center py-4 w-full">
+    <div className="block w-full max-lg:min-w-[600px] max-md:w-[400px] max-md:max-w[400px] max-md:min-w-[400px]">
+      <div className="flex items-center py-4 w-full max-md:w-[400px] max-md:max-w[400px] max-md:min-w-[400px]">
         <Input
           placeholder="ค้นหาคำสั่งศาล..."
           value={(table.getColumn("คำสั่งศาล")?.getFilterValue() as string) ?? ""}
@@ -308,7 +308,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
           </DropdownMenu>
         </div>
       </div>
-      <div className="rounded-md border w-full max-md:w-[350px]">
+      <div className="rounded-md border w-full max-md:w-[420px]">
         <Table>
           <TableHeader className="block w-full">
             {table.getHeaderGroups().map((headerGroup: HeaderGroup<Document>) => (
@@ -363,7 +363,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center justify-between py-4 max-md:w-[420px]">
         <div className="text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.

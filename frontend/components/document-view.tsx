@@ -15,12 +15,13 @@ import { Date2Thai, Text2Thai } from "@/lib/client/utils";
 import { downloadPdf, downloadUrls } from "./actions/document";
 import { isAuthError } from "./exceptions/auth";
 import { RedirectToLogin } from "./reload-page";
+import PdfView from "./pdf-view/main";
 
 export default function DocumentView(
   { docData, groupData }: { docData: Document, groupData: Group }) {
   return (
     <div className="h-full w-full flex flex-col justify-start items-center p-4">
-      <div className="flex w-full justify-between h-[500px]">
+      <div className="flex w-full justify-between">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">
             <div className="flex">
@@ -107,6 +108,7 @@ export default function DocumentView(
           </CardFooter>
         </Card>
       </div>
+      <PdfView document={docData} />
     </div>
   );
 }

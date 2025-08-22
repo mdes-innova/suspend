@@ -57,7 +57,7 @@ export default function RootLayout({
         attribute="class"
         defaultTheme="light"
         enableSystem={false} // Disable system theme detection
-        forcedTheme="light" // Force the theme to always be light
+        // forcedTheme="light" // Force the theme to always be light
         disableTransitionOnChange
       >
         <div className="w-full min-h-full relative">

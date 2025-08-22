@@ -224,7 +224,7 @@ export default function MailGroupView({
                     <TableBody>
                         {
                             (mailGroup && mailGroup?.documents && mailGroup?.documents?.length > 0) &&
-                                (mailGroup.section.name === 'ปกติ')?
+                                (mailGroup?.section?.name === 'ปกติ')?
                             mailGroup.documents.map((e: Document, idx: number) => 
                             <TableRow key={`table-row-${idx}`} className="cursor-default"
                                 onClick={(evt: React.MouseEvent<HTMLTableRowElement>) => {
