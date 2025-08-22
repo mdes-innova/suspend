@@ -122,7 +122,7 @@ class GroupFileView(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         group = serializer.instance.group
         user = self.request.user
-        if user != group.user or not user.is_superuser:
+        if user != group.user and not user.is_superuser:
             raise PermissionDenied("You are not allowed to update this group file.")
         serializer.save()
 
