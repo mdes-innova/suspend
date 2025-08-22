@@ -348,7 +348,7 @@ export function ProfileIspView({ orgUser, isIsps = false }:
               >{user?.username?? ''}</Link>:
             <Label className="text-2xl font-bold">{user?.username?? ''}</Label>
           }
-          <Label>{!user? '': user?.isSuperuser? 'Admin' : user?.isStaff? 'Staff': 'ISP'}</Label>
+          {isIsps? <></>:<Label>{!user? '': user?.isp?.name?? ''}</Label>}
           <Label className="mt-2 italic">{user?.email?? ''}</Label>
         </div>
       </div>
