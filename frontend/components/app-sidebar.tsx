@@ -7,7 +7,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -18,6 +17,7 @@ import { RootState } from "./store";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { logoutUser } from "./actions/user";
 import { setUser } from "./store/features/user-auth-slice";
+import { ThemToggle } from "./theme-toggle";
 
 type MenuType = {
   title: string,
@@ -68,7 +68,8 @@ export function AppSidebar() {
         <Sidebar>
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Suspend</SidebarGroupLabel>
+              {/* <SidebarGroupLabel>Suspend</SidebarGroupLabel> */}
+              <ThemToggle />
               <SidebarGroupContent>
                 <SidebarMenu>
                   {items.slice(user?.isStaff? 0: 1 ,items.length).map((item: MenuType) => 
