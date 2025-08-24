@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import ContentLoading from "@/components/loading/content";
+import LoadingTable from "@/components/loading/content";
 import MailTable from '@/components/mail-table';
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { notFound } from "next/navigation";
@@ -43,7 +43,7 @@ async function PlaylistContent() {
 
 export default function Page() {
   return (
-      <Suspense fallback={<ContentLoading />}>
+      <Suspense fallback={<LoadingTable />}>
         <PlaylistContent />
       </Suspense>
   );

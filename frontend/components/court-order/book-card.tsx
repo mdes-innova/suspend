@@ -225,13 +225,11 @@ export function BookCard({ispData, groupId, sectionName}:
                       formData.append("group", String(groupId));
 
                       await uploadFile(formData);
-                      
                       const groupFiles: GroupFile[] = await GetFilesFromGroup(groupId);
                       const allFilesIsp = groupFiles.filter((e) => e?.allIsp);
                       setIspFilesAll(allFilesIsp);
                     }
                   } catch (error) {
-                    console.error(error);
                     if (isAuthError(error)) 
                       RedirectToLogin();
                   }
@@ -268,7 +266,19 @@ export function BookCard({ispData, groupId, sectionName}:
                         }
                       }}  
                       >
-                        {filename}
+                        
+                        <div className="max-md:w-72 max-sm:w-48 truncate ">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className='w-full truncate'>
+                                {filename}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent className="min-md:hidden">
+                              <p>{filename}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                       </Button>
                     </div>
                     <div className="w-10">
@@ -596,31 +606,6 @@ function EditDialog({groupId, openNew, setOpenNew, ispSelected, setIspSelected,
                       }}
                       className="hidden"
                     />
-                        {/* <Tooltip>
-                          <TooltipTrigger asChild>
-                              <p className='truncate w-full text-accent p-0 underline cursor-default'
-                              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                                e.preventDefault();
-                                if (uploadRef.current) uploadRef.current.click();
-                              }}>{filename}</p>
-                          </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{filename}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                        <Input
-                          ref={uploadRef}
-                          id="isp-pdf-upload"
-                          type="file"
-                          accept="application/pdf"
-                          onChange={ async (e: ChangeEvent<HTMLInputElement>) => {
-                            if (e?.target?.files && e?.target?.files.length > 0) {
-                              setFilename(e.target.files[0].name);
-                            }
-                          }}
-                          className="hidden"
-                        /> */}
-
                   </div>
                 </div>
                 <DialogFooter>

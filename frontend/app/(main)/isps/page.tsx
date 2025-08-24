@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
-import ContentLoading from "@/components/loading/content";
 import { isAuthError } from '@/components/exceptions/auth';
 import ReloadPage from '@/components/reload-page';
 import { notFound } from "next/navigation";
 import { getAccess } from '../page';
 import IspTable from '@/components/isp-table';
 import { Isp, User } from '@/lib/types';
+import LoadingTable from '@/components/loading/content';
 
 
 async function MailContent() {
@@ -66,7 +66,6 @@ async function MailContent() {
     if (isAuthError(error))
       return <ReloadPage />;
     else {
-        console.log(error)
       return notFound();
     }
   }
@@ -74,7 +73,7 @@ async function MailContent() {
 
 export default function Page() {
   return (
-      <Suspense fallback={<ContentLoading />}>
+      <Suspense fallback={<LoadingTable />}>
         <MailContent />
       </Suspense>
   );

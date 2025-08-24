@@ -44,7 +44,7 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
                         priority
                     />
                 </div>
-                <div className="flex flex-col h-full justify-center items-start mr-auto pl-10 max-lg:pl-4 max-md:pl-2 max-md:mt-2">
+                <div className="flex flex-col h-full justify-center items-start mr-auto pl-10 max-lg:pl-4 max-md:pl-2 max-md:mt-2 max-sm:mt-2">
                     <div className="text-2xl font-bold max-lg:text-sm">ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์</div>
                     <div className="text-xl max-lg:text-xs">กองป้องกันและปราบปรามการกระทำความผิดทางเทคโรโลยีสารสนเทศ</div>
                 </div>

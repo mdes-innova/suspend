@@ -1,26 +1,266 @@
-import { Card } from "../ui/card";
+'use client';
 
-export default function ContentLoading() {
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  Column,
+  Cell,
+  Row,
+  HeaderGroup,
+  Header
+} from "@tanstack/react-table";
+import { Input } from "../ui/input";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import {useState} from 'react';
+import {useEffect} from 'react';
+import { Skeleton } from "../ui/skeleton";
+
+type TempDataType = {
+    id1: number,
+    id2: number,
+    id3: number,
+    id4: number
+}
+
+const staffColumns: ColumnDef<TempDataType>[] = [
+ {
+    id: 'id1',
+    accessorKey: "id1",
+    header: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+    cell: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+  }, 
+ {
+    id: 'id2',
+    accessorKey: "id2",
+    header: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+    cell: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+  }, 
+ {
+    id: 'id3',
+    accessorKey: "id3",
+    header: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+    cell: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+  }, 
+ {
+    id: 'id4',
+    accessorKey: "id4",
+    header: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+    cell: () => {
+      return (
+        <Skeleton className="w-40 h-6"></Skeleton>
+      );
+    },
+  }, 
+]
+
+export default function LoadingTable() {
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+        []
+    );
+    const columns = staffColumns;
+    const [columnVisibility, setColumnVisibility] =
+        useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = useState({}) 
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 100,
+    });
+    const table = useReactTable({
+        data: Array.from({length: 100}).map((_, idx: number) => {
+            return ({
+                id1: idx,
+                id2: idx,
+                id3: idx,
+                id4: idx
+            });
+        }),
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onPaginationChange: setPagination,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        state: {
+            pagination,
+            sorting,
+            columnFilters,
+            columnVisibility,
+            rowSelection,
+        },
+  })
+
+  useEffect(() => {
+    if (document) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+        if (document)
+            document.body.style.overflow = "";
+    };
+  }, []);
+
+
     return (
-        <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 
-            sm:p-20 font-[family-name:var(--font-geist-sans)] h-dvh w-full overflow-hidden">
-        <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full h-full">
-            <div className="w-full h-full flex flex-col justify-start gap-y-2">
-                {
-                    Array.from({length: 20}).map((_, index: number) => {
-                        return (
-                            <Card className="w-full bg-[linear-gradient(to_right,var(--card)_20%,var(--card-foreground)_49%,var(--card-foreground)_50%,var(--card-foreground)_51%,var(--card)_80%)]
-                                bg-[length:400%_400%] animate-[gradient-x_8s_ease_infinite]" key={`loading-card-key-${index}`}>
-                                <div key={`content-${index}`} className="w-full px-4">
-                                    <a className="w-6 h-6 block" href="#">
-                                    </a>
-                                </div>
-                            </Card>
-                        );
-                    })
-                }
-            </div>
-        </main>
+    <div className="w-full h-full overflow-clip px-4">
+      <div className="flex items-center py-4">
+        <Input
+        disabled
+          value={(table.getColumn("id1")?.getFilterValue() as string) ?? ""}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            table.getColumn("id1")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+        <div className="ml-auto flex items-center gap-x-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto w-32"
+                disabled
+              >
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column: Column<TempDataType>) => column.getCanHide())
+                .map((column: Column<TempDataType>) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value: boolean) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="rounded-md border"
+      >
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<TempDataType>) => (
+              <TableRow key={headerGroup.id} className="bg-transparent hover:bg-background">
+                {headerGroup.headers.map((header: Header<TempDataType, unknown>) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row: Row<TempDataType>) => {
+                return (
+                <TableRow
+                  key={row.id}
+                  className="cursor-default bg-transparent hover:bg-transparent"
+                >
+                  {row.getVisibleCells().map((cell: Cell<TempDataType, unknown>) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
     );
 }

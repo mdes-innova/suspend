@@ -300,9 +300,9 @@ function GroupActions({
   );
 }
 
-export default function GroupTable() {
+export default function GroupTable({ data }: { data: Group[] }) {
     const [sorting, setSorting] = useState<SortingState>([])
-    const [tableData, setTableData] = useState([]);
+    const [tableData, setTableData] = useState(data);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
@@ -339,7 +339,6 @@ export default function GroupTable() {
         const data = await getGroupList(); 
         setTableData(data);
       } catch (error) {
-        console.error(error);
         setTableData([]);
         if (isAuthError(error))
           RedirectToLogin();

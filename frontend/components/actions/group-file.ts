@@ -45,8 +45,8 @@ export async function uploadFile({
       throw new Error('Upload fail.');
     }
 
-    const isps = await response.json();
-    return isps;
+    const uploadedFile = await response.json();
+    return uploadedFile;
   } catch (error) {
     throw error;
   }

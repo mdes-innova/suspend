@@ -57,13 +57,6 @@ import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "../reload-page";
 
-// function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
-//   return typeof updater === 'function';
-// }
-
-// function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
-//   return isUpdaterFunction(updater) ? updater(previous) : updater;
-// }
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"

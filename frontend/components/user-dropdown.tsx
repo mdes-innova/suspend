@@ -21,7 +21,7 @@ export function DropdownMenuUser() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
 
-  if (!user) return null;
+  if (!user) return <Button disabled variant="outline" className="w-32 h-10"></Button>;
 
   return (
     <DropdownMenu open={userOpen} onOpenChange={setUserOpen}>
