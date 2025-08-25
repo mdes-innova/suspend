@@ -276,7 +276,7 @@ export default function IspTable({ data }: { data: IspUsers[] }) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -284,7 +284,7 @@ export default function IspTable({ data }: { data: IspUsers[] }) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

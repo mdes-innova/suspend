@@ -4,7 +4,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuSub,
@@ -42,13 +41,12 @@ export default function ActionDropdown({ children, docId, active }:
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem
                  onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                     e.preventDefault();
                     router.push(`/document-view/${docId}/`);
                 }}>
-                    View
+                    ดูคำสั่งศาล
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {
@@ -66,21 +64,21 @@ export default function ActionDropdown({ children, docId, active }:
                         dispatch(openModal({ ui: PLAYLISTUI.list }));
                     }}>
                         <Plus className="h-4 w-4" />
-                        <span>Add to Playlist</span>
+                        <span>เพิ่มลงในฉบับร่าง</span>
                     </DropdownMenuItem>
                 }
                 <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="text-lg">Downloads</DropdownMenuSubTrigger>
+                    <DropdownMenuSubTrigger className="text-lg">ดาวน์โหลด</DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                     <DropdownMenuSubContent>
                         <DropdownMenuItem>pdf</DropdownMenuItem>
                         <DropdownMenuItem>urls (.xlsx)</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>All</DropdownMenuItem>
+                        <DropdownMenuItem>ทั้งหมด</DropdownMenuItem>
                     </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
-                <DropdownMenuItem>Report issue</DropdownMenuItem>
+                <DropdownMenuItem>รายงานปัญหา</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

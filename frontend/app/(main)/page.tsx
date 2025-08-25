@@ -1,8 +1,6 @@
 import { Suspense } from 'react';
 import { notFound } from "next/navigation";
 import DataTable from '@/components/main/content';
-import PlaylistDialog from '@/components/main/playlist-dialog';
-import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
 import ReloadPage from '@/components/reload-page';
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { cookies } from "next/headers";
@@ -73,8 +71,6 @@ export default function Home() {
   return (
       <Suspense fallback={<LoadingTable />}>
         <Content />
-        <NewPlaylistSheet />
-        <PlaylistDialog />
       </Suspense>
   );
 }

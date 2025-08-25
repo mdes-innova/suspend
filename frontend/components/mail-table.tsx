@@ -344,7 +344,7 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -352,7 +352,7 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

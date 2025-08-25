@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import * as React from "react";
 import Link from 'next/link';
@@ -402,7 +402,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -410,7 +410,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

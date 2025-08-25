@@ -56,6 +56,8 @@ import { Date2Thai } from "@/lib/utils";
 import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "../reload-page";
+import { NewPlaylistSheet } from "./new-playlist-sheet";
+import PlaylistDialog from "./playlist-dialog";
 
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
@@ -324,6 +326,8 @@ export default function DataTable({ data }: { data: Document[] }) {
 
   return (
     <div className="w-full">
+      <NewPlaylistSheet />
+      <PlaylistDialog />
       <div className="flex items-center py-4">
         <Input
           placeholder="ค้นหาคำสั่งศาล..."
@@ -461,7 +465,7 @@ export default function DataTable({ data }: { data: Document[] }) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -469,7 +473,7 @@ export default function DataTable({ data }: { data: Document[] }) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

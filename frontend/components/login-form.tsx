@@ -20,6 +20,7 @@ import { getProfile, loginUser } from "./actions/user";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setUser } from "./store/features/user-auth-slice";
 import { RootState } from "./store";
+import { useRouter } from 'next/navigation';
 
 
 const FormSchema = z.object({
@@ -33,6 +34,7 @@ export default function LoginForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
+  const router = useRouter();
 
   useEffect(() => {
     const getData = async() => {
@@ -46,7 +48,8 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (user && window) {
-      window.location.href = params.get('pathname')?? '/';
+      router.replace(params.get('pathname')?? '/');
+      // window.location.href = params.get('pathname')?? '/';
     }
   }, [user]);
 

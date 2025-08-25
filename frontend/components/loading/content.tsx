@@ -249,7 +249,7 @@ export default function LoadingTable() {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -257,7 +257,7 @@ export default function LoadingTable() {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>
