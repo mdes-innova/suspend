@@ -19,6 +19,10 @@ import { useAppDispatch } from "./store/hooks";
 import { openModal, PLAYLISTUI, setDocIds} from "./store/features/playlist-diaolog-ui-slice";
 import { useRouter } from "next/navigation";
 import { RootState } from "./store";
+import { isAuthError } from "./exceptions/auth";
+import { downloadPdf, downloadUrls, getDocument } from "./actions/document";
+import { RedirectToLogin } from "./reload-page";
+import { type Document } from "@/lib/types";
 
 type User = {
     isp: boolean
@@ -30,6 +34,57 @@ export default function ActionDropdown({ children, docId, active }:
     const router = useRouter();
     const user = useAppSelector((state: RootState) => state.userAuth.user);
     const [open, setOpen] = useState(false);
+
+    const downloadFiles = async(kind: string) => {
+        if (typeof docId != 'number') throw new Error('Document id not a number.');
+        const documentData: Document = await getDocument(docId);
+        if (!documentData) throw new Error('Document not found.');
+
+        const downloadDocumentPdf = async() => {
+            const blob = await downloadPdf(docId);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `${documentData?.orderFilename?? 'คำสั่งศาล.pdf'}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        }
+
+        const downloadDocumentXlsx = async() => {
+            const blob = await downloadUrls(docId);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            const orderFilename = documentData?.orderFilename;
+            const orderFilenames = orderFilename?.split('.');
+            link.setAttribute("download", `${documentData?.orderFilename?
+                'urls_' + orderFilenames?.slice(0, orderFilenames.length - 1).join('.') +
+                    '.xlsx':'urls_คำสั่งศาล.xlsx'}`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        }
+
+        switch (kind) {
+            case 'pdf':
+                await downloadDocumentPdf(); 
+                break;
+            case 'xlsx':
+                await downloadDocumentXlsx();
+                break;
+        
+            default:
+                downloadDocumentPdf();
+                downloadDocumentXlsx();
+                break;
+        }
+        // const blob = await downloadPdf(docId);
+        // const url = window.URL.createObjectURL(blob);
+        // const link = document.createElement("a");
+    }
 
     return (
         <DropdownMenu open={open} onOpenChange={() => {
@@ -71,10 +126,43 @@ export default function ActionDropdown({ children, docId, active }:
                     <DropdownMenuSubTrigger className="text-lg">ดาวน์โหลด</DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                        <DropdownMenuItem>pdf</DropdownMenuItem>
-                        <DropdownMenuItem>urls (.xlsx)</DropdownMenuItem>
+                        <DropdownMenuItem
+                        onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                            e.preventDefault();
+                            try {
+                                await downloadFiles('pdf');
+                            } catch (error) {
+                                console.error(error);
+                                if (isAuthError(error))
+                                    RedirectToLogin();
+                            }
+                        }}
+                        >pdf</DropdownMenuItem>
+                        <DropdownMenuItem
+                        onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                            e.preventDefault();
+                            try {
+                                await downloadFiles('xlsx');
+                            } catch (error) {
+                                console.error(error);
+                                if (isAuthError(error))
+                                    RedirectToLogin();
+                            }
+                        }}
+                        >urls (.xlsx)</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>ทั้งหมด</DropdownMenuItem>
+                        <DropdownMenuItem
+                        onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
+                            e.preventDefault();
+                            try {
+                                await downloadFiles('both');
+                            } catch (error) {
+                                console.error(error);
+                                if (isAuthError(error))
+                                    RedirectToLogin();
+                            }
+                        }}
+                        >ทั้งหมด</DropdownMenuItem>
                     </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
