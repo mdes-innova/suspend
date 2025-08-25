@@ -52,12 +52,12 @@ import {
 } from '@tanstack/react-table';
 import { getContent } from "../actions/document";
 import { Document } from "@/lib/types";
-import { Date2Thai } from "@/lib/utils";
 import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "../reload-page";
 import { NewPlaylistSheet } from "./new-playlist-sheet";
 import PlaylistDialog from "./playlist-dialog";
+import { Date2Thai } from "@/lib/client/utils";
 
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {

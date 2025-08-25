@@ -50,7 +50,7 @@ import {
   type Updater,
 } from '@tanstack/react-table';
 import { RootState } from "./store";
-import { Date2Thai } from "@/lib/utils";
+import { Date2Thai } from "@/lib/client/utils";
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"

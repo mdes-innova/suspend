@@ -81,9 +81,6 @@ export default function ActionDropdown({ children, docId, active }:
                 downloadDocumentXlsx();
                 break;
         }
-        // const blob = await downloadPdf(docId);
-        // const url = window.URL.createObjectURL(blob);
-        // const link = document.createElement("a");
     }
 
     return (
@@ -136,6 +133,7 @@ export default function ActionDropdown({ children, docId, active }:
                                 if (isAuthError(error))
                                     RedirectToLogin();
                             }
+                            setOpen(false);
                         }}
                         >pdf</DropdownMenuItem>
                         <DropdownMenuItem
@@ -148,6 +146,7 @@ export default function ActionDropdown({ children, docId, active }:
                                 if (isAuthError(error))
                                     RedirectToLogin();
                             }
+                            setOpen(false);
                         }}
                         >urls (.xlsx)</DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -161,6 +160,7 @@ export default function ActionDropdown({ children, docId, active }:
                                 if (isAuthError(error))
                                     RedirectToLogin();
                             }
+                            setOpen(false);
                         }}
                         >ทั้งหมด</DropdownMenuItem>
                     </DropdownMenuSubContent>
