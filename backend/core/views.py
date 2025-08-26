@@ -17,6 +17,8 @@ from rest_framework_simplejwt.token_blacklist.models import (
 )
 from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
+import httpx
+import os
 
 
 def current_time_view(request):
@@ -48,11 +50,33 @@ class ThaiIdView(APIView):
             return Response({'errror': 'Invalid ThaiID authentication'},
                             status.HTTP_400_BAD_REQUEST)
 
+
+        authorization = os.environ.get('THAIID_AUTH')
+        grant_type = "authorization_code"
         code = codes[0]
         state = states[0]
+        redirect_uri = os.environ.get('THAIID_CALLBACK')
+        url = os.environ.get('THAIID_ENDPOINT')
 
-        print(codes)
-        print(state)
+        headers = {
+            "Content-type": "application/x-www-form-urlencoded",
+            "“Authorization": authorization 
+        }
+
+        payload = {
+            "grant_type": grant_type,
+            "code":code,
+            "redirect_uri":redirect_uri
+        }
+
+        r = httpx.post(
+            url,
+            headers=headers,
+            json=payload,
+            follow_redirects=False
+            )
+
+        print(r.json())
         
         # resp = redirect("/")
         # user = ...  # your logic here
