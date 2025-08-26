@@ -40,6 +40,10 @@ class ThaiIdView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        query_params = request.query_params
+
+        print(query_params)
+        
         # resp = redirect("/")
         # user = ...  # your logic here
         # user = request.user
