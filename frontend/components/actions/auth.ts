@@ -22,37 +22,38 @@ export async function getAccess() {
 
         if (resAccessMe.ok)
           return access;
-
-      if (!refresh) throw new AuthError(`Refresh token not found.`);
-
-      const res = await fetch(
-        `${url}/token/refresh/`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refresh }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new AuthError(`Token refresh failed: ${res.status}`);
-      }
-
-      const data = await res.json();
-      const newAccess = data.access;
-      cookieStore.set({
-        name: 'access',
-        value: newAccess,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 4,
-      });
-      return newAccess;
     }
+
+    if (!refresh) throw new AuthError(`Refresh token not found.`);
+
+    const res = await fetch(
+      `${url}/token/refresh/`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh }),
+      }
+    );
+
+    if (!res.ok) {
+      throw new AuthError(`Token refresh failed: ${res.status}`);
+    }
+
+    const data = await res.json();
+    const newAccess = data.access;
+    cookieStore.set({
+      name: 'access',
+      value: newAccess,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 4,
+    });
+
+    return newAccess;
   } catch (error) {
     console.error(error);
     throw new AuthError('Getting access fail.');  

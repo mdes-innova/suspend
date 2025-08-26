@@ -9,6 +9,7 @@ export async function getProfile() {
 
     try {
         const access = await getAccess();
+        console.log(access)
         const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/me/`, {
         headers: {
           Authorization: `Bearer ${access}`
