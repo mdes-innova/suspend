@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from 'next/image';
+import Link from 'next/link';
 import { useForm, ControllerRenderProps } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -122,21 +123,23 @@ export default function LoginForm() {
           /> 
           <div className="w-full flex justify-between items-center">
             <Button type="submit">เข้าสู่ระบบ</Button>
-            <Button variant='outline' className="flex justify-center items-center">
-              <div>
-                เข้าสู่ระบบด้วย
-              </div>
-               <div className="h-4 w-10 relative">
-                <Image
-                  src='/images/thaid_logo.png'
-                  alt='thaiid'
-                  fill
-                  className="object-cover"
-                  sizes="100vw"
-                  priority
-                />
-              </div>
-            </Button>
+            <Link href={`/thaiid/?pathname=${params.get('pathname')?? '%2F'}`}>
+              <Button variant='outline' className="flex justify-center items-center">
+                <div>
+                  เข้าสู่ระบบด้วย
+                </div>
+                <div className="h-4 w-10 relative">
+                  <Image
+                    src='/images/thaid_logo.png'
+                    alt='thaiid'
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority
+                  />
+                </div>
+              </Button>
+            </Link>
           </div>
         </form>
       </Form>

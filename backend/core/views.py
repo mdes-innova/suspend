@@ -41,8 +41,18 @@ class ThaiIdView(APIView):
 
     def get(self, request):
         query_params = request.query_params
+        codes = query_params.get('code', None)
+        states = query_params.get('state', ['/'])
 
-        print(query_params)
+        if not codes or len(codes) < 1:
+            return Response({'errror': 'Invalid ThaiID authentication'},
+                            status.HTTP_400_BAD_REQUEST)
+
+        code = codes[0]
+        state = states[0]
+
+        print(codes)
+        print(state)
         
         # resp = redirect("/")
         # user = ...  # your logic here
