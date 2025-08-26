@@ -2,15 +2,17 @@
 import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { DropdownMenuUser } from './user-dropdown';
-import { useAppDispatch  } from '../components/store/hooks';
+import { useAppDispatch, useAppSelector  } from '../components/store/hooks';
 import { setUser } from '../components/store/features/user-auth-slice';
 import { getProfile } from './actions/user';
 import { isAuthError } from './exceptions/auth';
 import { RedirectToLogin } from './reload-page';
+import { RootState } from './store';
 
 
 export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
     const dispatch = useAppDispatch();
+    const user = useAppSelector((state: RootState) => state.userAuth.user);
     
     useEffect(() => {
         const getData = async() => {
@@ -23,7 +25,8 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
                 }
             }
         }
-        getData();
+        if (!user)
+            getData();
     }, []);
 
     return (
