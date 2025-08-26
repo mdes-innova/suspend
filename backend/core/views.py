@@ -60,7 +60,7 @@ class ThaiIdView(APIView):
 
         headers = {
             "Content-type": "application/x-www-form-urlencoded",
-            "“Authorization": authorization 
+            "Authorization": authorization 
         }
 
         payload = {
