@@ -100,6 +100,8 @@ export const columns: ColumnDef<Document>[] = [
       return (
         <div className='flex gap-x-2 text-left justify-start p-0 m-0'
         >
+          <div className="w-4 h-4 block">
+          </div>
           คำสั่งศาล
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {

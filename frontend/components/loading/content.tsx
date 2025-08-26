@@ -38,12 +38,12 @@ const staffColumns: ColumnDef<TempDataType>[] = [
     accessorKey: "id1",
     header: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
     cell: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
   }, 
@@ -52,12 +52,12 @@ const staffColumns: ColumnDef<TempDataType>[] = [
     accessorKey: "id2",
     header: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
     cell: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
   }, 
@@ -66,12 +66,12 @@ const staffColumns: ColumnDef<TempDataType>[] = [
     accessorKey: "id3",
     header: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
     cell: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
   }, 
@@ -80,12 +80,12 @@ const staffColumns: ColumnDef<TempDataType>[] = [
     accessorKey: "id4",
     header: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
     cell: () => {
       return (
-        <Skeleton className="w-40 h-6"></Skeleton>
+        <Skeleton className="w-40 h-4"></Skeleton>
       );
     },
   }, 
@@ -142,9 +142,8 @@ export default function LoadingTable() {
     };
   }, []);
 
-
     return (
-    <div className="w-full h-full overflow-clip px-4">
+    <div className="w-full overflow-clip">
       <div className="flex items-center py-4">
         <Input
         disabled

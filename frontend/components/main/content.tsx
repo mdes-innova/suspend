@@ -105,6 +105,8 @@ export const columns: ColumnDef<Document>[] = [
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
+          <div className="w-4 h-4 block">
+          </div>
           คำสั่งศาล
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -136,8 +138,7 @@ export const columns: ColumnDef<Document>[] = [
     },
     header: ({ column }: { column: Column<Document> }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
+        <div className='inline-flex gap-x-2 w-full'>
           วันที่
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();

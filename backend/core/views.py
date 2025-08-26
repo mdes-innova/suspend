@@ -16,6 +16,7 @@ from rest_framework_simplejwt.token_blacklist.models import (
     BlacklistedToken,
 )
 from django.shortcuts import redirect
+from django.contrib.auth import get_user_model
 
 
 def current_time_view(request):
@@ -39,8 +40,10 @@ class ThaiIdView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        resp = redirect("/")
+        # resp = redirect("/")
         # user = ...  # your logic here
+        # user = request.user
+        # user = get_user_model().objects.get(username='admin')
 
         # with transaction.atomic():
             # 2) Mint a brand-new refresh token (and its paired access)
@@ -60,5 +63,5 @@ class ThaiIdView(APIView):
         #     status=status.HTTP_200_OK,
         # )
 
-        # return Response({'data': 'Hi there!'})
-        return resp
+        return Response({'data': 'Hi there!'})
+        # return resp

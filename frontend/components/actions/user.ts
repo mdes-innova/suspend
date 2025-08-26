@@ -9,7 +9,6 @@ export async function getProfile() {
 
     try {
         const access = await getAccess();
-        console.log(access)
         const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/me/`, {
         headers: {
           Authorization: `Bearer ${access}`
@@ -231,7 +230,7 @@ export async function loginUser({
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 4,
+            maxAge: 60 * 4.5,
         });
 
         cookieStore.set({
@@ -241,7 +240,7 @@ export async function loginUser({
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 60 * 23,
+            maxAge: 60 * 60 * 23.9,
         });
 
         const userRes = await fetch(`${url}/user/users/me/`, {

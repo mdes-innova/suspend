@@ -50,7 +50,7 @@ export async function getAccess() {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 4,
+      maxAge: 60 * 4.5,
     });
 
     return newAccess;
