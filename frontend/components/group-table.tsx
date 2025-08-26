@@ -44,6 +44,7 @@ import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
+import LoadingTable from "./loading/content";
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -300,9 +301,9 @@ function GroupActions({
   );
 }
 
-export default function GroupTable({ data }: { data: Group[] }) {
+export default function GroupTable() {
     const [sorting, setSorting] = useState<SortingState>([])
-    const [tableData, setTableData] = useState(data);
+    const [tableData, setTableData] = useState<Group[] | null>(null);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
@@ -313,7 +314,7 @@ export default function GroupTable({ data }: { data: Group[] }) {
     const [rowSelection, setRowSelection] = useState({}) 
     const user = useAppSelector((state: RootState) => state.userAuth.user);
     const table = useReactTable({
-        data: tableData,
+        data: tableData?? [],
         columns: user?.isSuperuser?
           columns:
           columns?.filter((_, idx: number) => idx != columns.length - 2),
@@ -339,7 +340,7 @@ export default function GroupTable({ data }: { data: Group[] }) {
         const data = await getGroupList(); 
         setTableData(data);
       } catch (error) {
-        setTableData([]);
+        setTableData(null);
         if (isAuthError(error))
           RedirectToLogin();
       }
@@ -347,6 +348,11 @@ export default function GroupTable({ data }: { data: Group[] }) {
 
     getData();
   }, [dataChanged]);
+
+  if (!tableData)
+    return (
+      <LoadingTable />
+  );
 
     return (
     <div className="w-full">
@@ -469,7 +475,7 @@ export default function GroupTable({ data }: { data: Group[] }) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -477,7 +483,7 @@ export default function GroupTable({ data }: { data: Group[] }) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

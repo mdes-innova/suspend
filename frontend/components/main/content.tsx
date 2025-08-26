@@ -58,6 +58,7 @@ import { RedirectToLogin } from "../reload-page";
 import { NewPlaylistSheet } from "./new-playlist-sheet";
 import PlaylistDialog from "./playlist-dialog";
 import { Date2Thai } from "@/lib/client/utils";
+import LoadingTable from "../loading/content";
 
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
@@ -234,10 +235,10 @@ export const columns: ColumnDef<Document>[] = [
   },
 ]
 
-export default function DataTable({ data }: { data: Document[] }) {
+export default function DataTable() {
   const paginations = [20, 50, 100];
   const dispatch = useAppDispatch();
-  const [tableData, setTableData] = React.useState<Document[]>(data);
+  const [tableData, setTableData] = React.useState<Document[] | null>(null);
   const sorting = useAppSelector((state: RootState) => state.contentListUi.sorting);
   const columnFilters = useAppSelector((state: RootState) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state: RootState) => state.contentListUi.columnVisibility);
@@ -249,7 +250,7 @@ export default function DataTable({ data }: { data: Document[] }) {
   const toggleDataState = useAppSelector((state: RootState) => state.contentListUi.toggleDataState);
 
   const table = useReactTable({
-    data: tableData,
+    data: tableData?? [],
     columns,
     onSortingChange: (updater: Updater<SortingState>) =>
       dispatch(setSorting(resolveUpdater(updater, sorting))),
@@ -282,7 +283,7 @@ export default function DataTable({ data }: { data: Document[] }) {
         setTableData(data);
       } catch (error) {
         console.error(error);
-        setTableData([]);
+        setTableData(null);
         if (isAuthError(error))
           RedirectToLogin();
       }
@@ -309,20 +310,25 @@ export default function DataTable({ data }: { data: Document[] }) {
   }, [toggleDataState]);
 
     React.useEffect(()=>{
-     if (table) {
+     if (table && tableData) {
       table.resetRowSelection(true);
      }
     }, [tableData]);
 
 
   React.useEffect(() => {
-    if (table)
+    if (table && tableData)
     {
       const selectedIds = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
       dispatch(setDocIds(selectedIds));
       // table.toggleAllPageRowsSelected(false);
     }
   }, [rowSelection]);
+
+  if (!tableData)
+    return (
+      <LoadingTable />
+  );
 
   return (
     <div className="w-full">

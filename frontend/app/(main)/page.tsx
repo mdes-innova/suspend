@@ -12,8 +12,20 @@ export async function getAccess() {
     const access = cookieStore.get("access")?.value;
     const refresh = cookieStore.get("refresh")?.value;
 
-    if (access) return access;
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+
+    if (access) {
+      const resAccessMe = await fetch(`${url}/user/users/me/`, {
+        headers: {
+            Authorization: `Bearer ${access}`
+          },
+      }); 
+
+      if (resAccessMe.ok) return access;
+    }
+
+    if (!refresh) throw new AuthError(`Refresh token not found.`);
+
     const res = await fetch(
       `${url}/token/refresh/`,
       {
@@ -28,6 +40,7 @@ export async function getAccess() {
     if (!res.ok) {
       throw new AuthError(`Token refresh failed: ${res.status}`);
     }
+
     const data = await res.json();
     return data.access;
     
@@ -36,27 +49,25 @@ export async function getAccess() {
   }
 }
 
-
 async function Content() {
   try {
     const access = await getAccess(); 
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/content/`, {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/user/users/me/`, {
       headers: {
           Authorization: `Bearer ${access}`
         },
     }); 
 
     if (!res.ok) {
-    if (res.status === 401)
-        throw new AuthError('Authentication fail.')
-    throw new Error('Get content fail.');
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get content fail.');
     }
-
-    const data = await res.json();
 
     return (
       <div className='w-full h-full flex flex-col px-2'>
-        <DataTable data={data}/>
+        <DataTable />
       </div>
     );
   } catch (error) {

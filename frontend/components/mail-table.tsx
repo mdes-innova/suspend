@@ -23,9 +23,13 @@ import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import {useState} from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Datetime2Thai } from "@/lib/client/utils";
+import LoadingTable from "./loading/content";
+import { RedirectToLogin } from "./reload-page";
+import { isAuthError } from "./exceptions/auth";
+import { getMailGroups } from "./actions/mail";
 
 const staffColumns: ColumnDef<MailGroup>[] = [
  {
@@ -209,7 +213,8 @@ const staffColumns: ColumnDef<MailGroup>[] = [
   }
 ]
 
-export default function MailTable({ data }: { data: MailGroup[] }) {
+export default function MailTable() {
+  const [tableData, setTableData] = useState<MailGroup[] | null>(null);
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
@@ -219,7 +224,7 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
     const table = useReactTable({
-        data: data?? [],
+        data: tableData?? [],
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -237,6 +242,28 @@ export default function MailTable({ data }: { data: MailGroup[] }) {
         },
   })
 
+  useEffect(()=>{
+    const getData = async() => {
+      try {
+        const data = await getMailGroups();
+        setTableData(data);
+      } catch (error) {
+        console.error(error);
+        setTableData([]);
+        if (isAuthError(error))
+          RedirectToLogin(); 
+      }
+    };
+
+    getData();
+
+  }, []);
+
+
+  if (!tableData)
+    return (
+      <LoadingTable />
+  );
 
     return (
     <div className="w-full">
