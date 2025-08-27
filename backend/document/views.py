@@ -302,14 +302,36 @@ class DocumentView(viewsets.ModelViewSet):
         methods=['get'],
     )
     def content(self, request):
+        sorts = request.GET.getlist("sort")  
+        decs = request.GET.getlist("decs")
+        page = request.GET.get("page", '0')
+        page_size = request.GET.get("pagesize", '20')
+
+        sort_keys = {
+            'orderDate': 'order_date',
+            'orderNo': 'order_no',
+            'orderblackNo': 'orderblack_no',
+            'orderredNo': 'orderred_no',
+            'kindName': 'kind_name'
+        }
+        for_sorts = []
+        for sort_i, sort in enumerate(sorts):
+            if decs[sort_i] == 'true':
+                for_sorts.append(f'-{sort_keys[sort]}')
+            else:
+                for_sorts.append(sort_keys[sort])
         qs = (
             Document.objects
             .all()
             .select_related('groupdocument__group')
-            .order_by('-order_date')
+            .order_by(*for_sorts)
         )
-        serializer = self.get_serializer(qs, many=True)
-        return Response(serializer.data)
+        page_qs = qs[int(page)*int(page_size): (int(page) + 1) * int(page_size)]
+        serializer = self.get_serializer(page_qs, many=True)
+        return Response({
+            'total': len(qs),
+            'data': serializer.data
+            })
 
     @action(
         detail=False,

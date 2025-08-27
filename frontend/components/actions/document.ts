@@ -3,10 +3,31 @@
 import { AuthError } from "../exceptions/auth";
 import { getAccess } from "./auth";
 
-export async function getContent() {
+type SortType = {
+  name: string,
+  decs: boolean,
+  id: string
+}
+
+type PaginationType = {
+  pageIndex: number,
+  pageSize: number
+}
+
+type ContentProps = {
+  sorts: SortType[],
+  pagination: PaginationType
+}
+
+export async function getContent(props: ContentProps) {
+  const sortQueries = props.sorts.map((e) => `sort=${e.name}`).join('&');
+  const decsQueries = props.sorts.map((e) => `decs=${e.decs}`).join('&');
+
   try {
     const access = await getAccess();
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/content/`, {
+    const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${baseUrl}/document/documents/content/?${sortQueries}&${decsQueries}`
+      + `&page=${props.pagination.pageIndex}&pagesize=${props.pagination.pageSize}`, {
       headers: {
           Authorization: `Bearer ${access}`
         },

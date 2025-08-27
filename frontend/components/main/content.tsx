@@ -59,6 +59,7 @@ import { NewPlaylistSheet } from "./new-playlist-sheet";
 import PlaylistDialog from "./playlist-dialog";
 import { Date2Thai } from "@/lib/client/utils";
 import LoadingTable from "../loading/content";
+import { useState, useEffect } from 'react';
 
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
@@ -236,10 +237,43 @@ export const columns: ColumnDef<Document>[] = [
   },
 ]
 
+type TableSortType = {
+  name: string,
+  decs: boolean,
+  id: string
+}
+
 export default function DataTable() {
+  const [sorts, setSorts] = useState<TableSortType[]>([
+    {
+      name: 'orderDate',
+      id: 'วันที่',
+      decs: true
+    },
+    {
+      name: 'orderNo',
+      id: 'คำสั่งศาล',
+      decs: true
+    },
+    {
+      name: 'orderblackNo',
+      id: 'คดีหมายเลขดำ',
+      decs: false
+    },
+    {
+      name: 'orderredNo',
+      id: 'คดีหมายเลขแดง',
+      decs: false
+    },
+    {
+      name: 'kindName',
+      id: 'ประเภท',
+      decs: false
+    }
+  ]);
   const paginations = [20, 50, 100];
   const dispatch = useAppDispatch();
-  const [tableData, setTableData] = React.useState<Document[] | null>(null);
+  const [tableData, setTableData] = useState<Document[] | null>(null);
   const sorting = useAppSelector((state: RootState) => state.contentListUi.sorting);
   const columnFilters = useAppSelector((state: RootState) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state: RootState) => state.contentListUi.columnVisibility);
@@ -249,10 +283,14 @@ export default function DataTable() {
   const playlistNewUi = useAppSelector((state: RootState) =>state.playlistDialogUi.newOpen);
   const dataChaged = useAppSelector((state: RootState) => state.playlistDialogUi.dataChanged);
   const toggleDataState = useAppSelector((state: RootState) => state.contentListUi.toggleDataState);
+  const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
+  const [pageSize, setPageSize] = useState(pagination.pageSize);
+  const [totalDocuments, setTotalDocuments] = useState(100);
 
   const table = useReactTable({
     data: tableData?? [],
     columns,
+    pageCount: Math.ceil(totalDocuments/pageSize),
     onSortingChange: (updater: Updater<SortingState>) =>
       dispatch(setSorting(resolveUpdater(updater, sorting))),
     onColumnFiltersChange: (updater: Updater<ColumnFiltersState>) =>
@@ -267,6 +305,9 @@ export default function DataTable() {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    enableMultiSort: true,
+    manualPagination: true,
+    enableSorting: false,
     state: {
       sorting,
       columnFilters,
@@ -274,33 +315,62 @@ export default function DataTable() {
       rowSelection,
       pagination
     },
-    enableMultiSort: true
   });
 
-  React.useEffect(()=>{
-    const getData = async() => {
-      try {
-        const data = await getContent();
-        setTableData(data);
-      } catch (error) {
-        console.error(error);
-        setTableData(null);
-        if (isAuthError(error))
-          RedirectToLogin();
+  useEffect(() => {
+    if (sorting && typeof sorting?.length === 'number' && sorting.length > 0) {
+      setPageIndex(0);
+      const theSorting = sorting[0];
+      const foundIndx = (sorts as TableSortType[]).findIndex((e) => e.id === theSorting?.id);
+      
+      if (foundIndx === 0) {
+        const decs = !(sorts[0].decs);
+        const firstSort = {...sorts[0], decs};
+        setSorts((prev) => [firstSort, ...(prev.slice(1))]);
+      } else {
+        setSorts((prev) => [sorts[foundIndx], ...prev.filter((_, idx: number) => idx != foundIndx)]);
       }
-    };
+    }
+  }, [sorting]);
 
-    if (!playlistNewUi && !playlistUi && dataChaged) getData();
-  }, [playlistUi, playlistNewUi]);
 
-  React.useEffect(()=>{
+
+  // useEffect(() => {
+  //   dispatch(setPagination({pageIndex, pageSize}));
+  // }, [pageIndex, pageSize]);
+
+  // useEffect(()=>{
+  //   const getData = async() => {
+  //     try {
+  //       const data = await getContent();
+  //       setTableData(data);
+  //     } catch (error) {
+  //       console.error(error);
+  //       setTableData(null);
+  //       if (isAuthError(error))
+  //         RedirectToLogin();
+  //     }
+  //   };
+
+  //   if (!playlistNewUi && !playlistUi && dataChaged) getData();
+  // }, [playlistUi, playlistNewUi]);
+
+  useEffect(()=>{
     const getData = async() => {
       try {
-        const data = await getContent();
-        setTableData(data);
+        const data = await getContent({
+          sorts,
+          pagination: {
+            pageIndex,
+            pageSize
+          } 
+        });
+        setTotalDocuments(data.total);
+        setTableData(data.data);
       } catch (error) {
         console.error(error);
         setTableData([]);
+        setTotalDocuments(0);
         if (isAuthError(error))
           RedirectToLogin(); 
       }
@@ -308,28 +378,28 @@ export default function DataTable() {
 
     getData();
 
-  }, [toggleDataState]);
+  }, [toggleDataState, sorts, pageSize, pageIndex]);
 
-    React.useEffect(()=>{
-     if (table && tableData) {
-      table.resetRowSelection(true);
-     }
-    }, [tableData]);
+    // useEffect(()=>{
+    //  if (table && tableData) {
+    //   table.resetRowSelection(true);
+    //  }
+    // }, [tableData]);
 
 
-  React.useEffect(() => {
-    if (table && tableData)
-    {
-      const selectedIds = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
-      dispatch(setDocIds(selectedIds));
-      // table.toggleAllPageRowsSelected(false);
-    }
-  }, [rowSelection]);
+  // useEffect(() => {
+  //   if (table && tableData)
+  //   {
+  //     const selectedIds = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
+  //     dispatch(setDocIds(selectedIds));
+  //   }
+  // }, [rowSelection]);
 
   if (!tableData)
     return (
       <LoadingTable />
   );
+
 
   return (
     <div className="w-full">
@@ -442,7 +512,7 @@ export default function DataTable() {
               const active = row?.original?.active?? false;
               return active;
             }).length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {totalDocuments} row(s) selected.
         </div>
         <div className="flex gap-x-2">
           <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -450,7 +520,9 @@ export default function DataTable() {
             if (pagination.pageSize <= 20) return;
             const currentPageIndex = paginations.indexOf(pagination.pageSize);
             if (currentPageIndex === -1 || currentPageIndex <= 0) return;
-            dispatch(setPagination({...pagination, pageSize: paginations[currentPageIndex - 1]}));
+            setPageIndex(0);
+            setPageSize(paginations[currentPageIndex - 1]);
+            dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex - 1]}));
           }}>
             <ChevronLeft/>
           </Button>
@@ -460,7 +532,9 @@ export default function DataTable() {
             if (pagination.pageSize >= 100) return;
             const currentPageIndex = paginations.indexOf(pagination.pageSize);
             if (currentPageIndex === -1 || currentPageIndex >= paginations.length - 1) return;
-            dispatch(setPagination({...pagination, pageSize: paginations[currentPageIndex + 1]}));
+            setPageIndex(0);
+            setPageSize(paginations[currentPageIndex + 1]);
+            dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex + 1]}));
           }}>
             <ChevronRight />
           </Button>
@@ -469,16 +543,16 @@ export default function DataTable() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPageIndex((prev) => prev - 1)}
+            disabled={pageIndex < 1}
           >
             ก่อนหน้า
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPageIndex((prev) => prev + 1)}
+            disabled={pageIndex >= Math.floor(totalDocuments/pageSize)}
           >
             ถัดไป
           </Button>
