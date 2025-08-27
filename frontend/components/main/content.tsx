@@ -23,7 +23,7 @@ import {
   Column,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal,
-  SlidersVertical, ChevronLeft, ChevronRight, MailCheck } from "lucide-react"
+  SlidersVertical, ChevronLeft, ChevronRight, MailCheck, Search } from "lucide-react"
 import { setColumnFilters, setRowSelection, setColumnVisibility, setSorting, setPagination} 
   from "../store/features/content-list-ui-slice";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ import { NewPlaylistSheet } from "./new-playlist-sheet";
 import PlaylistDialog from "./playlist-dialog";
 import { Date2Thai } from "@/lib/client/utils";
 import LoadingTable from "../loading/content";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
@@ -286,6 +286,8 @@ export default function DataTable() {
   const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
   const [pageSize, setPageSize] = useState(pagination.pageSize);
   const [totalDocuments, setTotalDocuments] = useState(100);
+  const searchRef = useRef<HTMLInputElement>();
+  const [q, setQ] = useState("");
 
   const table = useReactTable({
     data: tableData?? [],
@@ -363,7 +365,8 @@ export default function DataTable() {
           pagination: {
             pageIndex,
             pageSize
-          } 
+          },
+          q: q.trim()
         });
         setTotalDocuments(data.total);
         setTableData(data.data);
@@ -378,7 +381,7 @@ export default function DataTable() {
 
     getData();
 
-  }, [toggleDataState, sorts, pageSize, pageIndex]);
+  }, [toggleDataState, sorts, pageSize, pageIndex, q]);
 
     // useEffect(()=>{
     //  if (table && tableData) {
@@ -406,14 +409,48 @@ export default function DataTable() {
       <NewPlaylistSheet />
       <PlaylistDialog />
       <div className="flex items-center py-4">
-        <Input
-          placeholder="ค้นหาคำสั่งศาล..."
-          value={(table.getColumn("คำสั่งศาล")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("คำสั่งศาล")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex justify-start rounded-2xl items-center
+          border border-gray-500 overflow-clip
+          ">
+          <Search className='ml-1 cursor-pointer'
+            onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+              e.preventDefault();
+              if (searchRef?.current)
+                setQ(searchRef?.current?.value?? "");
+            }}
+          />
+          <Input
+            className="
+              border-transparent
+              border-l
+              border-l-gray-200
+              ring-0 ring-offset-0
+              outline-none
+              focus-visible:border-transparent
+              focus-visible:border-l 
+              focus-visible:border-l-gray-200
+              focus-visible:ring-0 focus-visible:ring-offset-0
+              focus-visible:outline-none
+              hover:border-transparent
+              hover:border-l
+              hover:border-l-gray-200
+              hover:ring-0 hover:ring-offset-0
+              hover:outline-none
+              ml-1 rounded-none
+              focus:ring-0 max-w-sm
+              px-2 py-2
+            "
+            ref={searchRef}
+            placeholder="ค้นหาคำสั่งศาล..."
+            onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setQ(e?.currentTarget?.value?? "");
+                e.currentTarget.blur();
+              }
+            }}
+          />
+        </div>
         <div className="ml-auto flex items-center gap-x-2">
           {Object.keys(rowSelection || {}).length > 0 ? (
             <ActionDropdown>
@@ -523,7 +560,9 @@ export default function DataTable() {
             setPageIndex(0);
             setPageSize(paginations[currentPageIndex - 1]);
             dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex - 1]}));
-          }}>
+          }}
+          disabled={pagination.pageSize <= 20 || paginations.indexOf(pagination.pageSize) <= 0}
+          >
             <ChevronLeft/>
           </Button>
             <p className="flex flex-col justify-center items-center">{pagination.pageSize}</p>
@@ -535,7 +574,9 @@ export default function DataTable() {
             setPageIndex(0);
             setPageSize(paginations[currentPageIndex + 1]);
             dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex + 1]}));
-          }}>
+          }}
+          disabled={pagination.pageSize >= 100 || paginations.indexOf(pagination.pageSize) >= paginations.length - 1}
+          >
             <ChevronRight />
           </Button>
         </div>

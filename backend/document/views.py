@@ -306,6 +306,7 @@ class DocumentView(viewsets.ModelViewSet):
         decs = request.GET.getlist("decs")
         page = request.GET.get("page", '0')
         page_size = request.GET.get("pagesize", '20')
+        q = request.GET.get("q", '')
 
         sort_keys = {
             'orderDate': 'order_date',
@@ -323,6 +324,7 @@ class DocumentView(viewsets.ModelViewSet):
         qs = (
             Document.objects
             .all()
+            .filter(order_no__icontains=q)
             .select_related('groupdocument__group')
             .order_by(*for_sorts)
         )

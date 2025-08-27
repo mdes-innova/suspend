@@ -16,7 +16,8 @@ type PaginationType = {
 
 type ContentProps = {
   sorts: SortType[],
-  pagination: PaginationType
+  pagination: PaginationType,
+  q: string
 }
 
 export async function getContent(props: ContentProps) {
@@ -27,7 +28,7 @@ export async function getContent(props: ContentProps) {
     const access = await getAccess();
     const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
     const res = await fetch(`${baseUrl}/document/documents/content/?${sortQueries}&${decsQueries}`
-      + `&page=${props.pagination.pageIndex}&pagesize=${props.pagination.pageSize}`, {
+      + `&page=${props.pagination.pageIndex}&pagesize=${props.pagination.pageSize}&q=${props.q}`, {
       headers: {
           Authorization: `Bearer ${access}`
         },

@@ -151,7 +151,7 @@ export default function LoadingTable() {
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             table.getColumn("id1")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="rounded-2xl w-[210px] h-10"
         />
         <div className="ml-auto flex items-center gap-x-1">
           <DropdownMenu>
