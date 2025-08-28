@@ -1,12 +1,10 @@
 import { Suspense } from 'react';
 import { notFound } from "next/navigation";
-import ContentLoading from "@/components/loading/content";
 import DataTable from '@/components/main/content';
-import PlaylistDialog from '@/components/main/playlist-dialog';
-import { NewPlaylistSheet } from '@/components/main/new-playlist-sheet';
 import ReloadPage from '@/components/reload-page';
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { cookies } from "next/headers";
+import LoadingTable from '@/components/loading/content';
 
 export async function getAccess() {
   try {
@@ -14,8 +12,20 @@ export async function getAccess() {
     const access = cookieStore.get("access")?.value;
     const refresh = cookieStore.get("refresh")?.value;
 
-    if (access) return access;
     const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+
+    if (access) {
+      const resAccessMe = await fetch(`${url}/user/users/me/`, {
+        headers: {
+            Authorization: `Bearer ${access}`
+          },
+      }); 
+
+      if (resAccessMe.ok) return access;
+    }
+
+    if (!refresh) throw new AuthError(`Refresh token not found.`);
+
     const res = await fetch(
       `${url}/token/refresh/`,
       {
@@ -30,6 +40,7 @@ export async function getAccess() {
     if (!res.ok) {
       throw new AuthError(`Token refresh failed: ${res.status}`);
     }
+
     const data = await res.json();
     return data.access;
     
@@ -38,27 +49,25 @@ export async function getAccess() {
   }
 }
 
-
 async function Content() {
   try {
     const access = await getAccess(); 
-    const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/document/documents/content/`, {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/user/users/me/`, {
       headers: {
           Authorization: `Bearer ${access}`
         },
     }); 
 
     if (!res.ok) {
-    if (res.status === 401)
-        throw new AuthError('Authentication fail.')
-    throw new Error('Get content fail.');
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get content fail.');
     }
-
-    const data = await res.json();
 
     return (
       <div className='w-full h-full flex flex-col px-2'>
-        <DataTable data={data}/>
+        <DataTable />
       </div>
     );
   } catch (error) {
@@ -71,10 +80,8 @@ async function Content() {
 
 export default function Home() {
   return (
-      <Suspense fallback={<ContentLoading />}>
+      <Suspense fallback={<LoadingTable />}>
         <Content />
-        <NewPlaylistSheet />
-        <PlaylistDialog />
       </Suspense>
   );
 }

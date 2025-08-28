@@ -230,7 +230,7 @@ export async function loginUser({
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 5,  // 5 minutes
+            maxAge: 60 * 4.5,
         });
 
         cookieStore.set({
@@ -240,7 +240,7 @@ export async function loginUser({
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 60 * 24 * 7,  // 5 minutes
+            maxAge: 60 * 60 * 23.9,
         });
 
         const userRes = await fetch(`${url}/user/users/me/`, {

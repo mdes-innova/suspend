@@ -44,6 +44,7 @@ import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
+import LoadingTable from "./loading/content";
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -302,7 +303,7 @@ function GroupActions({
 
 export default function GroupTable() {
     const [sorting, setSorting] = useState<SortingState>([])
-    const [tableData, setTableData] = useState([]);
+    const [tableData, setTableData] = useState<Group[] | null>(null);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
@@ -313,7 +314,7 @@ export default function GroupTable() {
     const [rowSelection, setRowSelection] = useState({}) 
     const user = useAppSelector((state: RootState) => state.userAuth.user);
     const table = useReactTable({
-        data: tableData,
+        data: tableData?? [],
         columns: user?.isSuperuser?
           columns:
           columns?.filter((_, idx: number) => idx != columns.length - 2),
@@ -339,8 +340,7 @@ export default function GroupTable() {
         const data = await getGroupList(); 
         setTableData(data);
       } catch (error) {
-        console.error(error);
-        setTableData([]);
+        setTableData(null);
         if (isAuthError(error))
           RedirectToLogin();
       }
@@ -348,6 +348,11 @@ export default function GroupTable() {
 
     getData();
   }, [dataChanged]);
+
+  if (!tableData)
+    return (
+      <LoadingTable />
+  );
 
     return (
     <div className="w-full">
@@ -460,8 +465,6 @@ export default function GroupTable() {
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         <div className="space-x-2">
           <Button
@@ -470,7 +473,7 @@ export default function GroupTable() {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -478,7 +481,7 @@ export default function GroupTable() {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

@@ -1,6 +1,8 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from 'next/image';
+import Link from 'next/link';
 import { useForm, ControllerRenderProps } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { getProfile, loginUser } from "./actions/user";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setUser } from "./store/features/user-auth-slice";
 import { RootState } from "./store";
+import { useRouter } from 'next/navigation';
 
 
 const FormSchema = z.object({
@@ -33,11 +36,15 @@ export default function LoginForm() {
   const [errorMessage, setErrorMessage] = useState('');
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.userAuth.user);
+  const router = useRouter();
 
   useEffect(() => {
     const getData = async() => {
-      const checkUser = await getProfile();
-      dispatch(setUser(checkUser));
+      try {
+        const checkUser = await getProfile();
+        dispatch(setUser(checkUser));
+      } catch {
+      }
     }
 
     if (!user)
@@ -46,7 +53,8 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (user && window) {
-      window.location.href = params.get('pathname')?? '/';
+      router.replace(params.get('pathname')?? '/');
+      // window.location.href = params.get('pathname')?? '/';
     }
   }, [user]);
 
@@ -113,7 +121,26 @@ export default function LoginForm() {
               </FormItem>
             )}
           /> 
-          <Button type="submit">Login</Button>
+          <div className="w-full flex justify-between items-center">
+            <Button type="submit">เข้าสู่ระบบ</Button>
+            <Link href={`/thaiid/?pathname=${params.get('pathname')?? '%2F'}`}>
+              <Button variant='outline' className="flex justify-center items-center">
+                <div>
+                  เข้าสู่ระบบด้วย
+                </div>
+                <div className="h-4 w-10 relative">
+                  <Image
+                    src='/images/thaid_logo.png'
+                    alt='thaiid'
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority
+                  />
+                </div>
+              </Button>
+            </Link>
+          </div>
         </form>
       </Form>
       <div className="h-2 block mt-1">
@@ -122,115 +149,3 @@ export default function LoginForm() {
     </div>
   )
 }
-
-
-// import { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import { useRouter } from 'next/navigation';
-// import { useAppDispatch } from '../components/store/hooks';
-// import { openModal } from '../components/store/features/password-reset-ui-slice';
-// import { setUser } from '../components/store/features/user-auth-slice';
-// import {RotatingLines} from 'react-loader-spinner';
-
-// export default function LoginPage() {
-//   const dispatch = useAppDispatch();
-
-//   const router = useRouter();
-//   const [errorMessage, setErrorMessage] = useState('');
-//   const [loginLoading, setLoginLoading] = useState(false);
-
-//   useEffect(() => {
-//     dispatch(setUser(null));
-//   }, []);
-
-//   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-//     event.preventDefault();
-
-//     const formData = new FormData(event.currentTarget);
-//     const rawFormData = {
-//       username: formData.get('username'),
-//       password: formData.get('password'),
-//     };
-
-//     try {
-//       setLoginLoading(true);
-//       const _ = await axios.post('api/auth/login/', rawFormData,
-//         {
-//           withCredentials: true
-//         }
-//       );
-//         router.push('/');
-//         router.refresh();
-//     } catch (error) {
-//       setLoginLoading(false);
-//       setErrorMessage('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
-//     }
-//   }
-
-//   return (
-//     <form onSubmit={handleSubmit} className="space-y-5 w-full p-10 rounded-xl shadow-[4px_8px_16px_rgba(0,0,0,0.6)]">
-//         <div>
-//         <label htmlFor="username" className="block text-sm font-medium text-foreground">
-//             ชื่อผู้ใช้งาน
-//         </label>
-//         <input
-//             type="text"
-//             id="username"
-//             name="username"
-//             required
-//             className="mt-1 text-foreground w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-border"
-//             placeholder="username"
-//             onChange={() => {
-//                 setErrorMessage('');
-//             }}
-//         />
-//         </div>
-
-//         <div>
-//         <label htmlFor="password" className="block text-sm font-medium text-foreground">
-//             รหัสผ่าน
-//         </label>
-//         <input
-//             type="password"
-//             name="password"
-//             id="password"
-//             required
-//             className="mt-1 text-foreground w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-border"
-//             placeholder="••••••••"
-//             onChange={() => {
-//                 setErrorMessage('');
-//             }}
-//         />
-//         </div>
-
-//         <div>
-//         <button
-//             type="submit"
-//             className="w-full bg-[#34c6b7] text-background font-bold h-12 relative items-center
-//               py-2 rounded-xl hover:ring hover:ring-border transition duration-300 flex justify-center"
-//         >
-//           {!loginLoading &&
-//             <div>
-//               เข้าสู่ระบบ
-//             </div>
-//           }
-//           {loginLoading &&
-//             <RotatingLines 
-//               visible={true}
-//               width="40"
-//               strokeColor="#FFFFFF"
-//               strokeWidth="5"
-//               animationDuration="0.75"
-//             />
-//           }
-//         </button>
-//         </div>
-//         {errorMessage != '' && <div className="text-destructive">{errorMessage}</div>}
-//         <p className="cursor-pointer text-[#34c6b7] underline"
-//           onClick={(e: any) => {
-//             e.preventDefault();
-//             dispatch(openModal());
-//           }}>รีเซ็ตรหัสผ่าน</p>
-//     </form>
-//   );
-// }

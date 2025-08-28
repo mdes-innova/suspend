@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import * as React from "react";
 import Link from 'next/link';
@@ -50,7 +50,7 @@ import {
   type Updater,
 } from '@tanstack/react-table';
 import { RootState } from "./store";
-import { Date2Thai } from "@/lib/utils";
+import { Date2Thai } from "@/lib/client/utils";
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
@@ -83,10 +83,12 @@ export const columns: ColumnDef<Document>[] = [
                 checked={row.getIsSelected()}
                 onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
                 aria-label="Select row"
-                disabled={!active}
               />
             </div>
           );
+        else {
+          return null;
+        }
     },
     enableSorting: false,
     enableHiding: false,
@@ -98,6 +100,8 @@ export const columns: ColumnDef<Document>[] = [
       return (
         <div className='flex gap-x-2 text-left justify-start p-0 m-0'
         >
+          <div className="w-4 h-4 block">
+          </div>
           คำสั่งศาล
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
@@ -365,7 +369,11 @@ export default function ContentDialog({data}: {data: Document[]}) {
       </div>
       <div className="flex items-center justify-between py-4 max-md:w-[420px]">
         <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredSelectedRowModel()
+            .rows.filter((row: Row<Document>) => {
+              const active = row?.original?.active?? false;
+              return active;
+            }).length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         <div className="flex gap-x-2">
@@ -396,7 +404,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -404,7 +412,7 @@ export default function ContentDialog({data}: {data: Document[]}) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

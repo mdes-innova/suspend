@@ -52,18 +52,14 @@ import {
 } from '@tanstack/react-table';
 import { getContent } from "../actions/document";
 import { Document } from "@/lib/types";
-import { Date2Thai } from "@/lib/utils";
 import { RootState } from "../store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "../reload-page";
+import { NewPlaylistSheet } from "./new-playlist-sheet";
+import PlaylistDialog from "./playlist-dialog";
+import { Date2Thai } from "@/lib/client/utils";
+import LoadingTable from "../loading/content";
 
-// function isUpdaterFunction<T>(updater: Updater<T>): updater is (old: T) => T {
-//   return typeof updater === 'function';
-// }
-
-// function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
-//   return isUpdaterFunction(updater) ? updater(previous) : updater;
-// }
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
@@ -93,9 +89,11 @@ export const columns: ColumnDef<Document>[] = [
               checked={row.getIsSelected()}
               onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
               aria-label="Select row"
-              disabled={!active}
             />
           );
+        else {
+          return null;
+        }
     },
     enableSorting: false,
     enableHiding: false,
@@ -107,6 +105,8 @@ export const columns: ColumnDef<Document>[] = [
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
+          <div className="w-4 h-4 block">
+          </div>
           คำสั่งศาล
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -138,8 +138,7 @@ export const columns: ColumnDef<Document>[] = [
     },
     header: ({ column }: { column: Column<Document> }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
-        >
+        <div className='inline-flex gap-x-2 w-full'>
           วันที่
           <ArrowUpDown size={16} className="cursor-pointer" onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -237,10 +236,10 @@ export const columns: ColumnDef<Document>[] = [
   },
 ]
 
-export default function DataTable({ data }: { data: Document[] }) {
+export default function DataTable() {
   const paginations = [20, 50, 100];
   const dispatch = useAppDispatch();
-  const [tableData, setTableData] = React.useState<Document[]>(data);
+  const [tableData, setTableData] = React.useState<Document[] | null>(null);
   const sorting = useAppSelector((state: RootState) => state.contentListUi.sorting);
   const columnFilters = useAppSelector((state: RootState) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state: RootState) => state.contentListUi.columnVisibility);
@@ -252,7 +251,7 @@ export default function DataTable({ data }: { data: Document[] }) {
   const toggleDataState = useAppSelector((state: RootState) => state.contentListUi.toggleDataState);
 
   const table = useReactTable({
-    data: tableData,
+    data: tableData?? [],
     columns,
     onSortingChange: (updater: Updater<SortingState>) =>
       dispatch(setSorting(resolveUpdater(updater, sorting))),
@@ -285,7 +284,7 @@ export default function DataTable({ data }: { data: Document[] }) {
         setTableData(data);
       } catch (error) {
         console.error(error);
-        setTableData([]);
+        setTableData(null);
         if (isAuthError(error))
           RedirectToLogin();
       }
@@ -312,14 +311,14 @@ export default function DataTable({ data }: { data: Document[] }) {
   }, [toggleDataState]);
 
     React.useEffect(()=>{
-     if (table) {
+     if (table && tableData) {
       table.resetRowSelection(true);
      }
     }, [tableData]);
 
 
   React.useEffect(() => {
-    if (table)
+    if (table && tableData)
     {
       const selectedIds = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
       dispatch(setDocIds(selectedIds));
@@ -327,8 +326,15 @@ export default function DataTable({ data }: { data: Document[] }) {
     }
   }, [rowSelection]);
 
+  if (!tableData)
+    return (
+      <LoadingTable />
+  );
+
   return (
     <div className="w-full">
+      <NewPlaylistSheet />
+      <PlaylistDialog />
       <div className="flex items-center py-4">
         <Input
           placeholder="ค้นหาคำสั่งศาล..."
@@ -431,7 +437,11 @@ export default function DataTable({ data }: { data: Document[] }) {
       </div>
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredSelectedRowModel()
+            .rows.filter((row: Row<Document>) => {
+              const active = row?.original?.active?? false;
+              return active;
+            }).length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         <div className="flex gap-x-2">
@@ -462,7 +472,7 @@ export default function DataTable({ data }: { data: Document[] }) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            ก่อนหน้า
           </Button>
           <Button
             variant="outline"
@@ -470,7 +480,7 @@ export default function DataTable({ data }: { data: Document[] }) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            ถัดไป
           </Button>
         </div>
       </div>

@@ -37,7 +37,7 @@ function CustomCaption(props: CaptionProps) {
         {month} {yearBE}
       </div>
 
-      {/* Next button */}
+      {/* ถัดไป button */}
       <button
         onClick={() => nextMonth && goToMonth(nextMonth)}
         disabled={!nextMonth}

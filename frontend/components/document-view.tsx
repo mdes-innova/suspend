@@ -11,7 +11,7 @@ import {
 
 import { type Group, type Document } from "@/lib/types";
 import CategoryGroup from "./document-category";
-import { Date2Thai, Text2Thai } from "@/lib/client/utils";
+import { Date2Thai } from "@/lib/client/utils";
 import { downloadPdf, downloadUrls } from "./actions/document";
 import { isAuthError } from "./exceptions/auth";
 import { RedirectToLogin } from "./reload-page";
@@ -29,19 +29,19 @@ export default function DocumentView(
             </div>
             <div className="w-full text-start text-2xl font-bold mt-2">{docData.orderNo}</div>
             <div className="w-full text-start text-md">{
-              docData && docData?.orderDate ? Text2Thai(Date2Thai(docData.orderDate)): '-'
+              docData && docData?.orderDate ? Date2Thai(docData.orderDate): '-'
             }</div>
           </div>
           <div className="flex flex-col">
             <div className="w-full text-start text-xl font-bold">คดีหมายเลขดำที่:</div>
             <div className="w-full text-start text-md">{
-              docData && docData?.orderblackNo? Text2Thai(docData.orderblackNo): '-`'
+              docData && docData?.orderblackNo? docData.orderblackNo: '-`'
             }</div>
           </div>
           <div className="flex flex-col">
             <div className="w-full text-start text-xl font-bold">คดีหมายเลขแดงที่</div>
             <div className="w-full text-start text-md">{
-              docData && docData?.orderredNo? Text2Thai(docData.orderredNo): '-'
+              docData && docData?.orderredNo? docData.orderredNo: '-'
             }</div>
           </div>
           <div className="mt-auto">

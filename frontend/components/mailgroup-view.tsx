@@ -103,8 +103,19 @@ export default function MailGroupView({
                                 }
                             }}  
                             >
-                                {filename}
-                            </Button>
+                            <div className="max-md:w-72 max-sm:w-48 truncate ">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                    <p className='w-full truncate'>
+                                        {filename}
+                                    </p>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="min-md:hidden">
+                                    <p>{filename}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </Button>
                     </div>
                     })}
                 </div>

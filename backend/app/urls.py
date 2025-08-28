@@ -28,12 +28,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from two_factor.urls import urlpatterns as tf_urls
-from core.views import CustomTokenObtainPairView, current_time_view
+from core.views import CustomTokenObtainPairView, ThaiIdView
 
 admin.site.__class__ = AdminSiteOTPRequired
 
 urlpatterns = [
-    path('api/current-time/', current_time_view, name='current_time'),
+    path('api/thaiid/callback/', ThaiIdView.as_view(), name='thaiid_callback'),
     path('api/f2a/', include(tf_urls)),  # replaces the login view with a 2FA flow
     path('api/admin/', admin.site.urls),
     path('api/token/', CustomTokenObtainPairView.as_view(),

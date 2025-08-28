@@ -749,7 +749,7 @@ export function GroupForm({
            
                 dispatch(openAlertModal(ALERTUI.successful_groupsave));
             } catch (error) {
-              console.log(error)
+              console.error(error)
               if (isAuthError(error)) RedirectToLogin();
               else {
                 dispatch(openAlertModal(ALERTUI.fail_groupsave));
