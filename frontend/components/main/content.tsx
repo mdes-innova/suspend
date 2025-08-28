@@ -43,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import ActionDropdown from "../action-dropdown";
+import ActionDropdown, { ActionDropdownAll } from "../action-dropdown";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
 
@@ -278,6 +278,7 @@ export default function DataTable() {
   const columnFilters = useAppSelector((state: RootState) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state: RootState) => state.contentListUi.columnVisibility);
   const rowSelection = useAppSelector((state: RootState) => state.contentListUi.rowSelection);
+  const toggleDocumentIdsSelection = useAppSelector((state: RootState) => state.contentListUi.toggleDocumentIdsSelection);
   const pagination = useAppSelector((state: RootState) => state.contentListUi.pagination); 
   const playlistUi = useAppSelector((state: RootState) => state.playlistDialogUi.listOpen);
   const playlistNewUi = useAppSelector((state: RootState) =>state.playlistDialogUi.newOpen);
@@ -288,6 +289,7 @@ export default function DataTable() {
   const [totalDocuments, setTotalDocuments] = useState(100);
   const searchRef = useRef<HTMLInputElement>();
   const [q, setQ] = useState("");
+  const [documentIdsSelection, setDocumentIdsSelection] = useState<number[]>([]);
 
   const table = useReactTable({
     data: tableData?? [],
@@ -336,6 +338,9 @@ export default function DataTable() {
   }, [sorting]);
 
 
+  useEffect(() => {
+    if (table && tableData) setDocumentIdsSelection([]);
+  }, [toggleDocumentIdsSelection]);
 
   // useEffect(() => {
   //   dispatch(setPagination({pageIndex, pageSize}));
@@ -383,20 +388,32 @@ export default function DataTable() {
 
   }, [toggleDataState, sorts, pageSize, pageIndex, q]);
 
-    // useEffect(()=>{
-    //  if (table && tableData) {
-    //   table.resetRowSelection(true);
-    //  }
-    // }, [tableData]);
+    useEffect(()=>{
+     if (table && tableData) {
+      // table.resetRowSelection(true);
+      const foundSelectedDoc
+     }
+    }, [tableData]);
 
 
-  // useEffect(() => {
-  //   if (table && tableData)
-  //   {
-  //     const selectedIds = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
-  //     dispatch(setDocIds(selectedIds));
-  //   }
-  // }, [rowSelection]);
+  useEffect(() => {
+    if (table && tableData)
+    {
+      // console.log(table.getSelectedRowModel().rows);
+      // console.log(rowSelection);
+      const documentRowIds: number[] = table.getRowModel().rows.map((row: Row<Document>) => row.original.id);
+      const selectedDocumentIds: number[] = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
+      const deselectedDocumentIds = documentRowIds.filter((e) => !selectedDocumentIds.includes(e));
+      setDocumentIdsSelection((prev: number[]) => [...new Set([
+          ...prev.filter((e) => !deselectedDocumentIds.includes(e)),
+          ...selectedDocumentIds
+        ])
+      ]);
+      // dispatch(setDocIds(selectedIds));
+    }
+  }, [rowSelection]);
+
+  console.log(documentIdsSelection);
 
   if (!tableData)
     return (
@@ -452,13 +469,9 @@ export default function DataTable() {
           />
         </div>
         <div className="ml-auto flex items-center gap-x-2">
-          {Object.keys(rowSelection || {}).length > 0 ? (
-            <ActionDropdown>
-                <SlidersVertical />
-            </ActionDropdown>
-          ) : (
-            <></>
-          )}
+          <ActionDropdownAll documentIdsSelection={documentIdsSelection}>
+              <SlidersVertical />
+          </ActionDropdownAll>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">

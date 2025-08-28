@@ -19,6 +19,7 @@ export interface ContentListUiState {
   };
   tableData: Document[];
   toggleDataState: boolean;
+  toggleDocumentIdsSelection: boolean;
 }
 
 // Initial state with type annotation
@@ -32,6 +33,7 @@ const initialState: ContentListUiState = {
     pageSize: 20,
   },
   tableData: [],
+  toggleDocumentIdsSelection: false,
   toggleDataState: false
 };
 
@@ -54,6 +56,9 @@ const contenListUiSlice = createSlice({
     },
     setPagination(state: ContentListUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
       state.pagination = action.payload;
+    },
+    setToggleDocumentIdsSelection(state: ContentListUiState) {
+      state.toggleDocumentIdsSelection = !state.toggleDocumentIdsSelection;
     },
     toggleData(state: ContentListUiState) {
       state.toggleDataState = !state.toggleDataState

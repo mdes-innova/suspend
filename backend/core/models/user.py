@@ -8,7 +8,7 @@ from core.models.isp import ISP
 
 
 username_validator = RegexValidator(
-    regex=r'^[a-zA-Z0-9_]+$',
+    regex=r'^[a-zA-Z0-9_.]+$',
     message="Username can only contain letters, numbers," +
     " and underscores. No spaces or special characters."
 )
