@@ -74,11 +74,15 @@ export type Isp = {
 }
 
 export type UserRegister = {
-  username: string,
-  password: string,
+  username?: string,
+  password?: string,
   email?: string,
   isStaff: boolean,
   ispId?: number,
+  givenName?: string,
+  familyName?: string,
+  birthdate?: string,
+  thaiid?: boolean
 }
 
 export type IspFile = {

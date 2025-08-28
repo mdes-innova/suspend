@@ -8,7 +8,7 @@ import { downloadFile } from "./actions/mail";
 import { Card } from "./ui/card";
 import { Label } from "./ui/label";
 import { isAuthError } from '@/components/exceptions/auth';
-import { redirectToLogin } from "./reload-page";
+import { RedirectToLogin } from "./reload-page";
 
 export default function MailView({
     mailGroup
@@ -34,7 +34,7 @@ export default function MailView({
                     ชั้นความลับ: {['ปกติ', 'ลับ', 'ลับมาก', 'ลับที่สุด'][mailGroup.secret as number]}
                 </div>
                 <div>
-                    มาตรา: {['ปกติ', 'มาตรา 15'][mailGroup.section as number]}
+                    มาตรา: {mailGroup?.section?.name?? '-'}
                 </div>
             </div>
             <Card>
@@ -78,7 +78,7 @@ export default function MailView({
                                         } catch (error) {
                                         console.error(error);
                                         if (isAuthError(error))
-                                            redirectToLogin(); 
+                                            RedirectToLogin(); 
                                         }
                                         }}/>
                                         <Tooltip>

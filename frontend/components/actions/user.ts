@@ -167,6 +167,7 @@ export async function updateUser({
 }
 
 export async function registerUser(userRegisterParams: UserRegister) {
+    console.log(userRegisterParams)
     try {
         const access = await getAccess(); 
         const res = await fetch(`${process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD}/user/users/`, {

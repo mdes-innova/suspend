@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, ControllerRenderProps } from "react-hook-form";
 import { z } from "zod";
+import { format } from 'date-fns';
+import Image from 'next/image';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +37,7 @@ import { RedirectToLogin } from "./reload-page";
 import { useEffect } from 'react';
 import { useAppDispatch } from "./store/hooks";
 import { ALERTUI, openModal } from "./store/features/alert-ui-slice";
+import { ThaiDateYearPicker } from "./date-picker";
 
 type TheUser = {
   username: string,
@@ -44,7 +47,42 @@ type TheUser = {
 
 
 export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
+  const [userKind, setUserKind] = useState("normal");
 
+  return (
+    <div className="h-full w-full flex flex-col justify-start items-center mt-4">
+      <RadioGroup value={userKind} onValueChange={setUserKind} className="flex ">
+        <div className="flex items-center gap-3">
+          <RadioGroupItem value="normal" id="r1" />
+          <Label htmlFor="r1">ปกติ</Label>
+        </div>
+        <div className="flex items-center gap-3">
+          <RadioGroupItem value="thaiid" id="r2" />
+          <div className="h-4 w-10 relative">
+            <Image
+              src='/images/thaid_logo.png'
+              alt='thaiid'
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+          </div>
+        </div>
+    </RadioGroup>
+    {
+      userKind === 'normal' &&
+      <NormalUserForm ispData={ispData} />
+    }
+    {
+      userKind === 'thaiid' &&
+      <ThaiIdUserForm />
+    }
+    </div>
+  )
+}
+
+function NormalUserForm({ ispData }: { ispData: Isp[] }) {
   const [userType, setUserType]= useState('user');
   const [isp, setIsp] = useState("");
   const dispatch = useAppDispatch(); 
@@ -112,10 +150,6 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
       ispId: (isp != "" && userType === 'user')? parseInt(isp): undefined,
       isStaff: userType === 'user'? false: true
     }
-
-    // if (isp != "")
-    //   extendedValues['ispId'] = parseInt(isp);
-
     try {
       await registerUser(extendedValues);
       dispatch(openModal(ALERTUI.successful_register));
@@ -129,9 +163,7 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
       }
     }
   }
-
-  return (
-    <div className="h-full w-full flex flex-col justify-center items-center">
+  return(
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
           <FormField
@@ -242,9 +274,98 @@ export default function RegisterForm({ ispData }: { ispData: Isp[] }) {
                 />
               </div>
             }
-          <Button type="submit">Register</Button>
+          <Button type="submit">ลงทะเบียน</Button>
         </form>
       </Form>
-    </div>
-  )
+  );
+}
+
+function ThaiIdUserForm() {
+  const dispatch = useAppDispatch(); 
+  const [date, setDate] = useState<Date>();
+
+  const UserFormSchema = z.object({
+    givenName: z.string().min(2, {
+      message: "ชื่อผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+    }),
+    familyName: z.string().min(2, {
+      message: "นามสกุลผู้ใช้งานน้อยกว่า 2 ตัวอักษร",
+    }),
+  });
+
+ 
+  type FormValues = z.infer<typeof UserFormSchema>;
+
+  const userDefaults = {
+      givenName: "",
+      familyName: "",
+  };
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(UserFormSchema),
+    defaultValues: userDefaults,
+  });
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      if (!date)
+        throw new Error('Birthdate cannot be left empty.');
+      const extendedValues  = {
+        thaiid: true,
+        givenName: values.givenName,
+        familyName: values.familyName,
+        birthdate: format(date, 'yyyy-MM-dd'),
+        isStaff: true
+      }
+      await registerUser(extendedValues);
+      dispatch(openModal(ALERTUI.successful_register));
+
+    } catch (error) {
+      if (isAuthError(error)) {
+        RedirectToLogin();
+      }
+      else {
+      dispatch(openModal(ALERTUI.fail_register));
+      }
+    }
+  }
+  return(
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+          <FormField
+            control={form.control}
+            name="givenName"
+            render={({ field }: { field:  ControllerRenderProps<z.infer<typeof UserFormSchema>, "givenName">}) => (
+              <FormItem>
+                <FormLabel>ชื่อ</FormLabel>
+                <FormControl>
+                  <Input placeholder="ชื่อ..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="familyName"
+            render={({ field }: { field:  ControllerRenderProps<z.infer<typeof UserFormSchema>, "familyName">}) => (
+              <FormItem>
+                <FormLabel>สกุล</FormLabel>
+                <FormControl>
+                  <Input placeholder="สกุล..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex flex-col justify-between items-start">
+              <FormLabel className="inline-flex items-center gap-0.5">
+                  เกิดวันที่<span className="text-red-400">*</span>
+              </FormLabel>
+              <ThaiDateYearPicker date={date} setDate={setDate}/>
+          </div>
+          <Button type="submit">ลงทะเบียน</Button>
+        </form>
+      </Form>
+  );
 }

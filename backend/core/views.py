@@ -19,6 +19,8 @@ from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
 import os
 import requests
+from django.utils.dateparse import parse_date
+import urllib.parse
 
 
 def current_time_view(request):
@@ -42,15 +44,13 @@ class ThaiIdView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        query_params = request.query_params
+        state = query_params.get('state', '/')
+        code = query_params.get('code', '')
         try:
-            query_params = request.query_params
-            code = query_params.get('code', None)
-            state = query_params.get('state', '/')
-
             if not code:
                 return Response({'errror': 'Invalid ThaiID authentication'},
                                 status.HTTP_400_BAD_REQUEST)
-
 
             authorization = os.environ.get('THAIID_AUTH')
             grant_type = "authorization_code"
@@ -69,7 +69,7 @@ class ThaiIdView(APIView):
             }
 
             r = requests.post(
-                url,
+                url if url else '',
                 headers=headers,
                 data=payload,
                 )
@@ -78,34 +78,15 @@ class ThaiIdView(APIView):
             given_name = data.get('given_name', None)
             family_name = data.get('family_name', None)
             birthdate = data.get('birthdate', None)
+            birthdate_d = parse_date(birthdate)
 
-            user = get_user_model().objects.get(username='admin') if\
-                given_name == 'อานนท์' and family_name == 'สงมูลนาค' and '1993-04-11'\
-                    else None
-            
+            user = get_user_model().objects.get(
+                given_name=given_name,
+                family_name=family_name,
+                birthdate=birthdate_d
+            )
             new_refresh = RefreshToken.for_user(user)
             new_access = new_refresh.access_token
-            # user = ...  # your logic here
-            # user = request.user
-            # user = get_user_model().objects.get(username='admin')
-
-            # with transaction.atomic():
-                # 2) Mint a brand-new refresh token (and its paired access)
-                # new_refresh = RefreshToken.for_user(user)
-                # new_access = new_refresh.access_token
-                # current_jti = str(new_refresh["jti"])
-
-                # 3) Blacklist all older refresh tokens for this user
-                #    (keep the freshly-created one valid)
-                # for t in OutstandingToken.objects.filter(user=user).exclude(jti=current_jti):
-                    # idempotent: get_or_create avoids duplicate blacklist rows
-                    # BlacklistedToken.objects.get_or_create(token=t)
-
-            # 4) Return or set as cookies (example returns JSON)
-            # return Response(
-            #     {"refresh": str(new_refresh), "access": str(new_access)},
-            #     status=status.HTTP_200_OK,
-            # )
             if state:
                 resp = redirect(state)
             else:
@@ -114,7 +95,7 @@ class ThaiIdView(APIView):
             resp.set_cookie(
                 key="access",
                 value=str(new_access),
-                max_age=60 * 4.5,
+                max_age=int(60*4.5),
                 path="/",
                 secure=True,
                 httponly=True,
@@ -123,7 +104,7 @@ class ThaiIdView(APIView):
             resp.set_cookie(
                 key="refresh",
                 value=str(new_refresh),
-                max_age=60 * 60 * 23.9,
+                max_age=int(60*60*23.9),
                 path="/",
                 secure=True,
                 httponly=True,
@@ -132,7 +113,8 @@ class ThaiIdView(APIView):
             return resp
         except:
             if not state:
-                resp = redirect("/login/?pathname=" + urllib.parse.quote(state, safe=""))
+                resp = redirect("/login/?pathname=" +
+                                urllib.parse.quote(state, safe=""))
             else:
                 resp = redirect("/login")
             return resp
