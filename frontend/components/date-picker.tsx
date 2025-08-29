@@ -253,8 +253,8 @@ export function ThaiDateYearPicker({
           selected={date}
           onSelect={(d: Date | undefined) => {
             if (!d) return;
-            const first = new Date(d.getFullYear(), d.getMonth(), 1);
-            setDate(first);      // selection changes only via day click
+            const selectedDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            setDate(selectedDate);      // selection changes only via day click
             setOpen(false);      // and close only then
           }}
           fromYear={1900}
