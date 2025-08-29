@@ -43,12 +43,16 @@ export type Group = {
 
 export type User = {
   id: number,
-  username: string,
+  username?: string,
   isStaff: boolean,
   isActive: boolean,
   isSuperuser: boolean,
   isp?: Isp,
-  email?: string
+  email?: string,
+  thaiid?: boolean,
+  givenName?: string,
+  familyName?: string,
+  birthdate?: string
 };
 
 export type File = {

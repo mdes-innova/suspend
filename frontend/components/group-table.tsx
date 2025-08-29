@@ -133,9 +133,19 @@ const columns: ColumnDef<Group>[] = [
     id: 'ผู้ใช้งาน',
     accessorKey: "user",
     sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
-      const usernameA = rowA.getValue<User | null>(columnId)?.username ?? '-';
-      const usernameB = rowB.getValue<User | null>(columnId)?.username ?? '-';
-      return usernameA < usernameB ? -1 : usernameA > usernameB ? 1 : 0;
+      if (rowA.getValue<User | null>(columnId)?.thaiid) {
+        const nameA = rowA.getValue<User | null>(columnId)?.givenName?? '-';
+        const nameB = rowB.getValue<User | null>(columnId)?.givenName?? '-';
+        const sirnameA = rowA.getValue<User | null>(columnId)?.familyName?? '-';
+        const sirnameB = rowB.getValue<User | null>(columnId)?.familyName?? '-';
+        const usernameA = `${nameA} ${sirnameA}`;
+        const usernameB = `${nameB} ${sirnameB}`;
+        return usernameA < usernameB ? -1 : usernameA > usernameB ? 1 : 0;
+      } else {
+        const usernameA = rowA.getValue<User | null>(columnId)?.username ?? '-';
+        const usernameB = rowB.getValue<User | null>(columnId)?.username ?? '-';
+        return usernameA < usernameB ? -1 : usernameA > usernameB ? 1 : 0;
+      }
     },
     header: ({ column }: { column: Column<Group> }) => {
       return (
@@ -152,7 +162,8 @@ const columns: ColumnDef<Group>[] = [
     },
     cell: ({ row }: { row: Row<Group> }) => {
       const original = row.original;
-      const username = original?.user?.username?? '-';
+      const username = original?.user?.thaiid?
+        `${original?.user?.givenName} ${original?.user?.familyName}`: original?.user?.username?? '';
       return (
         <div>
           {username}

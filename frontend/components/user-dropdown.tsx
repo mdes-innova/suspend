@@ -26,7 +26,9 @@ export function DropdownMenuUser() {
   return (
     <DropdownMenu open={userOpen} onOpenChange={setUserOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="text-xl">{user?.username}</Button>
+        <Button variant="outline" className="text-xl">
+          {user?.thaiid? `${user?.givenName} ${user?.familyName}`: user?.username?? ''}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>บัญชีของฉัน</DropdownMenuLabel>

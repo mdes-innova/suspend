@@ -254,7 +254,8 @@ export function ProfileIspView({ orgUser, isIsps = false }:
               setOpenEdit(open);
             }}>
               <DialogTrigger asChild>
-                <Button className="mt-2 max-w-none w-fit" variant="secondary">Edit</Button>
+                <Button disabled={user?.thaiid?? false}
+                className="mt-2 max-w-none w-fit" variant="secondary">Edit</Button>
               </DialogTrigger>
               <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -345,8 +346,12 @@ export function ProfileIspView({ orgUser, isIsps = false }:
             isIsps?
             <Link className="text-2xl font-bold hover:underline"
               href={`/profile-view/isp/${user?.id}/user`}
-              >{user?.username?? ''}</Link>:
-            <Label className="text-2xl font-bold">{user?.username?? ''}</Label>
+              >
+                {user?.thaiid? `${user?.givenName} ${user?.familyName}`: user?.username?? ''}
+              </Link>:
+            <Label className="text-2xl font-bold">
+                {user?.thaiid? `${user?.givenName} ${user?.familyName}`: user?.username?? ''}
+            </Label>
           }
           {isIsps? <></>:<Label>{!user? '': user?.isp?.name?? ''}</Label>}
           <Label className="mt-2 italic">{user?.email?? ''}</Label>

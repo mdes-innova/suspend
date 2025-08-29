@@ -97,7 +97,7 @@ export function AppSidebar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <SidebarMenuButton>
-                      {user.username} 
+                      {user?.thaiid? `${user?.givenName} ${user?.familyName}`: user?.username?? ''}
                       <ChevronUp className="ml-auto" />
                     </SidebarMenuButton>
                   </DropdownMenuTrigger>
