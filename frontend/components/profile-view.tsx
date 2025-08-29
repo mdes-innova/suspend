@@ -94,7 +94,9 @@ export default function ProfileView() {
             setOpenEdit(open);
           }}>
             <DialogTrigger asChild>
-              <Button className="mt-2 max-w-none w-fit" variant="secondary">Edit</Button>
+              <Button
+                disabled={user?.thaiid?? false}
+                className="mt-2 max-w-none w-fit" variant="secondary">Edit</Button>
             </DialogTrigger>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -180,7 +182,9 @@ export default function ProfileView() {
           </Dialog>
         </div>
         <div className="flex flex-col justify-center items-start gap-y-1 px-4">
-          <Label className="text-2xl font-bold">{user?.username?? ''}</Label>
+          <Label className="text-2xl font-bold">
+            {user?.thaiid? `${user?.givenName} ${user?.familyName}`: user?.username?? ''}
+            </Label>
           <Label>{!user? '': user?.isSuperuser? 'Admin' : user?.isStaff? 'Staff': 'ISP'}</Label>
           <Label className="mt-2 italic">{user?.email?? ''}</Label>
         </div>
