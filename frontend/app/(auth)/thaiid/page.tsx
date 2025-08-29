@@ -1,4 +1,3 @@
-import { getAccess } from '@/app/(main)/page';
 import { redirect } from 'next/navigation'
 
 export default async function Page({

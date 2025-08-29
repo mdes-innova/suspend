@@ -16,12 +16,13 @@ username_validator = RegexValidator(
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
-        if extra_fields['thaiid'] and\
+        if 'thaiid' in extra_fields.keys() and extra_fields['thaiid'] and\
             not (extra_fields['given_name'] and
                  extra_fields['family_name'] and extra_fields['birthdate']):
             raise ValueError('ThaiID user needs given_name ' +
                              'family_name and birthdate.')
-        elif not extra_fields['thaiid'] and not username:
+        elif not ('thaiid' in extra_fields.keys() and
+                  extra_fields['thaiid']) and not username:
             raise ValueError('Username is required.')
         user = self.model(username=username, **extra_fields)
         user.set_password(password)
@@ -53,10 +54,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=None,
         blank=True,
     )
-    given_name = models.CharField(max_length=50, null=True)
-    family_name = models.CharField(max_length=50, null=True)
-    birthdate = models.DateField(null=True)
-    thaiid = models.BooleanField(null=True, default=False)
+    given_name = models.CharField(max_length=50, null=True, blank=True)
+    family_name = models.CharField(max_length=50, null=True, blank=True)
+    birthdate = models.DateField(null=True, blank=True)
+    thaiid = models.BooleanField(null=True, default=False, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     email = models.EmailField(blank=True, null=True, unique=True)
@@ -79,4 +80,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         super().clean()
         if self.username == "":
             self.username = None
+        if self.birthdate == "":
+            self.birthdate = None
+        if self.given_name == "":
+            self.given_name = None
+        if self.family_name == "":
+            self.family_name = None
+        if self.thaiid == "":
+            self.thaiid = None
             
