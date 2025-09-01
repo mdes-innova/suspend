@@ -40,7 +40,6 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
     const editAreaId = 'edit-area';
     const dispatch = useAppDispatch();
     const [openContent, setOpenContent] = useState(false);
-    const [contentData, setContentData] = useState<Document[] | null>(null);
 
     const isDragging = useAppSelector((state: RootState) => state.documentListUi.isDragging);
     const draggingId = useAppSelector((state: RootState) => state.documentListUi.dragId);
@@ -71,12 +70,6 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
         updateData();
         dispatch(toggleDataChanged());
     }, [columns]);
-
-    useEffect(() => {
-        if (contentData) {
-            setOpenContent(true)
-        }
-    }, [contentData]);
 
     useEffect(() => {
         const getData = async() => {
@@ -161,19 +154,6 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
             isDragging: false,
             yPos: 0
         }));
-
-        // const fromColumn = Object.keys(columns).find((col) =>
-        //     columns[col].includes(active.id)
-        //     );
-        //     const toColumn = over.id;
-
-        //     if (!fromColumn || fromColumn === toColumn) return;
-
-        //     setColumns((prev) => ({
-        //         ...prev,
-        //         [fromColumn]: prev[fromColumn].filter((id) => id !== active.id),
-        //         [toColumn]: [...prev[toColumn], active.id],
-        // }));
     };
 
     useEffect(() => {
@@ -271,30 +251,12 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
             <div className="flex gap-x-1 justify-end items-center w-full">
                 <Button onClick={async(evt) => {
                     evt.preventDefault();
-                    dispatch(openModal({ui: LOADINGUI.dialog}));
-                    try {
-                        setContentData(null);
-                        dispatch(setRowSelection({}));
-                        const cData = await getContent();
-                        setContentData(cData);
-                    } catch (error) {
-                        console.error(error);
-                        setContentData([]);
-                        if (isAuthError(error)) {
-                            RedirectToLogin();
-                        }
-                    }
-
+                    dispatch(setRowSelection({}));
+                    setOpenContent(true);
                 }}>
                     <Plus /> <span>เพิ่มคำสั่งศาล</span>
                 </Button>
-                <Dialog open={contentData === null? false: openContent} onOpenChange={(open: boolean) => {
-                    if (!open) {
-                        setContentData(null);
-                        dispatch(closeModal({ui: LOADINGUI.dialog}));
-                    } else {
-                        dispatch(closeModal({ui: LOADINGUI.dialog}));
-                    }
+                <Dialog open={ openContent} onOpenChange={(open: boolean) => {
                     setOpenContent(open);
                 }}>
                     <DialogContent className="max-w-[1000px] min-w-[1000px]
@@ -304,7 +266,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
                         <DialogHeader>
                             <DialogTitle>เพิ่มคำสั่งศาล</DialogTitle>
                         </DialogHeader>
-                            <ContentDialog data={contentData?? []}/>
+                            <ContentDialog />
                     <DialogFooter>
                         <div className="flex gap-x-2 max-md:w-[400px]">
                             <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {

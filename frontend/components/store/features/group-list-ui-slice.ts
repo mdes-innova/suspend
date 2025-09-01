@@ -5,11 +5,19 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface GroupListtUiState {
   dataChanged: boolean;
   rename: number;
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  };
 }
 
 // Initial state with type annotation
 const initialState: GroupListtUiState = {
   dataChanged: false,
+  pagination: {
+    pageIndex: 0,
+    pageSize: 20,
+  },
   rename: -1
 };
 
@@ -23,14 +31,18 @@ const GroupListUiSlice = createSlice({
     },
     setRename(state: GroupListtUiState, action: PayloadAction<number>) {
       state.rename = action.payload;
-    }
+    },
+    setPagination(state: GroupListtUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
+      state.pagination = action.payload;
+    },
   },
 });
 
 // Export actions and reducer
 export const {
   toggleDataChanged,
-  setRename
+  setRename,
+  setPagination
 } = GroupListUiSlice.actions;
 
 export default GroupListUiSlice.reducer;

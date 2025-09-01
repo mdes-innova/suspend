@@ -16,11 +16,15 @@ import {
   Column,
   Cell,
   Header,
-  HeaderGroup
+  HeaderGroup,
+  Updater,
+  PaginationState
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash2, FolderPen, Plus } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash2,
+  FolderPen, Plus, ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Input } from "./ui/input";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import {useState} from 'react';
@@ -29,9 +33,9 @@ import { NewPlaylistSheet } from "./main/new-playlist-sheet";
 import { openModal, PLAYLISTUI } from './store/features/playlist-diaolog-ui-slice';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect, useRef} from 'react';
-import { getGroupList, RemoveGroup, RenameGroup } from "./actions/group";
+import { getContent, RemoveGroup, RenameGroup } from "./actions/group";
 import { Datetime2Thai } from "@/lib/client/utils";
-import { setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
+import { setPagination, setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
 import {
   Sheet,
   SheetClose,
@@ -45,6 +49,12 @@ import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
 import LoadingTable from "./loading/content";
+
+function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
+  return typeof updater === "function"
+    ? (updater as (prev: T) => T)(previous)
+    : updater;
+}
 
 const columns: ColumnDef<Group>[] = [
   {
@@ -172,20 +182,27 @@ const columns: ColumnDef<Group>[] = [
   },
 ]
 
+type TableSortType = {
+  name: string,
+  decs: boolean,
+  id: string
+}
+
 function GroupActions({
   id, name
 }: {
   id: number,
   name: string
 }) {
-  const dispatch = useAppDispatch();
- const [uiOpen, setUiOpen] = useState(false);
- const [deleteDailogOpen, setDeleteDailogOpen] = useState(false);
- const rename = useAppSelector((state: RootState) => state.groupListUi.rename);
- const nameRef = useRef<HTMLInputElement>(null);
- const [deleteErrorMsg, setDeleteErrorMsg] = useState('');
 
-  return (
+  const dispatch = useAppDispatch();
+  const [uiOpen, setUiOpen] = useState(false);
+  const [deleteDailogOpen, setDeleteDailogOpen] = useState(false);
+  const rename = useAppSelector((state: RootState) => state.groupListUi.rename);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [deleteErrorMsg, setDeleteErrorMsg] = useState('');
+
+    return (
     <div className="w-full text-right flex justify-end">
       <Dialog open={deleteDailogOpen} onOpenChange={(open) => {
         if (!open) setUiOpen(false);
@@ -301,53 +318,116 @@ function GroupActions({
   );
 }
 
+type PaginationType = {
+  pageIndex: number,
+  pageSize: number
+}
+
 export default function GroupTable() {
+  const [sorts, setSorts] = useState<TableSortType[]>([
+    {
+      name: 'modifiedAt',
+      id: 'วันที่',
+      decs: true
+    },
+    {
+      name: 'name',
+      id: 'ชื่อฉบับร่าง',
+      decs: false 
+    },
+    {
+      name: 'numDocuments',
+      id: 'จำนวนคำสั่งศาล',
+      decs: false
+    },
+    {
+      name: 'user',
+      id: 'ผู้ใช้งาน',
+      decs: false
+    },
+  ]);
     const [sorting, setSorting] = useState<SortingState>([])
     const [tableData, setTableData] = useState<Group[] | null>(null);
     const dispatch = useAppDispatch();
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    const dataChanged = useAppSelector((state: RootState) => state.groupListUi.dataChanged);
+    const pagination = useAppSelector((state: RootState) => state.groupListUi.pagination); 
+    const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
+    const [pageSize, setPageSize] = useState(pagination.pageSize);
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = useState({}) 
     const user = useAppSelector((state: RootState) => state.userAuth.user);
+    const [totalDocuments, setTotalDocuments] = useState(100);
+    const searchRef = useRef<HTMLInputElement>();
+    const paginations = [20, 50, 100];
+    const [q, setQ] = useState("");
     const table = useReactTable({
-        data: tableData?? [],
-        columns: user?.isSuperuser?
-          columns:
-          columns?.filter((_, idx: number) => idx != columns.length - 2),
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        state: {
+      data: tableData?? [],
+      columns: user?.isSuperuser?
+        columns:
+        columns?.filter((_, idx: number) => idx != columns.length - 2),
+      onSortingChange: setSorting,
+      onColumnFiltersChange: setColumnFilters,
+      getCoreRowModel: getCoreRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      onColumnVisibilityChange: setColumnVisibility,
+      onPaginationChange: (updater: Updater<PaginationState>) =>
+        dispatch(setPagination(resolveUpdater(updater, pagination))),
+      enableMultiSort: true,
+      manualPagination: true,
+      enableSorting: false,
+      state: {
         sorting,
         columnFilters,
         columnVisibility,
-        rowSelection,
-        },
+        pagination
+      },
   })
 
   useEffect(() => {
-    const getData = async() => {
-      try {
-        const data = await getGroupList(); 
-        setTableData(data);
-      } catch (error) {
-        setTableData(null);
-        if (isAuthError(error))
-          RedirectToLogin();
+    if (sorting && typeof sorting?.length === 'number' && sorting.length > 0) {
+      setPageIndex(0);
+      const theSorting = sorting[0];
+      const foundIndx = (sorts as TableSortType[]).findIndex((e) => e.id === theSorting?.id);
+      
+      if (foundIndx === 0) {
+        const decs = !(sorts[0].decs);
+        const firstSort = {...sorts[0], decs};
+        setSorts((prev) => [firstSort, ...(prev.slice(1))]);
+      } else {
+        setSorts((prev) => [sorts[foundIndx], ...prev.filter((_, idx: number) => idx != foundIndx)]);
       }
     }
+  }, [sorting]);
+
+  useEffect(()=>{
+    const getData = async() => {
+      try {
+        const data = await getContent({
+          sorts,
+          pagination: {
+            pageIndex,
+            pageSize
+          },
+          q: q.trim()
+        });
+        setTotalDocuments(data.total);
+        setTableData(data.data);
+      } catch (error) {
+        console.error(error);
+        setTableData([]);
+        setTotalDocuments(0);
+        if (isAuthError(error))
+          RedirectToLogin(); 
+      }
+    };
 
     getData();
-  }, [dataChanged]);
+
+  }, [sorts, pageSize, pageIndex, q]);
 
   if (!tableData)
     return (
@@ -357,14 +437,48 @@ export default function GroupTable() {
     return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder="ค้นหา ฉบับร่าง..."
-          value={(table.getColumn("ชื่อฉบับร่าง")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("ชื่อฉบับร่าง")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex justify-start rounded-2xl items-center
+          border border-gray-500 overflow-clip
+          ">
+          <Search className='ml-1 cursor-pointer'
+            onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+              e.preventDefault();
+              if (searchRef?.current)
+                setQ(searchRef?.current?.value?? "");
+            }}
+          />
+          <Input
+            className="
+              border-transparent
+              border-l
+              border-l-gray-200
+              ring-0 ring-offset-0
+              outline-none
+              focus-visible:border-transparent
+              focus-visible:border-l 
+              focus-visible:border-l-gray-200
+              focus-visible:ring-0 focus-visible:ring-offset-0
+              focus-visible:outline-none
+              hover:border-transparent
+              hover:border-l
+              hover:border-l-gray-200
+              hover:ring-0 hover:ring-offset-0
+              hover:outline-none
+              ml-1 rounded-none
+              focus:ring-0 max-w-sm
+              px-2 py-2
+            "
+            ref={searchRef}
+            placeholder="ค้นหาคำสั่งศาล..."
+            onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setQ(e?.currentTarget?.value?? "");
+                e.currentTarget.blur();
+              }
+            }}
+          />
+        </div>
         <Link href="document-groups/-1">
           <Button variant="secondary" className="ml-1">สร้างแบบเร่งด่วน</Button>
         </Link>
@@ -463,23 +577,51 @@ export default function GroupTable() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between py-4">
+        <div className='block h-1 w-1'></div>
+        <div className="flex gap-x-2">
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize <= 20) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex <= 0) return;
+            setPageIndex(0);
+            setPageSize(paginations[currentPageIndex - 1]);
+            dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex - 1]}));
+          }}
+          disabled={pagination.pageSize <= 20 || paginations.indexOf(pagination.pageSize) <= 0}
+          >
+            <ChevronLeft/>
+          </Button>
+            <p className="flex flex-col justify-center items-center">{pagination.pageSize}</p>
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize >= 100) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex >= paginations.length - 1) return;
+            setPageIndex(0);
+            setPageSize(paginations[currentPageIndex + 1]);
+            dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex + 1]}));
+          }}
+          disabled={pagination.pageSize >= 100 || paginations.indexOf(pagination.pageSize) >= paginations.length - 1}
+          >
+            <ChevronRight />
+          </Button>
         </div>
-        <div className="space-x-2">
+        <div className="flex gap-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPageIndex((prev) => prev - 1)}
+            disabled={pageIndex < 1}
           >
             ก่อนหน้า
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPageIndex((prev) => prev + 1)}
+            disabled={pageIndex >= Math.floor(totalDocuments/pageSize)}
           >
             ถัดไป
           </Button>

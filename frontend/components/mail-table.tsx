@@ -84,18 +84,13 @@ const staffColumns: ColumnDef<MailGroup>[] = [
       );
     },
   }, {
-    id: 'จำนวนคำสั่งศาล',
-    accessorKey: "documents",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      const numA = (rowA.getValue(columnId) as Document[]).length?? 0;
-      const numB = (rowB.getValue(columnId) as Document[]).length?? 0;
-      return numA - numB; // ascending
-    },
+    id: 'มาตรา',
+    accessorKey: "section",
     header: ({ column }: { column: Column<MailGroup>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
         >
-            จำนวนคำสั่งศาล
+          มาตรา 
           <ArrowUpDown size={16} className="cursor-pointer"
           onClick={(e: React.MouseEvent<SVGSVGElement>) => {
             e.preventDefault();
@@ -106,12 +101,44 @@ const staffColumns: ColumnDef<MailGroup>[] = [
     },
     cell: ({ row }: { row: Row<MailGroup> }) => {
       const original = row.original;
-      const noDocuments = original?.documents?.length?? '-';
+      const sectionName = original?.section?.name?? '-';
       return (
         <div>
-          {noDocuments}
+          {sectionName}
           </div>
       );
+    },
+  }, {
+    id: 'ผู้ส่ง',
+    accessorKey: "user",
+    header: ({ column }: { column: Column<MailGroup>}) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          ผู้ส่ง
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }: { row: Row<MailGroup> }) => {
+      const original = row.original;
+      const user = original?.user;
+      if (user?.username)
+        return (
+          <div>
+            {user?.username}
+            </div>
+        );
+      else
+        return (
+          <div>
+            {user?.givenName} {user?.familyName}
+            </div>
+        );
     },
   }, {
     id: 'ส่ง',
@@ -258,6 +285,7 @@ export default function MailTable() {
     getData();
 
   }, []);
+
 
 
   if (!tableData)

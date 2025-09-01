@@ -14,9 +14,10 @@ import {
 import {  Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAppSelector } from "./store/hooks";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppDispatch } from "./store/hooks";
 import { openModal, PLAYLISTUI, setDocIds} from "./store/features/playlist-diaolog-ui-slice";
+import { clearRowsSelection } from "./store/features/content-list-ui-slice";
 import { useRouter } from "next/navigation";
 import { RootState } from "./store";
 import { isAuthError } from "./exceptions/auth";
@@ -34,6 +35,8 @@ export default function ActionDropdown({ children, docId, active }:
     const router = useRouter();
     const user = useAppSelector((state: RootState) => state.userAuth.user);
     const [open, setOpen] = useState(false);
+    const tableDocIds = useAppSelector((state: RootState) => state.contentListUi.docIds);
+    const docIds = useAppSelector((state: RootState) => state.playlistDialogUi.docIds);
 
     const downloadFiles = async(kind: string) => {
         if (typeof docId != 'number') throw new Error('Document id not a number.');
@@ -86,6 +89,8 @@ export default function ActionDropdown({ children, docId, active }:
     return (
         <DropdownMenu open={open} onOpenChange={() => {
             setOpen((prev: boolean) => !prev);
+
+            if (open) setDocIds(null);
         }}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -111,9 +116,10 @@ export default function ActionDropdown({ children, docId, active }:
                         e.preventDefault();
                         if (active == false) return;
                         setOpen(false);
-                        if (docId)
+                        if (docId) {
                             dispatch(setDocIds([docId]));
-                        dispatch(openModal({ ui: PLAYLISTUI.list }));
+                            dispatch(openModal({ ui: PLAYLISTUI.list }));
+                        }
                     }}>
                         <Plus className="h-4 w-4" />
                         <span>เพิ่มลงในฉบับร่าง</span>
@@ -172,16 +178,16 @@ export default function ActionDropdown({ children, docId, active }:
     );
 }
 
-export function ActionDropdownAll({ children, docId, active, documentIdsSelection }:
+export function ActionDropdownAll({ children, active }:
     { children?: React.ReactNode, docId?: number, active?: boolean,
-        documentIdsSelection: number[]
     }) {
     const dispatch = useAppDispatch();
-    const router = useRouter();
     const user = useAppSelector((state: RootState) => state.userAuth.user);
+    const tableDocIds = useAppSelector((state: RootState) => state.contentListUi.docIds);
+    const docIds = useAppSelector((state: RootState) => state.playlistDialogUi.docIds);
     const [open, setOpen] = useState(false);
 
-    const downloadFiles = async(kind: string) => {
+    const downloadFiles = async(kind: string, docId: number) => {
         if (typeof docId != 'number') throw new Error('Document id not a number.');
         const documentData: Document = await getDocument(docId);
         if (!documentData) throw new Error('Document not found.');
@@ -232,6 +238,8 @@ export function ActionDropdownAll({ children, docId, active, documentIdsSelectio
     return (
         <DropdownMenu open={open} onOpenChange={() => {
             setOpen((prev: boolean) => !prev);
+
+            if (open) setDocIds(null);
         }}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -249,9 +257,10 @@ export function ActionDropdownAll({ children, docId, active, documentIdsSelectio
                         e.preventDefault();
                         if (active == false) return;
                         setOpen(false);
-                        if (docId)
-                            dispatch(setDocIds([docId]));
-                        dispatch(openModal({ ui: PLAYLISTUI.list }));
+                        if (tableDocIds && tableDocIds?.length > 0) {
+                            dispatch(setDocIds([...tableDocIds]));
+                            dispatch(openModal({ ui: PLAYLISTUI.list }));
+                        }
                     }}>
                         <Plus className="h-4 w-4" />
                         <span>เพิ่มลงในฉบับร่าง</span>
@@ -264,26 +273,30 @@ export function ActionDropdownAll({ children, docId, active, documentIdsSelectio
                         <DropdownMenuItem
                         onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
-                            try {
-                                await downloadFiles('pdf');
-                            } catch (error) {
-                                console.error(error);
-                                if (isAuthError(error))
-                                    RedirectToLogin();
-                            }
+                            await Promise.all(docIds?.map(async(ee: number) => {
+                                try {
+                                    await downloadFiles('pdf', ee);
+                                } catch (error) {
+                                    console.error(error);
+                                    if (isAuthError(error))
+                                        RedirectToLogin();
+                                }
+                            })); 
                             setOpen(false);
                         }}
                         >pdf</DropdownMenuItem>
                         <DropdownMenuItem
                         onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
-                            try {
-                                await downloadFiles('xlsx');
-                            } catch (error) {
-                                console.error(error);
-                                if (isAuthError(error))
-                                    RedirectToLogin();
-                            }
+                            await Promise.all(docIds?.map(async(ee: number) => {
+                                try {
+                                    await downloadFiles('xlsx', ee);
+                                } catch (error) {
+                                    console.error(error);
+                                    if (isAuthError(error))
+                                        RedirectToLogin();
+                                }
+                            })); 
                             setOpen(false);
                         }}
                         >urls (.xlsx)</DropdownMenuItem>
@@ -291,13 +304,15 @@ export function ActionDropdownAll({ children, docId, active, documentIdsSelectio
                         <DropdownMenuItem
                         onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
-                            try {
-                                await downloadFiles('both');
-                            } catch (error) {
-                                console.error(error);
-                                if (isAuthError(error))
-                                    RedirectToLogin();
-                            }
+                            await Promise.all(docIds?.map(async(ee: number) => {
+                                try {
+                                    await downloadFiles('both', ee);
+                                } catch (error) {
+                                    console.error(error);
+                                    if (isAuthError(error))
+                                        RedirectToLogin();
+                                }
+                            })); 
                             setOpen(false);
                         }}
                         >ทั้งหมด</DropdownMenuItem>
@@ -306,7 +321,10 @@ export function ActionDropdownAll({ children, docId, active, documentIdsSelectio
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                    disabled={documentIdsSelection.length === 0}
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.preventDefault();
+                        dispatch(clearRowsSelection());
+                    }}
                 >ล้างรายการที่เลือก</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

@@ -20,6 +20,7 @@ export interface ContentListUiState {
   tableData: Document[];
   toggleDataState: boolean;
   toggleDocumentIdsSelection: boolean;
+  docIds: number[]
 }
 
 // Initial state with type annotation
@@ -34,7 +35,8 @@ const initialState: ContentListUiState = {
   },
   tableData: [],
   toggleDocumentIdsSelection: false,
-  toggleDataState: false
+  toggleDataState: false,
+  docIds: []
 };
 
 // Create the slice
@@ -42,6 +44,9 @@ const contenListUiSlice = createSlice({
   name: 'table',
   initialState,
   reducers: {
+    setDocIds(state: ContentListUiState, action: PayloadAction<number[]>) {
+      state.docIds = action.payload? action.payload: null;
+    },
     setSorting(state: ContentListUiState, action: PayloadAction<SortingState>) {
       state.sorting = action.payload;
     },
@@ -60,9 +65,14 @@ const contenListUiSlice = createSlice({
     setToggleDocumentIdsSelection(state: ContentListUiState) {
       state.toggleDocumentIdsSelection = !state.toggleDocumentIdsSelection;
     },
+    clearRowsSelection(state: ContentListUiState) {
+      state.docIds = [];
+      state.rowSelection = {};
+    },
     toggleData(state: ContentListUiState) {
       state.toggleDataState = !state.toggleDataState
-    }
+    },
+
   },
 });
 
@@ -73,7 +83,9 @@ export const {
   setColumnVisibility,
   setRowSelection,
   setPagination,
-  toggleData
+  toggleData,
+  setDocIds,
+  clearRowsSelection
 } = contenListUiSlice.actions;
 
 export default contenListUiSlice.reducer;

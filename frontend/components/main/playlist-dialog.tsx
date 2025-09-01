@@ -219,7 +219,8 @@ function GroupTable() {
     getData();
   }, [dataChanged]);
 
-  if (!tableData || (tableData as Group[]).length < 1)
+  if (!docIds || docIds?.length < 1) return <></>;
+  else if (!tableData || (tableData as Group[]).length < 1)
     return (
     <div className="w-full">
       <div className="flex items-center py-4">

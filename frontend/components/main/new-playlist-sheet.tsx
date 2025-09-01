@@ -28,7 +28,8 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
     const docIds = useAppSelector((state: RootState)=>state.playlistDialogUi.docIds);
     const inputNameRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
-
+  
+  if (!docIds || docIds?.length < 1) return <></>;
 
   return (
     <div className="grid grid-cols-2 gap-2 flex-1">

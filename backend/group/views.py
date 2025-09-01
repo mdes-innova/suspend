@@ -11,6 +11,9 @@ from core.permissions import IsActiveUser, IsAdminOrStaff
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
+from django.db.models import Value as V, Count, CharField
+from django.db.models.functions import Coalesce, Concat, Lower
+
 
 class GroupView(viewsets.ModelViewSet):
     """Group view."""
@@ -24,6 +27,57 @@ class GroupView(viewsets.ModelViewSet):
             return self.queryset.filter()
         else:
             return self.queryset.filter(user=user)
+    
+    @action(
+        detail=False,
+        methods=['get'],
+    )
+    def content(self, request):
+        sorts = request.GET.getlist("sort")  
+        decs = request.GET.getlist("decs")
+        page = request.GET.get("page", '0')
+        page_size = request.GET.get("pagesize", '20')
+        q = request.GET.get("q", '')
+
+        sort_keys = {
+            'modifiedAt': 'modified_at',
+            'name': 'name',
+            'numDocuments': 'num_documents',
+            'user': 'user_name',
+        }
+        for_sorts = []
+        for sort_i, sort in enumerate(sorts):
+            if decs[sort_i] == 'true':
+                for_sorts.append(f'-{sort_keys[sort]}')
+            else:
+                for_sorts.append(sort_keys[sort])
+        qs = (
+            Group.objects
+            .all()
+            .filter(name__icontains=q)
+            .annotate(num_documents=Count('documents'))
+            .alias(
+                user_name=Lower(
+                    Coalesce(
+                        'user__username',
+                        Concat(
+                            Coalesce('user__given_name', V('')),
+                            V(' '),
+                            Coalesce('user__family_name', V(''))
+                        ),
+                        output_field=CharField(),
+                    )
+                )
+            )
+            .order_by(*for_sorts)
+        )
+
+        page_qs = qs[int(page)*int(page_size): (int(page) + 1) * int(page_size)]
+        serializer = self.get_serializer(page_qs, many=True)
+        return Response({
+            'total': len(qs),
+            'data': serializer.data
+            })
 
     def perform_update(self, serializer):
         group = serializer.instance

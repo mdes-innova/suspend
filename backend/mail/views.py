@@ -19,6 +19,9 @@ import urllib.parse
 from core.permissions import IsAdminOnlyUser
 from django.utils import timezone
 from django.core.files.base import File
+from django.db.models import (Value as V, Count, IntegerField,
+                              CharField, Q, F, FloatField, Case, When)
+from django.db.models.functions import Coalesce, Concat, Lower, Cast
 
 
 class MailGroupViews(viewsets.ModelViewSet):
@@ -33,6 +36,79 @@ class MailGroupViews(viewsets.ModelViewSet):
             return self.queryset.filter(receiver=user,
                                         mail_status=MailStatus.SUCCESSFUL)\
                                             .distinct()
+
+    @action(
+        detail=False,
+        methods=['get'],
+    )
+    def content(self, request):
+        sorts = request.GET.getlist("sort")
+        decs = request.GET.getlist("decs")
+        page = request.GET.get("page", '0')
+        page_size = request.GET.get("pagesize", '20')
+        q = request.GET.get("q", '')
+
+        sort_keys = {
+            'createdAt': 'created_at',
+            'documentNo': 'document_no',
+            'section': 'section__name',
+            'user': 'user_name',
+            'sends': 'send_mails',
+            'confirms': 'confirm_rate'
+        }
+        for_sorts = []
+        for sort_i, sort in enumerate(sorts):
+            if decs[sort_i] == 'true':
+                for_sorts.append(f'-{sort_keys[sort]}')
+            else:
+                for_sorts.append(sort_keys[sort])
+        qs = (
+            MailGroup.objects
+            .all()
+            .filter(document_no__icontains=q)
+            .annotate(num_sends=Count('mails'))
+            .annotate(
+                total_mails=Count('mails', distinct=True),
+                confirmed_mails=Count('mails', filter=Q(mails__confirm=True),
+                                      distinct=True),
+            )
+            .annotate(
+                send_mails=Case(
+                    When(total_mails=0, then=V(-1)),
+                    default=Count('mails', filter=Q(mails__status='successful'),
+                                      distinct=True),
+                    output_field=IntegerField(),
+                )
+            )
+            .annotate(
+                confirm_rate=Case(
+                    When(total_mails=0, then=V(-1.0)),
+                    default=Cast(F('confirmed_mails'), FloatField()) / Cast(F('total_mails'), FloatField()),
+                    output_field=FloatField(),
+                )
+            )
+            .alias(
+                user_name=Lower(
+                    Coalesce(
+                        'user__username',
+                        Concat(
+                            Coalesce('user__given_name', V('')),
+                            V(' '),
+                            Coalesce('user__family_name', V(''))
+                        ),
+                        output_field=CharField(),
+                    )
+                )
+            )
+            .order_by(*for_sorts)
+        )
+
+        page_qs = qs[int(page)*int(page_size): (int(page) + 1) * int(page_size)]
+        serializer = self.get_serializer(page_qs, many=True)
+        return Response({
+            'total': len(qs),
+            'data': serializer.data
+            })
     
     def perform_update(self, serializer):
         mail_group = serializer.instance

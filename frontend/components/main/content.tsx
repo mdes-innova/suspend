@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/table";
 import ActionDropdown, { ActionDropdownAll } from "../action-dropdown";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setDocIds } from "../store/features/playlist-diaolog-ui-slice";
+import { setDocIds } from "../store/features/content-list-ui-slice";
 
 import {
   type Updater,
@@ -60,6 +60,11 @@ import PlaylistDialog from "./playlist-dialog";
 import { Date2Thai } from "@/lib/client/utils";
 import LoadingTable from "../loading/content";
 import { useState, useEffect, useRef } from 'react';
+
+type DocTableIdType = {
+  index: number,
+  docId: number | undefined
+}
 
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
@@ -278,7 +283,6 @@ export default function DataTable() {
   const columnFilters = useAppSelector((state: RootState) => state.contentListUi.columnFilters);
   const columnVisibility = useAppSelector((state: RootState) => state.contentListUi.columnVisibility);
   const rowSelection = useAppSelector((state: RootState) => state.contentListUi.rowSelection);
-  const toggleDocumentIdsSelection = useAppSelector((state: RootState) => state.contentListUi.toggleDocumentIdsSelection);
   const pagination = useAppSelector((state: RootState) => state.contentListUi.pagination); 
   const playlistUi = useAppSelector((state: RootState) => state.playlistDialogUi.listOpen);
   const playlistNewUi = useAppSelector((state: RootState) =>state.playlistDialogUi.newOpen);
@@ -289,7 +293,8 @@ export default function DataTable() {
   const [totalDocuments, setTotalDocuments] = useState(100);
   const searchRef = useRef<HTMLInputElement>();
   const [q, setQ] = useState("");
-  const [documentIdsSelection, setDocumentIdsSelection] = useState<number[]>([]);
+
+  const docIds = useAppSelector((state: RootState) => state.contentListUi.docIds);
 
   const table = useReactTable({
     data: tableData?? [],
@@ -338,29 +343,30 @@ export default function DataTable() {
   }, [sorting]);
 
 
-  useEffect(() => {
-    if (table && tableData) setDocumentIdsSelection([]);
-  }, [toggleDocumentIdsSelection]);
+  useEffect(()=>{
+    const getData = async() => {
+      try {
+        const data = await getContent({
+          sorts,
+          pagination: {
+            pageIndex,
+            pageSize
+          },
+          q: q.trim()
+        });
+        setTotalDocuments(data.total);
+        setTableData(data.data);
+      } catch (error) {
+        console.error(error);
+        setTableData([]);
+        setTotalDocuments(0);
+        if (isAuthError(error))
+          RedirectToLogin(); 
+      }
+    };
 
-  // useEffect(() => {
-  //   dispatch(setPagination({pageIndex, pageSize}));
-  // }, [pageIndex, pageSize]);
-
-  // useEffect(()=>{
-  //   const getData = async() => {
-  //     try {
-  //       const data = await getContent();
-  //       setTableData(data);
-  //     } catch (error) {
-  //       console.error(error);
-  //       setTableData(null);
-  //       if (isAuthError(error))
-  //         RedirectToLogin();
-  //     }
-  //   };
-
-  //   if (!playlistNewUi && !playlistUi && dataChaged) getData();
-  // }, [playlistUi, playlistNewUi]);
+    if (!playlistNewUi && !playlistUi && dataChaged) getData();
+  }, [playlistUi, playlistNewUi]);
 
   useEffect(()=>{
     const getData = async() => {
@@ -388,32 +394,49 @@ export default function DataTable() {
 
   }, [toggleDataState, sorts, pageSize, pageIndex, q]);
 
-    useEffect(()=>{
-     if (table && tableData) {
-      // table.resetRowSelection(true);
-      const foundSelectedDoc
-     }
-    }, [tableData]);
+  useEffect(()=>{
+    if (table && tableData) {
+      const foundSelectedDocumentIds =
+        table.getRowModel().rows.map((row: Row<Document>, idx: number) => {
+          return {
+            index: idx,
+            docId: row?.original?.id
+          }
+        })
+        .filter((e: DocTableIdType) => typeof e?.docId === 'number' && docIds.includes(e?.docId));
+      
+      const selectedObj: {[key: number]: boolean} = {};
+
+      foundSelectedDocumentIds.forEach((e: DocTableIdType)=> {
+        selectedObj[e?.index] = true;
+      });
+
+      dispatch(setRowSelection(selectedObj));
+    }
+
+  }, [tableData]);
 
 
   useEffect(() => {
     if (table && tableData)
     {
-      // console.log(table.getSelectedRowModel().rows);
-      // console.log(rowSelection);
-      const documentRowIds: number[] = table.getRowModel().rows.map((row: Row<Document>) => row.original.id);
-      const selectedDocumentIds: number[] = table.getSelectedRowModel().rows.map((row: Row<Document>) => row.original.id);
+      const documentRowIds: number[] =
+        table.getRowModel().rows.map((row: Row<Document>) => row?.original?.id)
+        .filter((e: number | undefined | null) => typeof e === 'number');
+      const selectedDocumentIds: number[] =
+        table.getSelectedRowModel().rows.map((row: Row<Document>) => row?.original?.id)
+        .filter((e: number | undefined | null) => typeof e === 'number');
       const deselectedDocumentIds = documentRowIds.filter((e) => !selectedDocumentIds.includes(e));
-      setDocumentIdsSelection((prev: number[]) => [...new Set([
-          ...prev.filter((e) => !deselectedDocumentIds.includes(e)),
-          ...selectedDocumentIds
+      const nextDocIds = Array.from(
+        new Set([
+          ...docIds.filter((e: number) => !deselectedDocumentIds.includes(e)),
+          ...selectedDocumentIds,
         ])
-      ]);
-      // dispatch(setDocIds(selectedIds));
+      );
+      dispatch(setDocIds(nextDocIds.length ? nextDocIds: []));
     }
   }, [rowSelection]);
 
-  console.log(documentIdsSelection);
 
   if (!tableData)
     return (
@@ -469,9 +492,12 @@ export default function DataTable() {
           />
         </div>
         <div className="ml-auto flex items-center gap-x-2">
-          <ActionDropdownAll documentIdsSelection={documentIdsSelection}>
-              <SlidersVertical />
-          </ActionDropdownAll>
+          {
+            docIds && docIds?.length > 0 &&
+            <ActionDropdownAll>
+                <SlidersVertical />
+            </ActionDropdownAll>
+          }
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
@@ -557,11 +583,7 @@ export default function DataTable() {
       </div>
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel()
-            .rows.filter((row: Row<Document>) => {
-              const active = row?.original?.active?? false;
-              return active;
-            }).length} of{" "}
+          {docIds.length} of{" "}
           {totalDocuments} row(s) selected.
         </div>
         <div className="flex gap-x-2">
