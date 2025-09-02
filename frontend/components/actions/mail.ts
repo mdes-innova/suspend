@@ -356,3 +356,47 @@ export async function createMailGroup({
       throw error; 
   }
 }
+
+type SortType = {
+  name: string,
+  decs: boolean,
+  id: string
+}
+
+type PaginationType = {
+  pageIndex: number,
+  pageSize: number
+}
+
+type ContentProps = {
+  sorts: SortType[],
+  pagination: PaginationType,
+  q: string
+}
+
+export async function getContent(props: ContentProps) {
+  const sortQueries = props.sorts.map((e) => `sort=${e.name}`).join('&');
+  const decsQueries = props.sorts.map((e) => `decs=${e.decs}`).join('&');
+
+  try {
+    const access = await getAccess();
+    const baseUrl = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${baseUrl}/mail/mailgroups/content/?${sortQueries}&${decsQueries}`
+      + `&page=${props.pagination.pageIndex}&pagesize=${props.pagination.pageSize}&q=${props.q}`, {
+      headers: {
+          Authorization: `Bearer ${access}`
+        },
+    }); 
+
+      if (!res.ok) {
+      if (res.status === 401)
+          throw new AuthError('Authentication fail.')
+      throw new Error('Get content fail.');
+      }
+
+      const content = await res.json();
+      return content;
+  } catch (error) {
+      throw error; 
+  }
+}

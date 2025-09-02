@@ -69,7 +69,7 @@ class MailGroupViews(viewsets.ModelViewSet):
             .annotate(num_sends=Count('mails'))
             .annotate(
                 total_mails=Count('mails', distinct=True),
-                confirmed_mails=Count('mails', filter=Q(mails__confirm=True),
+                confirmed_mails=Count('mails', filter=Q(mails__confirmed=True),
                                       distinct=True),
             )
             .annotate(

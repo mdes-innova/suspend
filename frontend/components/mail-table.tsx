@@ -3,6 +3,7 @@
 import { Mail, MailGroup } from "@/lib/types";
 import {
   ColumnDef,
+  PaginationState,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -15,23 +16,28 @@ import {
   Column,
   Cell,
   Row,
+  RowSelectionState,
   HeaderGroup,
-  Header
+  Header,
+  Updater
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronRight, ChevronLeft, Search } from "lucide-react"
 import { Input } from "./ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Datetime2Thai } from "@/lib/client/utils";
 import LoadingTable from "./loading/content";
 import { RedirectToLogin } from "./reload-page";
 import { isAuthError } from "./exceptions/auth";
-import { getMailGroups } from "./actions/mail";
+import { getContent, getMailGroups } from "./actions/mail";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { RootState } from "./store";
+import { setPagination } from "./store/features/mailbox-list-ui-slice";
 
-const staffColumns: ColumnDef<MailGroup>[] = [
+const columns: ColumnDef<MailGroup>[] = [
  {
     id: 'วันที่',
     accessorKey: "createdAt",
@@ -240,43 +246,130 @@ const staffColumns: ColumnDef<MailGroup>[] = [
   }
 ]
 
+function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
+  return typeof updater === "function"
+    ? (updater as (prev: T) => T)(previous)
+    : updater;
+}
+
+type TableSortType = {
+  name: string,
+  decs: boolean,
+  id: string
+}
+
 export default function MailTable() {
+    const [sorts, setSorts] = useState<TableSortType[]>([
+    {
+      name: 'createdAt',
+      id: 'วันที่',
+      decs: true
+    },
+    {
+      name: 'documentNo',
+      id: 'เลขหนังสือ',
+      decs: false 
+    },
+    {
+      name: 'section',
+      id: 'มาตรา',
+      decs: false
+    },
+    {
+      name: 'user',
+      id: 'ผู้ส่ง',
+      decs: false
+    },
+    {
+      name: 'sends',
+      id: 'ส่ง',
+      decs: false
+    },
+    {
+      name: 'confirms',
+      id: 'ยืนยัน',
+      decs: false
+    },
+  ]);
   const [tableData, setTableData] = useState<MailGroup[] | null>(null);
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
         []
     );
-    const columns = staffColumns;
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
+    const pagination = useAppSelector((state: RootState) => state.mailboxListUi.pagination); 
+    const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
+    const [pageSize, setPageSize] = useState(pagination.pageSize);
+    const dispatch = useAppDispatch();
+    const [totalDocuments, setTotalDocuments] = useState(100);
+    const searchRef = useRef<HTMLInputElement>();
+    const paginations = [20, 50, 100];
+    const [q, setQ] = useState("");
     const table = useReactTable({
-        data: tableData?? [],
-        columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        state: {
+      data: tableData?? [],
+      columns,
+      pageCount: Math.ceil(totalDocuments/pageSize),
+      onSortingChange: (updater: Updater<SortingState>) =>
+        dispatch(setSorting(resolveUpdater(updater, sorting))),
+      onColumnFiltersChange: (updater: Updater<ColumnFiltersState>) =>
+        dispatch(setColumnFilters(resolveUpdater(updater, columnFilters))),
+      onColumnVisibilityChange: (updater: Updater<VisibilityState>) =>
+        dispatch(setColumnVisibility(resolveUpdater(updater, columnVisibility))),
+      onRowSelectionChange: (updater: Updater<RowSelectionState>) =>
+        dispatch(setRowSelection(resolveUpdater(updater, rowSelection))),
+      onPaginationChange: (updater: Updater<PaginationState>) =>
+        dispatch(setPagination(resolveUpdater(updater, pagination))),
+      getCoreRowModel: getCoreRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      enableMultiSort: true,
+      manualPagination: true,
+      enableSorting: false,
+      state: {
         sorting,
         columnFilters,
         columnVisibility,
         rowSelection,
-        },
-  })
+        pagination
+      },
+    })
+
+  useEffect(() => {
+    if (sorting && typeof sorting?.length === 'number' && sorting.length > 0) {
+      setPageIndex(0);
+      const theSorting = sorting[0];
+      const foundIndx = (sorts as TableSortType[]).findIndex((e) => e.id === theSorting?.id);
+      
+      if (foundIndx === 0) {
+        const decs = !(sorts[0].decs);
+        const firstSort = {...sorts[0], decs};
+        setSorts((prev) => [firstSort, ...(prev.slice(1))]);
+      } else {
+        setSorts((prev) => [sorts[foundIndx], ...prev.filter((_, idx: number) => idx != foundIndx)]);
+      }
+    }
+  }, [sorting]);
 
   useEffect(()=>{
     const getData = async() => {
       try {
-        const data = await getMailGroups();
-        setTableData(data);
+        const data = await getContent({
+          sorts,
+          pagination: {
+            pageIndex,
+            pageSize
+          },
+          q: q.trim()
+        });
+        setTotalDocuments(data.total);
+        setTableData(data.data);
       } catch (error) {
         console.error(error);
         setTableData([]);
+        setTotalDocuments(0);
         if (isAuthError(error))
           RedirectToLogin(); 
       }
@@ -284,8 +377,7 @@ export default function MailTable() {
 
     getData();
 
-  }, []);
-
+  }, [sorts, pageSize, pageIndex, q]);
 
 
   if (!tableData)
@@ -296,14 +388,48 @@ export default function MailTable() {
     return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder="ค้นหาเลขหนังสือ..."
-          value={(table.getColumn("เลขหนังสือ")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("เลขหนังสือ")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex justify-start rounded-2xl items-center
+          border border-gray-500 overflow-clip
+          ">
+          <Search className='ml-1 cursor-pointer'
+            onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+              e.preventDefault();
+              if (searchRef?.current)
+                setQ(searchRef?.current?.value?? "");
+            }}
+          />
+          <Input
+            className="
+              border-transparent
+              border-l
+              border-l-gray-200
+              ring-0 ring-offset-0
+              outline-none
+              focus-visible:border-transparent
+              focus-visible:border-l 
+              focus-visible:border-l-gray-200
+              focus-visible:ring-0 focus-visible:ring-offset-0
+              focus-visible:outline-none
+              hover:border-transparent
+              hover:border-l
+              hover:border-l-gray-200
+              hover:ring-0 hover:ring-offset-0
+              hover:outline-none
+              ml-1 rounded-none
+              focus:ring-0 max-w-sm
+              px-2 py-2
+            "
+            ref={searchRef}
+            placeholder="ค้นหาคำสั่งศาล..."
+            onKeyDown={async(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setQ(e?.currentTarget?.value?? "");
+                e.currentTarget.blur();
+              }
+            }}
+          />
+        </div>
         <div className="ml-auto flex items-center gap-x-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -387,23 +513,51 @@ export default function MailTable() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between py-4">
+        <div className='block h-1 w-1'></div>
+        <div className="flex gap-x-2">
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize <= 20) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex <= 0) return;
+            setPageIndex(0);
+            setPageSize(paginations[currentPageIndex - 1]);
+            dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex - 1]}));
+          }}
+          disabled={pagination.pageSize <= 20 || paginations.indexOf(pagination.pageSize) <= 0}
+          >
+            <ChevronLeft/>
+          </Button>
+            <p className="flex flex-col justify-center items-center">{pagination.pageSize}</p>
+          <Button variant="outline" onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            if (pagination.pageSize >= 100) return;
+            const currentPageIndex = paginations.indexOf(pagination.pageSize);
+            if (currentPageIndex === -1 || currentPageIndex >= paginations.length - 1) return;
+            setPageIndex(0);
+            setPageSize(paginations[currentPageIndex + 1]);
+            dispatch(setPagination({pageIndex: 0, pageSize: paginations[currentPageIndex + 1]}));
+          }}
+          disabled={pagination.pageSize >= 100 || paginations.indexOf(pagination.pageSize) >= paginations.length - 1}
+          >
+            <ChevronRight />
+          </Button>
         </div>
-        <div className="space-x-2">
+        <div className="flex gap-x-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPageIndex((prev) => prev - 1)}
+            disabled={pageIndex < 1}
           >
             ก่อนหน้า
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPageIndex((prev) => prev + 1)}
+            disabled={pageIndex >= Math.floor(totalDocuments/pageSize)}
           >
             ถัดไป
           </Button>

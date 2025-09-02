@@ -318,11 +318,6 @@ function GroupActions({
   );
 }
 
-type PaginationType = {
-  pageIndex: number,
-  pageSize: number
-}
-
 export default function GroupTable() {
   const [sorts, setSorts] = useState<TableSortType[]>([
     {
