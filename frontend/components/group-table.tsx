@@ -48,7 +48,7 @@ import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
-import LoadingTable from "./loading/content";
+import LoadingTable, { LoadingGroupTable } from "./loading/content";
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
@@ -426,7 +426,7 @@ export default function GroupTable() {
 
   if (!tableData)
     return (
-      <LoadingTable />
+      <LoadingGroupTable />
   );
 
     return (

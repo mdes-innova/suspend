@@ -29,7 +29,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Datetime2Thai } from "@/lib/client/utils";
-import LoadingTable from "./loading/content";
+import LoadingTable, { LoadingMailTable } from "./loading/content";
 import { RedirectToLogin } from "./reload-page";
 import { isAuthError } from "./exceptions/auth";
 import { getContent, getMailGroups } from "./actions/mail";
@@ -149,24 +149,6 @@ const columns: ColumnDef<MailGroup>[] = [
   }, {
     id: 'ส่ง',
     accessorKey: "mails",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      let valueA = -1;
-      let valueB = -1;
-      
-      const mailsA = rowA.getValue(columnId) as Mail[];
-      const mailsB = rowB.getValue(columnId) as Mail[];
-
-      if (mailsA.length > 0) {
-        const numConfirms = (mailsA.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
-        valueA = numConfirms/mailsA.length;
-      }
-      if (mailsB.length > 0) {
-        const numConfirms = (mailsB.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
-        valueB = numConfirms/mailsB.length;
-      }
-
-      return valueA - valueB; // ascending
-    },
     header: ({ column }: { column: Column<MailGroup> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -185,7 +167,7 @@ const columns: ColumnDef<MailGroup>[] = [
       const mails = original?.mails as Mail[];
       let sends = '-';
       if (mails && mails?.length) {
-        const numSends = (mails.filter((e: Mail) => e?.datetime != null && e?.datetime != undefined)).length;
+        const numSends = (mails.filter((e: Mail) => e?.status === 'successful')).length;
         sends = `${numSends}/${mails.length}`
       }
       return (
@@ -382,7 +364,7 @@ export default function MailTable() {
 
   if (!tableData)
     return (
-      <LoadingTable />
+      <LoadingMailTable />
   );
 
     return (

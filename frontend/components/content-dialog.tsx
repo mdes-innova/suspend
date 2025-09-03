@@ -54,7 +54,7 @@ import { Date2Thai } from "@/lib/client/utils";
 import { getContent } from './actions/document';
 import { isAuthError } from './exceptions/auth';
 import { RedirectToLogin } from './reload-page';
-import LoadingTable from './loading/content';
+import LoadingTable, { ContentDialogLoading } from './loading/content';
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
@@ -402,7 +402,7 @@ export default function ContentDialog() {
 
   if (!tableData)
     return (
-      <LoadingTable />
+      <ContentDialogLoading/>
   );
 
   return (

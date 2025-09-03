@@ -26,6 +26,8 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Date2Thai } from "@/lib/client/utils";
+import { useAppSelector } from "./store/hooks";
+import { RootState } from "./store";
 
 type IspUsers = Isp & { users: User[]};
 
@@ -145,6 +147,7 @@ export default function IspTable({ data }: { data: IspUsers[] }) {
     const [columnVisibility, setColumnVisibility] =
         useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({}) 
+    const pagination = useAppSelector((state: RootState) => state.utilsUi.ispTablePagination);
     const table = useReactTable({
         data: data?? [],
         columns,
@@ -157,15 +160,16 @@ export default function IspTable({ data }: { data: IspUsers[] }) {
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
         state: {
-        sorting,
-        columnFilters,
-        columnVisibility,
-        rowSelection,
+          pagination,
+          sorting,
+          columnFilters,
+          columnVisibility,
+          rowSelection,
         },
   })
 
   return (
-    <div className="w-full">
+    <div className="w-full pb-4">
       <div className="flex items-center py-4">
         <Input
           placeholder="ค้นหา ISP..."
@@ -263,28 +267,6 @@ export default function IspTable({ data }: { data: IspUsers[] }) {
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            ก่อนหน้า
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            ถัดไป
-          </Button>
-        </div>
       </div>
     </div>
   );

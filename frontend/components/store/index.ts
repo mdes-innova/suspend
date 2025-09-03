@@ -11,6 +11,7 @@ import loadingUiReducer from './features/loading-ui-slice';
 import groupListUiReducer from './features/group-list-ui-slice';
 import groupUiReducer from './features/group-ui-slice';
 import alertUiReducer from './features/alert-ui-slice';
+import utilsUiReducer from './features/utils-ui-slice';
 
 export const store = configureStore({
   reducer: {
@@ -25,7 +26,8 @@ export const store = configureStore({
     loadingUi: loadingUiReducer,
     groupListUi: groupListUiReducer,
     groupUi: groupUiReducer,
-    alertUi: alertUiReducer
+    alertUi: alertUiReducer,
+    utilsUi: utilsUiReducer
   },
 });
 

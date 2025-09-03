@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getAccess } from '../page';
 import IspTable from '@/components/isp-table';
 import { Isp, User } from '@/lib/types';
-import LoadingTable from '@/components/loading/content';
+import LoadingTable, { LoadingIspTable } from '@/components/loading/content';
 
 
 async function MailContent() {
@@ -73,7 +73,7 @@ async function MailContent() {
 
 export default function Page() {
   return (
-      <Suspense fallback={<LoadingTable />}>
+      <Suspense fallback={<LoadingIspTable />}>
         <MailContent />
       </Suspense>
   );
