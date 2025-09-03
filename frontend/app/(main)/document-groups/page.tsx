@@ -1,7 +1,5 @@
-import { Suspense } from 'react';
 import { notFound } from "next/navigation";
 import GroupTable from '@/components/group-table';
-import LoadingTable from '@/components/loading/content';
 import { getAccess } from '../page';
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import ReloadPage from '@/components/reload-page';
@@ -38,8 +36,6 @@ async function Components() {
 
 export default function Page() {
   return (
-      <Suspense fallback={<LoadingTable />}>
         <Components />
-      </Suspense>
   );
 }

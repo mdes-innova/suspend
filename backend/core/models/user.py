@@ -16,6 +16,7 @@ username_validator = RegexValidator(
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
+        print("Creating user:", username, extra_fields)
         if 'thaiid' in extra_fields.keys() and extra_fields['thaiid'] and\
             not (extra_fields['given_name'] and
                  extra_fields['family_name'] and extra_fields['birthdate']):

@@ -14,7 +14,7 @@ import {
 import {  Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAppSelector } from "./store/hooks";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAppDispatch } from "./store/hooks";
 import { openModal, PLAYLISTUI, setDocIds} from "./store/features/playlist-diaolog-ui-slice";
 import { clearRowsSelection } from "./store/features/content-list-ui-slice";
@@ -35,8 +35,6 @@ export default function ActionDropdown({ children, docId, active }:
     const router = useRouter();
     const user = useAppSelector((state: RootState) => state.userAuth.user);
     const [open, setOpen] = useState(false);
-    const tableDocIds = useAppSelector((state: RootState) => state.contentListUi.docIds);
-    const docIds = useAppSelector((state: RootState) => state.playlistDialogUi.docIds);
 
     const downloadFiles = async(kind: string) => {
         if (typeof docId != 'number') throw new Error('Document id not a number.');
@@ -273,6 +271,10 @@ export function ActionDropdownAll({ children, active }:
                         <DropdownMenuItem
                         onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
+                            if (!docIds || docIds.length === 0) {
+                                setOpen(false);
+                                return;
+                            }
                             await Promise.all(docIds?.map(async(ee: number) => {
                                 try {
                                     await downloadFiles('pdf', ee);
@@ -288,6 +290,10 @@ export function ActionDropdownAll({ children, active }:
                         <DropdownMenuItem
                         onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
+                            if (!docIds || docIds.length === 0) {
+                                setOpen(false);
+                                return;
+                            }
                             await Promise.all(docIds?.map(async(ee: number) => {
                                 try {
                                     await downloadFiles('xlsx', ee);
@@ -304,6 +310,10 @@ export function ActionDropdownAll({ children, active }:
                         <DropdownMenuItem
                         onClick={async(e: React.MouseEvent<HTMLDivElement>) => {
                             e.preventDefault();
+                            if (!docIds || docIds.length === 0) {
+                                setOpen(false);
+                                return;
+                            }
                             await Promise.all(docIds?.map(async(ee: number) => {
                                 try {
                                     await downloadFiles('both', ee);
@@ -321,7 +331,7 @@ export function ActionDropdownAll({ children, active }:
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                         e.preventDefault();
                         dispatch(clearRowsSelection());
                     }}

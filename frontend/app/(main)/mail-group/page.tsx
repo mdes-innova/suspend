@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import LoadingTable from "@/components/loading/content";
 import MailTable from '@/components/mail-table';
 import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { notFound } from "next/navigation";
@@ -41,8 +39,6 @@ async function PlaylistContent() {
 
 export default function Page() {
   return (
-      <Suspense fallback={<LoadingTable />}>
         <PlaylistContent />
-      </Suspense>
   );
 }

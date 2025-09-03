@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getAccess } from '../page';
 import IspTable from '@/components/isp-table';
 import { Isp, User } from '@/lib/types';
-import LoadingTable, { LoadingIspTable } from '@/components/loading/content';
+import { LoadingIspTable } from '@/components/loading/content';
 
 
 async function MailContent() {

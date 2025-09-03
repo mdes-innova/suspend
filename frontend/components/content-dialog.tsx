@@ -54,7 +54,7 @@ import { Date2Thai } from "@/lib/client/utils";
 import { getContent } from './actions/document';
 import { isAuthError } from './exceptions/auth';
 import { RedirectToLogin } from './reload-page';
-import LoadingTable, { ContentDialogLoading } from './loading/content';
+import { ContentDialogLoading } from './loading/content';
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
@@ -142,11 +142,6 @@ export const columns: ColumnDef<Document>[] = [
     {
       id: 'วันที่',
     accessorKey: "orderDate",
-    sortingFn: (rowA: Row<Document>, rowB: Row<Document>, columnId: string) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
     header: ({ column }: { column: Column<Document> }) => {
       return (
         <div className='flex gap-x-2 text-left justify-start -ml-1'>
@@ -280,7 +275,7 @@ export default function ContentDialog() {
   const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
   const [pageSize, setPageSize] = useState(pagination.pageSize);
   const [totalDocuments, setTotalDocuments] = useState(100);
-  const searchRef = useRef<HTMLInputElement>();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState("");
 
   const docIds = useAppSelector((state: RootState) => state.dialogListUi.docIds);

@@ -83,10 +83,10 @@ export type UserRegister = {
   email?: string,
   isStaff: boolean,
   ispId?: number,
-  givenName?: string,
-  familyName?: string,
-  birthdate?: string,
-  thaiid?: boolean
+  givenName?: string | null,
+  familyName?: string | null,
+  birthdate?: string | null,
+  thaiid?: boolean | null
 }
 
 export type IspFile = {
@@ -155,7 +155,8 @@ export type MailGroup = {
   mails: Mail[],
   documents: Document[],
   section: Section,
-  allispMailFiles?: MailFile[]
+  allispMailFiles?: MailFile[],
+  user?: User
 }
 
 export type GroupUpdate = {

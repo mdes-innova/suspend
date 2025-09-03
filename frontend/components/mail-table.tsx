@@ -29,23 +29,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Datetime2Thai } from "@/lib/client/utils";
-import LoadingTable, { LoadingMailTable } from "./loading/content";
+import { LoadingMailTable } from "./loading/content";
 import { RedirectToLogin } from "./reload-page";
 import { isAuthError } from "./exceptions/auth";
-import { getContent, getMailGroups } from "./actions/mail";
+import { getContent } from "./actions/mail";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { RootState } from "./store";
-import { setPagination } from "./store/features/mailbox-list-ui-slice";
+import { setColumnFilters, setColumnVisibility, setPagination, setRowSelection, setSorting } from "./store/features/mailbox-list-ui-slice";
 
 const columns: ColumnDef<MailGroup>[] = [
  {
     id: 'วันที่',
     accessorKey: "createdAt",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
     header: ({ column }: { column: Column<MailGroup> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -179,24 +174,6 @@ const columns: ColumnDef<MailGroup>[] = [
   }, {
     id: 'ยืนยัน',
     accessorKey: "mails",
-    sortingFn: (rowA: Row<MailGroup>, rowB: Row<MailGroup>, columnId: string) => {
-      let valueA = -1;
-      let valueB = -1;
-      
-      const mailsA = rowA.getValue(columnId) as Mail[];
-      const mailsB = rowB.getValue(columnId) as Mail[];
-
-      if (mailsA.length > 0) {
-        const numConfirms = (mailsA.filter((e: Mail) => e?.confirmed)).length;
-        valueA = numConfirms/mailsA.length;
-      }
-      if (mailsB.length > 0) {
-        const numConfirms = (mailsB.filter((e: Mail) => e?.confirmed)).length;
-        valueB = numConfirms/mailsB.length;
-      }
-
-      return valueA - valueB; // ascending
-    },
     header: ({ column }: { column: Column<MailGroup>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -274,19 +251,16 @@ export default function MailTable() {
     },
   ]);
   const [tableData, setTableData] = useState<MailGroup[] | null>(null);
-    const [sorting, setSorting] = useState<SortingState>([])
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-        []
-    );
-    const [columnVisibility, setColumnVisibility] =
-        useState<VisibilityState>({})
-    const [rowSelection, setRowSelection] = useState({}) 
+    const sorting = useAppSelector((state: RootState) => state.mailboxListUi.sorting);
+    const columnFilters = useAppSelector((state: RootState) => state.mailboxListUi.columnFilters);
+    const columnVisibility = useAppSelector((state: RootState) => state.mailboxListUi.columnVisibility);
+    const rowSelection = useAppSelector((state: RootState) => state.mailboxListUi.rowSelection);
     const pagination = useAppSelector((state: RootState) => state.mailboxListUi.pagination); 
     const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
     const [pageSize, setPageSize] = useState(pagination.pageSize);
     const dispatch = useAppDispatch();
     const [totalDocuments, setTotalDocuments] = useState(100);
-    const searchRef = useRef<HTMLInputElement>();
+    const searchRef = useRef<HTMLInputElement>(null);
     const paginations = [20, 50, 100];
     const [q, setQ] = useState("");
     const table = useReactTable({

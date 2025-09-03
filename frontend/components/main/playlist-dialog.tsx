@@ -72,11 +72,6 @@ const columns: ColumnDef<Group>[] = [
   {
     id: 'วันที่สร้าง',
     accessorKey: "createdAt",
-    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
     header: ({ column }: { column: Column<Group> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -443,7 +438,7 @@ export default function PlaylistDialog() {
                     e.preventDefault();
                     dispatch(closeModal({ ui: PLAYLISTUI.list }));
                     dispatch(openModal({ ui: PLAYLISTUI.new }));
-                  }}><Plus size={10} />Create new</Button>
+                  }}><Plus size={10} />สร้างฉบับบร่างใหม่</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

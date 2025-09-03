@@ -4,7 +4,7 @@ services:
     restart: always
     env_file: .env
     volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
+      - postgres_data_dev:/var/lib/postgresql/data
     networks: 
       - mdes_network_dev
 
@@ -91,7 +91,7 @@ services:
       - mdes_network_dev
 
 volumes:
-  postgres_data_prod:
+  postgres_data_dev:
 
 networks:
   mdes_network_dev:

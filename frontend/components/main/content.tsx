@@ -137,11 +137,6 @@ export const columns: ColumnDef<Document>[] = [
     {
       id: 'วันที่',
     accessorKey: "orderDate",
-    sortingFn: (rowA: Row<Document>, rowB: Row<Document>, columnId: string) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
     header: ({ column }: { column: Column<Document> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full'>
@@ -291,7 +286,7 @@ export default function DataTable() {
   const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
   const [pageSize, setPageSize] = useState(pagination.pageSize);
   const [totalDocuments, setTotalDocuments] = useState(100);
-  const searchRef = useRef<HTMLInputElement>();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState("");
 
   const docIds = useAppSelector((state: RootState) => state.contentListUi.docIds);
@@ -403,7 +398,7 @@ export default function DataTable() {
             docId: row?.original?.id
           }
         })
-        .filter((e: DocTableIdType) => typeof e?.docId === 'number' && docIds.includes(e?.docId));
+        .filter((e: DocTableIdType) => typeof e?.docId === 'number' && docIds?.includes(e?.docId));
       
       const selectedObj: {[key: number]: boolean} = {};
 
@@ -427,12 +422,12 @@ export default function DataTable() {
         table.getSelectedRowModel().rows.map((row: Row<Document>) => row?.original?.id)
         .filter((e: number | undefined | null) => typeof e === 'number');
       const deselectedDocumentIds = documentRowIds.filter((e) => !selectedDocumentIds.includes(e));
-      const nextDocIds = Array.from(
+      const nextDocIds = docIds? Array.from(
         new Set([
           ...docIds.filter((e: number) => !deselectedDocumentIds.includes(e)),
           ...selectedDocumentIds,
         ])
-      );
+      ): [...selectedDocumentIds];
       dispatch(setDocIds(nextDocIds.length ? nextDocIds: []));
     }
   }, [rowSelection]);
@@ -583,7 +578,7 @@ export default function DataTable() {
       </div>
       <div className="flex items-center justify-between py-4">
         <div className="text-sm text-muted-foreground">
-          {docIds.length} of{" "}
+          {docIds?.length?? '0'} of{" "}
           {totalDocuments} row(s) selected.
         </div>
         <div className="flex gap-x-2">

@@ -17,20 +17,25 @@ class UserSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-    email = serializers.EmailField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False)
     is_superuser = serializers.BooleanField(read_only=True)
+    is_active = serializers.BooleanField(required=False)
     password = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
     thaiid = serializers.BooleanField(required=False, allow_null=True)
     birthdate = serializers.DateField(required=False, allow_null=True)
-    given_name = serializers.CharField(required=False, allow_null=True)
-    username = serializers.CharField(allow_null=True, required=False)
+    given_name = serializers.CharField(required=False, allow_null=True,
+                                       allow_blank=True)
+    family_name = serializers.CharField(required=False, allow_null=True,
+                                        allow_blank=True)
+    username = serializers.CharField(required=False, allow_null=True,
+                                     allow_blank=True)
 
     class Meta:
         model = get_user_model()
         fields = ['id', 'username', 'password', 'isp', 'isp_id', 'email',
-                  'is_staff', 'is_active', 'is_superuser', 'thaiid',
+                  'is_staff', 'is_superuser', 'is_active', 'thaiid',
                   'birthdate', 'given_name', 'family_name']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
         read_only_fields = ['isp', 'is_superuser']

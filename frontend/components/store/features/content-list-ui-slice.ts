@@ -20,7 +20,7 @@ export interface ContentListUiState {
   tableData: Document[];
   toggleDataState: boolean;
   toggleDocumentIdsSelection: boolean;
-  docIds: number[]
+  docIds: number[] | null;
 }
 
 // Initial state with type annotation

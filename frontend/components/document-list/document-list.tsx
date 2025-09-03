@@ -20,8 +20,8 @@ import ContentDialog from "../content-dialog";
 import { DialogFooter } from "../ui/dialog";
 import { setRowSelection} 
   from "../store/features/dialog-list-ui-slice";
-import {closeModal, LOADINGUI, openModal} from '../store/features/loading-ui-slice';
-import { getContent, getDocumentList } from "../actions/document";
+import {closeModal, LOADINGUI} from '../store/features/loading-ui-slice';
+import { getDocumentList } from "../actions/document";
 import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
 import { toggleDataChanged } from "../store/features/group-list-ui-slice";

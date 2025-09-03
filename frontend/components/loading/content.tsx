@@ -18,7 +18,7 @@ import {
   Header
 } from "@tanstack/react-table";
 import { Input } from "../ui/input";
-import { ArrowUpDown, ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -26,10 +26,12 @@ import { useState, useEffect } from 'react';
 import { Skeleton } from "../ui/skeleton";
 
 type TempDataType = {
+    id0: number,
     id1: number,
     id2: number,
     id3: number,
-    id4: number
+    id4: number,
+    id5: number,
 }
 
 const staffColumns: ColumnDef<TempDataType>[] = [
@@ -396,7 +398,8 @@ export function LoadingGroupTable() {
     });
     const table = useReactTable({
         data: Array.from({length: 100}).map((_, idx: number) => {
-            return ({
+           return ({
+                id0: idx,
                 id1: idx,
                 id2: idx,
                 id3: idx,
@@ -570,12 +573,13 @@ export function LoadingIspTable() {
     });
     const table = useReactTable({
         data: Array.from({length: 22}).map((_, idx: number) => {
-            return ({
+           return ({
                 id0: idx,
                 id1: idx,
                 id2: idx,
                 id3: idx,
                 id4: idx,
+                id5: idx
             });
         }),
         columns,
@@ -716,7 +720,7 @@ export function LoadingMailTable() {
     });
     const table = useReactTable({
         data: Array.from({length: 100}).map((_, idx: number) => {
-            return ({
+           return ({
                 id0: idx,
                 id1: idx,
                 id2: idx,
@@ -891,12 +895,13 @@ export function ContentDialogLoading() {
   });
   const table = useReactTable({
       data: Array.from({length: 100}).map((_, idx: number) => {
-          return ({
+        return ({
               id0: idx,
               id1: idx,
               id2: idx,
               id3: idx,
-              id4: idx
+              id4: idx,
+              id5: idx
           });
       }),
       columns,
@@ -946,15 +951,16 @@ export function ContentDialogLoading() {
         <div className="ml-auto flex items-center gap-x-2 w-full">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                คอลัมน์<ChevronDown />
+              <Button variant="outline" className="ml-auto w-24"
+                disabled
+              >
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {table
                 .getAllColumns()
-                .filter((column: Column<Document>) => column.getCanHide())
-                .map((column: Column<Document>) => {
+                .filter((column: Column<TempDataType>) => column.getCanHide())
+                .map((column: Column<TempDataType>) => {
                   return (
                     <DropdownMenuCheckboxItem
                       key={column.id}
@@ -975,9 +981,9 @@ export function ContentDialogLoading() {
       <div className="rounded-md border w-full max-md:w-[420px] overflow-clip">
         <Table className="overflow-clip overflow-x-clip">
           <TableHeader className="block w-full overflow-clip">
-            {table.getHeaderGroups().map((headerGroup: HeaderGroup<Document>) => (
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<TempDataType>) => (
               <TableRow key={headerGroup.id} className="flex items-center justify-between w-full ">
-                {headerGroup.headers.map((header: Header<Document, unknown>) => {
+                {headerGroup.headers.map((header: Header<TempDataType, unknown>) => {
                   return (
                     <TableHead key={header.id} className="flex items-center justify-center">
                       {header.isPlaceholder
@@ -994,13 +1000,13 @@ export function ContentDialogLoading() {
           </TableHeader>
           <TableBody className="block max-h-[50vh] overflow-clip w-full">
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row: Row<Document>) => {
+              table.getRowModel().rows.map((row: Row<TempDataType>) => {
                 return (
                 <TableRow
                   key={row.id}
                   className="flex items-center justify-between w-full overflow-x-clip"
                 >
-                  {row.getVisibleCells().map((cell: Cell<Document, unknown>) => (
+                  {row.getVisibleCells().map((cell: Cell<TempDataType, unknown>) => (
                     <TableCell key={cell.id} className="overflow-x-clip">
                       {flexRender(
                         cell.column.columnDef.cell,

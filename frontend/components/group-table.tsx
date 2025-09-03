@@ -1,6 +1,6 @@
 'use client';
 
-import { User, type Group } from "@/lib/types";
+import {type Group } from "@/lib/types";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -48,7 +48,7 @@ import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
-import LoadingTable, { LoadingGroupTable } from "./loading/content";
+import { LoadingGroupTable } from "./loading/content";
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
   return typeof updater === "function"
@@ -60,11 +60,6 @@ const columns: ColumnDef<Group>[] = [
   {
     id: 'วันที่',
     accessorKey: "modifiedAt",
-    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
-      const dateA = new Date(rowA.getValue(columnId));
-      const dateB = new Date(rowB.getValue(columnId));
-      return dateA.getTime() - dateB.getTime(); // ascending
-    },
     header: ({ column }: { column: Column<Group> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -116,11 +111,6 @@ const columns: ColumnDef<Group>[] = [
   {
     id: 'จำนวนคำสั่งศาล',
     accessorKey: "documents",
-    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
-      const lenA = (rowA.getValue(columnId) as unknown[]).length;
-      const lenB = (rowB.getValue(columnId) as unknown[]).length;
-      return lenA - lenB; // ascending
-    },
     header: ({ column }: { column: Column<Group>}) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -142,11 +132,6 @@ const columns: ColumnDef<Group>[] = [
   {
     id: 'ผู้ใช้งาน',
     accessorKey: "user",
-    sortingFn: (rowA: Row<Group>, rowB: Row<Group>, columnId: string) => {
-      const usernameA = rowA.getValue<User | null>(columnId)?.username ?? '-';
-      const usernameB = rowB.getValue<User | null>(columnId)?.username ?? '-';
-      return usernameA < usernameB ? -1 : usernameA > usernameB ? 1 : 0;
-    },
     header: ({ column }: { column: Column<Group> }) => {
       return (
         <div className='inline-flex gap-x-2 w-full '
@@ -162,7 +147,8 @@ const columns: ColumnDef<Group>[] = [
     },
     cell: ({ row }: { row: Row<Group> }) => {
       const original = row.original;
-      const username = original?.user?.username?? '-';
+      const username = original?.user?.thaiid?
+        `${original?.user?.givenName} ${original?.user?.familyName}`: original?.user?.username?? '';
       return (
         <div>
           {username}
@@ -354,7 +340,7 @@ export default function GroupTable() {
         useState<VisibilityState>({})
     const user = useAppSelector((state: RootState) => state.userAuth.user);
     const [totalDocuments, setTotalDocuments] = useState(100);
-    const searchRef = useRef<HTMLInputElement>();
+    const searchRef = useRef<HTMLInputElement>(null);
     const paginations = [20, 50, 100];
     const [q, setQ] = useState("");
     const table = useReactTable({

@@ -39,14 +39,14 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
         }}>
           <SheetContent side={'bottom'}>
             <SheetHeader>
-              <SheetTitle>Create new playlist</SheetTitle>
+              <SheetTitle>สร้างฉบับบร่างใหม่</SheetTitle>
             </SheetHeader>
             <div className="grid gap-4 py-4 px-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   ชื่อ 
                 </Label>
-                <Input id="name" ref={inputNameRef} defaultValue="New playlist" className="col-span-3" />
+                <Input id="name" ref={inputNameRef} defaultValue="ฉบับร่างใหม่" className="col-span-3" />
               </div>
             </div>
             <SheetFooter>
@@ -84,7 +84,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                         RedirectToLogin();
                     }
                   }
-                }}>Save</Button>
+                }}>บันทึก</Button>
               </SheetClose>
             </SheetFooter>
           </SheetContent>
