@@ -54,7 +54,6 @@ export default function LoginForm() {
   useEffect(() => {
     if (user && window) {
       router.replace(params.get('pathname')?? '/');
-      // window.location.href = params.get('pathname')?? '/';
     }
   }, [user]);
 

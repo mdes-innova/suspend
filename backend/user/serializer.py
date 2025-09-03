@@ -22,29 +22,25 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
+    thaiid = serializers.BooleanField(required=False, allow_null=True)
+    birthdate = serializers.DateField(required=False, allow_null=True)
+    given_name = serializers.CharField(required=False, allow_null=True)
+    username = serializers.CharField(allow_null=True, required=False)
 
     class Meta:
         model = get_user_model()
         fields = ['id', 'username', 'password', 'isp', 'isp_id', 'email',
-                  'is_staff', 'is_active', 'is_superuser']
+                  'is_staff', 'is_active', 'is_superuser', 'thaiid',
+                  'birthdate', 'given_name', 'family_name']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
         read_only_fields = ['isp', 'is_superuser']
 
-    def validate_username(self, value):
-        try:
-            username_validator(value)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)  # raise DRF's HTTP 400 error
-        return value
-
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
-        if get_user_model().objects.filter(
-                username=validated_data.get('username')).exists():
-            raise serializers.ValidationError("Duplicate entry.")
-
+        username = validated_data.pop('username', None)
         isp = validated_data.pop('isp_id', None)
-        return get_user_model().objects.create_user(isp=isp, **validated_data)
+        return get_user_model().objects.create_user(
+            username=username, isp=isp, **validated_data)
 
     def update(self, instance, validated_data):
         """Update and return user."""

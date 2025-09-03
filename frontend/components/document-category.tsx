@@ -113,7 +113,10 @@ export default function CategoryGroup({ doc, group }:
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Belong to {groupData?.user?.username}</p>
+                                <p>Belong to {
+                                groupData?.user?.thaiid? `${groupData?.user?.givenName} ${groupData?.user?.familyName}`:
+                                groupData?.user?.username
+                            }</p>
                             </TooltipContent>
                         </Tooltip>
                     }

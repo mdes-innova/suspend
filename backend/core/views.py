@@ -17,8 +17,10 @@ from rest_framework_simplejwt.token_blacklist.models import (
 )
 from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
-import httpx
 import os
+import requests
+from django.utils.dateparse import parse_date
+import urllib.parse
 
 
 def current_time_view(request):
@@ -43,63 +45,84 @@ class ThaiIdView(APIView):
 
     def get(self, request):
         query_params = request.query_params
-        codes = query_params.get('code', None)
-        states = query_params.get('state', ['/'])
+        state = query_params.get('state', '/')
+        code = query_params.get('code', '')
+        try:
+            if not code:
+                return Response({'errror': 'Invalid ThaiID authentication'},
+                                status.HTTP_400_BAD_REQUEST)
 
-        if not codes or len(codes) < 1:
-            return Response({'errror': 'Invalid ThaiID authentication'},
-                            status.HTTP_400_BAD_REQUEST)
+            authorization = os.environ.get('THAIID_AUTH')
+            grant_type = "authorization_code"
+            redirect_uri = os.environ.get('THAIID_CALLBACK')
+            url = os.environ.get('THAIID_ENDPOINT')
 
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": f"Basic {authorization}"
+                }
 
-        authorization = os.environ.get('THAIID_AUTH')
-        grant_type = "authorization_code"
-        code = codes[0]
-        state = states[0]
-        redirect_uri = os.environ.get('THAIID_CALLBACK')
-        url = os.environ.get('THAIID_ENDPOINT')
+            payload = {
+                "grant_type": grant_type,
+                "code": code,
+                "redirect_uri": redirect_uri
+            }
 
-        headers = {
-            "Content-type": "application/x-www-form-urlencoded",
-            "Authorization": authorization 
-        }
+            r = requests.post(
+                url if url else '',
+                headers=headers,
+                data=payload,
+                )
 
-        payload = {
-            "grant_type": grant_type,
-            "code":code,
-            "redirect_uri":redirect_uri
-        }
+            data = r.json()
+            given_name = data.get('given_name', None)
+            family_name = data.get('family_name', None)
+            birthdate = data.get('birthdate', None)
+            birthdate_d = parse_date(birthdate)
 
-        r = httpx.post(
-            url,
-            headers=headers,
-            json=payload,
-            follow_redirects=False
+            print(given_name, family_name, birthdate)
+
+            if not birthdate or not given_name or not family_name:
+                raise Exception("Invalid ThaiID authentication")
+            birthdate_d = parse_date(birthdate)
+
+            user = get_user_model().objects.get(
+                given_name=given_name,
+                family_name=family_name,
+                birthdate=birthdate_d
             )
+            print(user)
 
-        print(r.json())
-        
-        # resp = redirect("/")
-        # user = ...  # your logic here
-        # user = request.user
-        # user = get_user_model().objects.get(username='admin')
-
-        # with transaction.atomic():
-            # 2) Mint a brand-new refresh token (and its paired access)
-            # new_refresh = RefreshToken.for_user(user)
-            # new_access = new_refresh.access_token
-            # current_jti = str(new_refresh["jti"])
-
-            # 3) Blacklist all older refresh tokens for this user
-            #    (keep the freshly-created one valid)
-            # for t in OutstandingToken.objects.filter(user=user).exclude(jti=current_jti):
-                # idempotent: get_or_create avoids duplicate blacklist rows
-                # BlacklistedToken.objects.get_or_create(token=t)
-
-        # 4) Return or set as cookies (example returns JSON)
-        # return Response(
-        #     {"refresh": str(new_refresh), "access": str(new_access)},
-        #     status=status.HTTP_200_OK,
-        # )
-
-        return Response({'data': 'Hi there!'})
-        # return resp
+            new_refresh = RefreshToken.for_user(user)
+            new_access = new_refresh.access_token
+            if state:
+                resp = redirect(state)
+            else:
+                resp = redirect("/")
+            
+            resp.set_cookie(
+                key="access",
+                value=str(new_access),
+                max_age=int(60*4.5),
+                path="/",
+                secure=True,
+                httponly=True,
+                samesite="Lax"
+            )
+            resp.set_cookie(
+                key="refresh",
+                value=str(new_refresh),
+                max_age=int(60*60*23.9),
+                path="/",
+                secure=True,
+                httponly=True,
+                samesite="Lax"
+            )
+            return resp
+        except:
+            if not state:
+                resp = redirect("/login/?pathname=" +
+                                urllib.parse.quote(state, safe=""))
+            else:
+                resp = redirect("/login")
+            return resp
