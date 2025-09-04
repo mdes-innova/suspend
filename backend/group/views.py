@@ -53,7 +53,6 @@ class GroupView(viewsets.ModelViewSet):
                 for_sorts.append(sort_keys[sort])
         qs = (
             self.queryset
-            .all()
             .filter(name__icontains=q)
             .annotate(num_documents=Count('documents'))
             .alias(
