@@ -12,8 +12,9 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigation, CaptionProps, useDayPicker } from 'react-day-picker';
+import { useNavigation, CaptionProps } from 'react-day-picker';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select";
 
 function CustomCaption(props: CaptionProps) {
   const { goToMonth, nextMonth, previousMonth } = useNavigation();
@@ -177,11 +178,10 @@ export function ThaiDateYearPicker({
 
   const CustomCaption: React.FC<CaptionProps> = ({ displayMonth }) => {
     const { goToMonth } = useNavigation();
-    const { fromYear, toYear } = useDayPicker();
 
     const currentYear = new Date().getFullYear();
-    const start = fromYear ?? 1900;
-    const end = toYear ?? currentYear + 20;
+    const start = 1950;
+    const end = currentYear;
 
     const years = React.useMemo(
       () => Array.from({ length: end - start + 1 }, (_, i) => start + i),
@@ -199,32 +199,47 @@ export function ThaiDateYearPicker({
     const yearValue = displayMonth.getFullYear();
 
     const commit = (y: number, m: number) => {
-      // ✅ Only navigate; DO NOT change selected value
       goToMonth(new Date(y, m, 1));
-      // (Removed: setDate(...))
-      // (Do not close here)
     };
 
     return (
       <div className="flex items-center justify-between gap-2 p-2">
-        <select
-          className="h-9 rounded-md border px-2 text-sm"
-          value={monthIndex}
-          onChange={(e) => commit(yearValue, Number(e.target.value))}
-        >
-          {months.map(({ i, label }) => (
-            <option key={i} value={i}>{label}</option>
-          ))}
-        </select>
-        <select
-          className="h-9 rounded-md border px-2 text-sm"
-          value={yearValue}
-          onChange={(e) => commit(Number(e.target.value), monthIndex)}
-        >
-          {years.map((y) => (
-            <option key={y} value={y}>{y + 543}</option>
-          ))}
-        </select>
+        <Select
+            name="month"
+            value={`${monthIndex?? ''}`}
+            onValueChange={(value: string) => commit(yearValue, Number(value))}
+          >
+          <SelectTrigger>
+            <SelectValue placeholder="เลือกเดือน" />
+          </SelectTrigger>
+          <SelectContent>
+              <SelectGroup>
+              <SelectLabel>เดือน</SelectLabel>
+                {months.map(({ i, label }) => (<SelectItem  
+                    key={`month-${i}`} value={`${i}`}> {label}
+                    </SelectItem>)
+                )}
+              </SelectGroup>
+          </SelectContent>
+        </Select> 
+        <Select
+            name="year"
+            value={`${yearValue?? ''}`}
+            onValueChange={(value: string) => commit(Number(value), monthIndex)}
+          >
+          <SelectTrigger>
+            <SelectValue placeholder="เลือกปี" />
+          </SelectTrigger>
+          <SelectContent>
+              <SelectGroup>
+              <SelectLabel>ปี พ.ศ.</SelectLabel>
+                {years.map((y) => (<SelectItem  
+                    key={`year-${y}`} value={`${y}`}> {y + 543}
+                    </SelectItem>)
+                )}
+              </SelectGroup>
+          </SelectContent>
+        </Select> 
       </div>
     );
   };
@@ -257,8 +272,8 @@ export function ThaiDateYearPicker({
             setDate(selectedDate);      // selection changes only via day click
             setOpen(false);      // and close only then
           }}
-          fromYear={1900}
-          toYear={new Date().getFullYear() + 20}
+          fromYear={1950}
+          toYear={new Date().getFullYear()}
           locale={th}
           initialFocus
           components={{ Caption: CustomCaption }}
