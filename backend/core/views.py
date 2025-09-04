@@ -80,8 +80,6 @@ class ThaiIdView(APIView):
             birthdate = data.get('birthdate', None)
             birthdate_d = parse_date(birthdate)
 
-            print(given_name, family_name, birthdate)
-
             if not birthdate or not given_name or not family_name:
                 raise Exception("Invalid ThaiID authentication")
             birthdate_d = parse_date(birthdate)
@@ -91,7 +89,6 @@ class ThaiIdView(APIView):
                 family_name=family_name,
                 birthdate=birthdate_d
             )
-            print(user)
 
             new_refresh = RefreshToken.for_user(user)
             new_access = new_refresh.access_token

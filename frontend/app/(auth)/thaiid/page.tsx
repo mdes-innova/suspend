@@ -16,7 +16,6 @@ export default async function Page({
       `client_id=${clientId}&redirect_uri=${redirectUri}&` +
       `scope=${scope}&state=${encodeURIComponent(state)}`;
   
-  console.log(url);
   const res = await fetch(url, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })

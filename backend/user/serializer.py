@@ -23,14 +23,11 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
-    thaiid = serializers.BooleanField(required=False, allow_null=True)
-    birthdate = serializers.DateField(required=False, allow_null=True)
-    given_name = serializers.CharField(required=False, allow_null=True,
-                                       allow_blank=True)
-    family_name = serializers.CharField(required=False, allow_null=True,
-                                        allow_blank=True)
-    username = serializers.CharField(required=False, allow_null=True,
-                                     allow_blank=True)
+    thaiid = serializers.BooleanField(required=False)
+    birthdate = serializers.DateField(required=False)
+    given_name = serializers.CharField(required=False)
+    family_name = serializers.CharField(required=False)
+    username = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = get_user_model()
@@ -42,6 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create and return a user with encrypted password."""
+        print(validated_data)
         username = validated_data.pop('username', None)
         isp = validated_data.pop('isp_id', None)
         return get_user_model().objects.create_user(

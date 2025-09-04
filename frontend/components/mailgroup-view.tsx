@@ -137,7 +137,7 @@ export default function MailGroupView({
                                 <TableCell>
                                     {idx + 1} 
                                 </TableCell>
-                                <TableCell className='max-w-[400px] flex flex-col items-start'>
+                                <TableCell className='max-w-[400px]'>
                                 {
                                     e?.mailFiles?.map((ee, idx2) => 
                                     <div className='w-full h-full flex' key={`isp-file-${idx}-${idx2}`}>

@@ -168,7 +168,7 @@ export function GroupForm({
     if (sectionName != `${sections.length}`) setPrevSectionName(sectionName);
 
     if (sectionName != '') updateSection();
-  }, [sectionName]);
+  }, [sectionName, sections]);
 
   const updateField = async({kind, value}: {kind: string, value: string}) => {
     try {
@@ -608,6 +608,10 @@ export function GroupForm({
                         name: newSectionName
                        });
                        setSectionName(newSection.name);
+                       await updateField({
+                        kind: 'section',
+                        value: `${newSection.id}`
+                       });
 
                        const newSections = await getSections();
                        setSections(newSections??[]);

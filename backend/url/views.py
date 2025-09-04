@@ -28,7 +28,5 @@ class UrlView(viewsets.ModelViewSet):
     )
     def by_document(self, request, did=None):
         doc = Document.objects.get(pk=did)
-        # print(DocumentSerializer(doc).data)
         urls = doc.urls
-        # print(urls)
         return Response(UrlSerializer(urls, many=True).data)

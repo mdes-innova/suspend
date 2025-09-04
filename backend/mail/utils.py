@@ -190,7 +190,6 @@ def send_email(mail, mail_group, section=False):
         all_mail_files = mail_group.mail_files.filter(all_isp=True)
         if (len(all_mail_files)):
             for mail_file in all_mail_files.all():
-                print(mail_file)
                 file_path = mail_file.file.path
                 filename = mail_file.original_filename or\
                     os.path.basename(file_path)

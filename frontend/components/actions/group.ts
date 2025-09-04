@@ -21,7 +21,6 @@ type ContentProps = {
 }
 
 export async function getContent(props: ContentProps) {
-  console.log(props)
   const sortQueries = props.sorts.map((e) => `sort=${e.name}`).join('&');
   const decsQueries = props.sorts.map((e) => `decs=${e.decs}`).join('&');
 
