@@ -124,7 +124,7 @@ class MailGroupViews(viewsets.ModelViewSet):
         url_path='by-isp/(?P<isp>[^/]+)'
     )
     def by_isp(self, request, isp=None):
-        queryset = self.queryset
+        queryset = self.get_queryset()
         try:
             isp = ISP.objects.get(id=isp)
             data = queryset.filter(mails_isp=isp)
