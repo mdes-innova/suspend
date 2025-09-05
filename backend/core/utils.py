@@ -78,10 +78,10 @@ def get_tokens(user):
     tz = ZoneInfo("Asia/Bangkok")
     now = datetime.now(tz)
 
-    # cutoff = datetime.combine(now.date() + timedelta(days=1),
-    #                           time.min, tzinfo=tz)
     cutoff = datetime.combine(now.date() + timedelta(days=1),
-                              time(15, 10), tzinfo=tz)
+                              time.min, tzinfo=tz)
+    # cutoff = datetime.combine(now.date() + timedelta(days=1),
+    #                           time(17, 0), tzinfo=tz)
 
     if now >= cutoff:
         cutoff += timedelta(days=1)
