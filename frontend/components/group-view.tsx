@@ -17,11 +17,15 @@ import { PencilLine } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
 import { Label } from "./ui/label";
 
-function TimeTick({ date }: { date?: string }) {
+function TimeTick({ date, setDatetimeOpen }:
+  { date?: string, setDatetimeOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [ts, setTs] = useState<number | null>(null);
 
   useEffect(() => {
     if (!date) { setTs(null); return; }
+
+    if (!IsAboutMidnight(date)) setDatetimeOpen(false);
+
     const d = new Date(date);
     if (isNaN(d.getTime())) { setTs(null); return; }
     setTs(d.getTime());
@@ -31,6 +35,7 @@ function TimeTick({ date }: { date?: string }) {
     }, 1000);
 
     return () => clearInterval(id);
+
   }, [date]);
 
   if (ts == null) return null;
@@ -51,24 +56,26 @@ export default function GroupView(
     const [datetimeOpen, setDatetimeOpen] = useState(false);
 
     useEffect(() => {
-      try {
-        if (!datetime) {
-          setDatetimeOpen(false);
-          return;
-        }
-        const isAboutMidnight = IsAboutMidnight(datetime);
-        if (isAboutMidnight)
-            setDatetimeOpen(true);
-        else
-          setDatetimeOpen(false);
-      } catch {
-        setDatetimeOpen(false);
-      }
     }, []);
 
     useEffect(() => {
       if (idParam === '-1')
         redirect(`/document-groups/${groupData?.id}`);
+      else {
+        try {
+          if (!datetime) {
+            setDatetimeOpen(false);
+            return;
+          }
+          const isAboutMidnight = IsAboutMidnight(datetime);
+          if (isAboutMidnight)
+              setDatetimeOpen(true);
+          else
+            setDatetimeOpen(false);
+        } catch {
+          setDatetimeOpen(false);
+        }
+      }
     }, []);
 
     useEffect(() => {
@@ -104,7 +111,7 @@ export default function GroupView(
             หากคุณต้องการให้ระบบทำงานอย่างต่อเนื่อง กรุณาเลือกเวลาอื่นที่ไม่ใช่ช่วงเวลาดังกล่าว
           </DialogDescription>
           <DialogTitle className="w-full">
-            <TimeTick date={datetime} />
+            <TimeTick date={datetime} setDatetimeOpen={setDatetimeOpen} />
           </DialogTitle>
           <DialogFooter>
             <DialogClose asChild>
