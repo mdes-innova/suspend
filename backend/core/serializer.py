@@ -33,4 +33,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 getattr(user, "thaiid", False):
             raise AuthenticationFailed(
                 "Your account isn't allowed to sign in.", code="authorization")
+        elif not user.is_staff:
+            raise AuthenticationFailed(
+                "Your account isn't allowed to sign in.", code="authorization")
         return data
