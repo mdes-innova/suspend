@@ -38,7 +38,7 @@ const items = [
     icon: Home,
   },
   {
-    title: "กล่องข้อความ",
+    title: "รายการที่ส่ง",
     url: "/mail-group",
     icon: Inbox,
   },

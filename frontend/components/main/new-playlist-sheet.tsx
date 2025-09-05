@@ -62,7 +62,7 @@ export function NewPlaylistSheet({main}: {main?: boolean}) {
                         mode: 'append'
                       });
                       const newPlaylist = newDocsGroup.name;
-                      const docs = newDocsGroup.documents.map((doc: Document) => doc.orderNo).slice(0, 3);
+                      const docs = newDocsGroup.documents.map((doc: Document) => doc.orderNo);
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [newPlaylist, ...docs] }));
                     } catch (error) {
                       dispatch(closeModal({ui: PLAYLISTUI.new, info: [error as string], err: true }));

@@ -78,19 +78,14 @@ def get_tokens(user):
     tz = ZoneInfo("Asia/Bangkok")
     now = datetime.now(tz)
 
-    cutoff = datetime.combine(now.date() + timedelta(days=1),
-                              time.min, tzinfo=tz)
-    # cutoff = datetime.combine(now.date() + timedelta(days=1),
-    #                           time(17, 0), tzinfo=tz)
+    next_day = now.date() + timedelta(days=1)
+    cutoff = datetime(next_day.year, next_day.month, next_day.day, 0, 0, 0, tzinfo=tz)
 
-    if now >= cutoff:
-        cutoff += timedelta(days=1)
-
-    liftime = cutoff - now
+    lifetime = cutoff - now
 
     refresh = RefreshToken.for_user(user)
-    refresh.set_exp(from_time=now, lifetime=liftime)
+    refresh.set_exp(from_time=now, lifetime=lifetime)
 
     access = refresh.access_token
     return {"refresh": str(refresh), "access": str(access),
-            "lifetime": int(liftime.total_seconds())}
+            "lifetime": int(lifetime.total_seconds())}

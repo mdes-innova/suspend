@@ -13,9 +13,10 @@ class FixedExpiryRefreshToken(RefreshToken):
 
         cutoff = datetime.combine(
             from_time.date() + timedelta(days=1),
-            time.min,
-            tzinfo=tz
-        )
+            time.min
+        ).replace(tzinfo=tz)
+
+        print(cutoff)
 
         self.payload["exp"] = int(cutoff.timestamp())
 
@@ -33,7 +34,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 getattr(user, "thaiid", False):
             raise AuthenticationFailed(
                 "Your account isn't allowed to sign in.", code="authorization")
-        elif not user.is_staff:
+        elif getattr(user, 'isp', None):
             raise AuthenticationFailed(
                 "Your account isn't allowed to sign in.", code="authorization")
         return data

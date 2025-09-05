@@ -40,7 +40,7 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
                         if (window) window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND}`;
                     }}>
                     <Image 
-                        src="/images/logo.png"
+                        src="/images/de.png"
                         alt="Home logo"
                         fill
                         className="object-cover"

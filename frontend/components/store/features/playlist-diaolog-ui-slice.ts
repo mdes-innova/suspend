@@ -76,8 +76,8 @@ const playlistDialogUiSlice = createSlice({
             else
                 Array.from({length: action.payload.info.length - 1}).forEach((_, idx: number) => {
                   if (action.payload.info)
-                    toast(action.payload.info[0], {
-                      description: action.payload.info[idx + 1] + " added."
+                    toast("ฉบับบร่าง " + action.payload.info[0], {
+                      description: "เพิ่ม " + action.payload.info[idx + 1]
                     });
                 });
             state.dataChanged = true;

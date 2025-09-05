@@ -13,14 +13,13 @@ import DraggableItem from "./drag";
 import React from "react";
 import DroppableArea from "./drop";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setDragging } from "../store/features/document-list-ui-slice";
+import { addDocumentToast, setDragging } from "../store/features/document-list-ui-slice";
 import { Date2Thai, Text2Thai } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/playlist-dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/playlist-dialog";
 import ContentDialog from "../content-dialog";
 import { DialogFooter } from "../ui/dialog";
 import { setRowSelection} 
   from "../store/features/dialog-list-ui-slice";
-import {closeModal, LOADINGUI} from '../store/features/loading-ui-slice';
 import { getDocumentList } from "../actions/document";
 import { Group, type Document } from "@/lib/types";
 import { addToGroup, getGroup } from "../actions/group";
@@ -249,50 +248,46 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
         
         <div className="flex flex-col justify-start gap-y-2 px-2 w-full ">
             <div className="flex gap-x-1 justify-end items-center w-full">
-                <Button onClick={async(evt) => {
-                    evt.preventDefault();
-                    dispatch(setRowSelection({}));
-                    setOpenContent(true);
-                }}>
-                    <Plus /> <span>เพิ่มคำสั่งศาล</span>
-                </Button>
                 <Dialog open={ openContent} onOpenChange={(open: boolean) => {
+                    dispatch(setRowSelection({}));
                     setOpenContent(open);
                 }}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Plus /> <span>เพิ่มคำสั่งศาล</span>
+                        </Button>
+                    </DialogTrigger>
                     <DialogContent className="max-w-[1000px] min-w-[1000px]
                         max-lg:min-w-[700px] max-lg:max-w-[700px]
-                        max-md:min-w-[400px] max-md:max-w-[400px]
+                        max-md:min-w-[400px] max-md:max-w-[400px] max-md:w-fit
                         overflow-auto">
                         <DialogHeader>
                             <DialogTitle>เพิ่มคำสั่งศาล</DialogTitle>
                         </DialogHeader>
                             <ContentDialog />
                     <DialogFooter>
-                        <div className="flex gap-x-2 max-md:w-[400px]">
-                            <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
-                                e.preventDefault();
-                                try {
-                                    await addToGroup({
-                                        groupId: groupId as number,
-                                        docIds: docIds?? [],
-                                        mode: 'append'
-                                    });
-                                    const docs = docIds && docIds.length > 0? await getDocumentList(docIds): [];
-                                    setDocData([...columns, ...docs]);
-                                } catch (error) {
-                                    console.error(error);
-                                    if (isAuthError(error))
-                                       RedirectToLogin(); 
-                                }
-                                setOpenContent(false);
-                                dispatch(closeModal({ui: LOADINGUI.dialog}));
-                            }}>เพิ่ม</Button>
-                            <Button variant='destructive' onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                                e.preventDefault();
-                                setOpenContent(false);
-                                dispatch(closeModal({ui: LOADINGUI.dialog}));
-                            }}>ยกเลิก</Button>
-                        </div>
+                        <DialogClose asChild>
+                            <Button variant="outline">ยกเลิก</Button>
+                        </DialogClose>
+                        <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.preventDefault();
+                            try {
+                                const group: Group = await addToGroup({
+                                    groupId: groupId as number,
+                                    docIds: docIds?? [],
+                                    mode: 'append'
+                                });
+                                const docs = docIds && docIds.length > 0? await getDocumentList(docIds): [];
+                                setDocData([...columns, ...docs]);
+                                const newOrders = docs.map((e: Document) => e.orderNo);
+                                dispatch(addDocumentToast([group.name, ...newOrders]));
+                            } catch (error) {
+                                console.error(error);
+                                if (isAuthError(error))
+                                    RedirectToLogin(); 
+                            }
+                            setOpenContent(false);
+                        }}>เพิ่ม</Button>
                     </DialogFooter>
                     </DialogContent>
                 </Dialog>

@@ -17,6 +17,10 @@ export interface ContentListUiState {
     pageIndex: number;
     pageSize: number;
   };
+  groupPagination: {
+    pageIndex: number;
+    pageSize: number;
+  };
   tableData: Document[];
   toggleDataState: boolean;
   toggleDocumentIdsSelection: boolean;
@@ -30,6 +34,10 @@ const initialState: ContentListUiState = {
   columnVisibility: {},
   rowSelection: {},
   pagination: {
+    pageIndex: 0,
+    pageSize: 20,
+  },
+  groupPagination: {
     pageIndex: 0,
     pageSize: 20,
   },
@@ -62,6 +70,9 @@ const contenListUiSlice = createSlice({
     setPagination(state: ContentListUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
       state.pagination = action.payload;
     },
+    setGroupPagination(state: ContentListUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
+      state.groupPagination = action.payload;
+    },
     setToggleDocumentIdsSelection(state: ContentListUiState) {
       state.toggleDocumentIdsSelection = !state.toggleDocumentIdsSelection;
     },
@@ -85,7 +96,8 @@ export const {
   setPagination,
   toggleData,
   setDocIds,
-  clearRowsSelection
+  clearRowsSelection,
+  setGroupPagination
 } = contenListUiSlice.actions;
 
 export default contenListUiSlice.reducer;

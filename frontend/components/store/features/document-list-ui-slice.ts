@@ -1,5 +1,6 @@
 import { type Document } from '@/lib/types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { toast } from "sonner";
 
 interface DocumentListUiState {
   data: Document[]
@@ -38,14 +39,22 @@ const documentListUiSlice = createSlice({
     },
     toggleDataChanged(state: DocumentListUiState) {
       state.dataChanged = !state.dataChanged;
+    },
+    addDocumentToast(state: DocumentListUiState, action: PayloadAction<string[]>) {
+      const actionPayloadLength = action.payload.length;
+      if (actionPayloadLength > 0)
+        Array.from({length: actionPayloadLength - 1}).forEach((_, idx: number) => {
+          toast("ฉบับบร่าง " + action.payload[0], {
+            description: "เพิ่ม " + action.payload[idx + 1]
+          });
+        });
     }
-
   },
 });
 
 // Export actions and reducer
 export const {
-  setData, setDragging, toggleDataChanged
+  setData, setDragging, toggleDataChanged, addDocumentToast
 } = documentListUiSlice.actions;
 
 export default documentListUiSlice.reducer;
