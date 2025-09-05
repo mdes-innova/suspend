@@ -9,17 +9,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 class FixedExpiryRefreshToken(RefreshToken):
     def set_exp(self, from_time=None, lifetime=None):
         tz = ZoneInfo("Asia/Bangkok")
-        from_time = from_time or datetime.now(tz)
+        now = datetime.now(tz)
 
-        cutoff = datetime.combine(
-            from_time.date() + timedelta(days=1),
-            time.min
-        ).replace(tzinfo=tz)
-
-        print(cutoff)
+        next_day = now.date() + timedelta(days=1)
+        cutoff = datetime(next_day.year, next_day.month, next_day.day, 0, 0, 0, tzinfo=tz)
 
         self.payload["exp"] = int(cutoff.timestamp())
-
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
