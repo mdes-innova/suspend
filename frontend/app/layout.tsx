@@ -25,6 +25,7 @@ const notoThai = Noto_Sans_Thai({
 
 export const metadata: Metadata = {
   title: "Suspend",
+  metadataBase: new URL(`${process.env.NEXT_PUBLIC_FRONTEND_PROD}`),
   description: "ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์",
   openGraph: {
     title: "Suspense",
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     siteName: "Suspend",
     images: [
       {
-        url: "/og-image.png",
+        url: "/images/de.png",
         width: 1200,
         height: 630,
       },
@@ -41,6 +42,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  twitter:   { images: ['/images/de.png'] },
 };
 
 export default function RootLayout({

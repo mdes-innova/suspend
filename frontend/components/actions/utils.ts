@@ -23,3 +23,12 @@ export async function getCurrentDate() {
        throw error; 
     }
 }
+
+export async function getServerTime() {
+    try {
+      await getAccess();
+      return { date: new Date().toISOString() };
+    } catch (error) {
+       throw error; 
+    }
+}

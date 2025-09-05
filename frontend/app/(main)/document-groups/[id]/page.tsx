@@ -52,7 +52,7 @@ async function Components({ params }: { params: Promise<{ id: string }>}) {
     const isps = await resIsps.json();
 
     return (
-      <GroupView groupData={groupData} isps={isps} idParam={id}/>
+      <GroupView groupData={groupData} isps={isps} idParam={id} datetime={new Date().toISOString()}/>
     );
 
   } catch (error) {

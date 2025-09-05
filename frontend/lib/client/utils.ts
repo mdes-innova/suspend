@@ -23,6 +23,48 @@ export function Datetime2Thai(date: string) {
   }).format(newDate)).toString();
 }
 
+export function Time2Thai(date: string) {
+  const newDate = new Date(date);
+  return (new Intl.DateTimeFormat('th-TH', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  }).format(newDate)).toString();
+}
+
+export function Datetime2ThaiHourMinute(date: string) {
+  const newDate = new Date(date);
+  const hour = (new Intl.DateTimeFormat('th-TH', {
+    hour: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  }).format(newDate)).toString();
+
+  const minute = (new Intl.DateTimeFormat('th-TH', {
+    minute: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  }).format(newDate)).toString();
+
+  return { hour: parseInt(hour), minute: parseInt(minute) };
+}
+
+export function IsAboutMidnight(date: string) {
+  const newDate = new Date(date);
+  const hour = (new Intl.DateTimeFormat('th-TH', {
+    hour: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  }).format(newDate)).toString();
+
+  const minute = (new Intl.DateTimeFormat('th-TH', {
+    minute: '2-digit',
+    timeZone: 'Asia/Bangkok',
+  }).format(newDate)).toString();
+
+  return (parseInt(hour) === 23 && parseInt(minute) >= 50) ||
+    (parseInt(hour) === 0 && parseInt(minute) <= 10);
+}
+
+
 export function Text2Thai(text: string) {
   const digitsMap = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
   return text.replace(/\d/g, (d) => digitsMap[parseInt(d)]);

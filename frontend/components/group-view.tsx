@@ -11,16 +11,60 @@ import { toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { redirect } from 'next/navigation';
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
-import { Date2Thai, Text2Thai } from "@/lib/client/utils";
+import { Date2Thai, IsAboutMidnight, Text2Thai, Time2Thai } from "@/lib/client/utils";
 import { Button } from "./ui/button";
 import { PencilLine } from "lucide-react";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
+import { Label } from "./ui/label";
+
+function TimeTick({ date }: { date?: string }) {
+  const [ts, setTs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!date) { setTs(null); return; }
+    const d = new Date(date);
+    if (isNaN(d.getTime())) { setTs(null); return; }
+    setTs(d.getTime());
+
+    const id = setInterval(() => {
+      setTs((prev) => (prev == null ? prev : prev + 1000));
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [date]);
+
+  if (ts == null) return null;
+  return (
+    <Label className="font-bold text-center text-2xl text-red-600 flex justify-center">
+      {Time2Thai(new Date(ts).toISOString())}
+    </Label>
+  );
+}
 
 export default function GroupView(
-  { groupData, isps, idParam}: { groupData: Group | null, isps: Isp[], idParam: string }) {
+  { groupData, isps, idParam, datetime}:
+  { groupData: Group | null, isps: Isp[], idParam: string, datetime?: string }) {
     const [title, setTitle] = useState(groupData?.name?? 'ไม่มีชื่อ');
     const [onTitleChange, setOnTitleChange] = useState(false);
     const titleRef = useRef<HTMLInputElement>(null);
     const dispatch = useAppDispatch();
+    const [datetimeOpen, setDatetimeOpen] = useState(false);
+
+    useEffect(() => {
+      try {
+        if (!datetime) {
+          setDatetimeOpen(false);
+          return;
+        }
+        const isAboutMidnight = IsAboutMidnight(datetime);
+        if (isAboutMidnight)
+            setDatetimeOpen(true);
+        else
+          setDatetimeOpen(false);
+      } catch {
+        setDatetimeOpen(false);
+      }
+    }, []);
 
     useEffect(() => {
       if (idParam === '-1')
@@ -52,6 +96,23 @@ export default function GroupView(
 
   return (
     <div className="w-full flex flex-col justify-start items-center p-4" id="groupview">
+      <Dialog open={datetimeOpen} onOpenChange={setDatetimeOpen}>
+        <DialogContent>
+          <DialogTitle>ช่วงเวลาเที่ยงคื่น</DialogTitle>
+          <DialogDescription>
+            เนื่องจากเวลาที่คุณเลือกอยู่ในช่วงเวลาเที่ยงคืน ซึ่งเป็นช่วงเวลาที่ระบบจะทำการให้ผู้ใช้งานออกจากระบบ
+            หากคุณต้องการให้ระบบทำงานอย่างต่อเนื่อง กรุณาเลือกเวลาอื่นที่ไม่ใช่ช่วงเวลาดังกล่าว
+          </DialogDescription>
+          <DialogTitle className="w-full">
+            <TimeTick date={datetime} />
+          </DialogTitle>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">ปิด</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex w-full justify-between">
         <div className="flex flex-col justify-start items-start w-full gap-y-4">
           <div className="flex flex-col">

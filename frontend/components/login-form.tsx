@@ -82,7 +82,7 @@ export default function LoginForm({ loginOptions }: { loginOptions: string }) {
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center">
-      <Form {...form} className={`${loginOptions === 'normal' ? '': 'w-full'}`}>
+      <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className={`w-2/3 space-y-6 ${loginOptions === 'normal' ? '': 'space-y-0 w-full'}`}>
         { loginOptions === 'normal' &&
           <>
