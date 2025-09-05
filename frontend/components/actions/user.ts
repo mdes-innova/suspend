@@ -194,6 +194,20 @@ export async function registerUser(userRegisterParams: UserRegister) {
     }
 }
 
+function getSecondsUntilMidnightBangkok() {
+  const now = new Date();
+
+  const bangkokOffset = 7 * 60;
+  const utc = now.getTime() + now.getTimezoneOffset() * 60_000;
+  const bangkokNow = new Date(utc + bangkokOffset * 60_000);
+
+  const midnight = new Date(bangkokNow);
+  midnight.setHours(24, 0, 0, 0);
+
+  const diffMs = midnight.getTime() - bangkokNow.getTime();
+  return Math.floor(diffMs / 1000);
+}
+
 export async function loginUser({
     username,
     password,
@@ -233,6 +247,7 @@ export async function loginUser({
             maxAge: 60 * 4.5,
         });
 
+        const lifetime = getSecondsUntilMidnightBangkok();
         cookieStore.set({
             name: 'refresh',
             value: refresh,
@@ -240,7 +255,7 @@ export async function loginUser({
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 60 * 23.9,
+            maxAge: lifetime - 30,
         });
 
         const userRes = await fetch(`${url}/user/users/me/`, {

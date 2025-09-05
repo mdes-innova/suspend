@@ -30,7 +30,7 @@ const FormSchema = z.object({
   password: z.string()
 })
 
-export default function LoginForm() {
+export default function LoginForm({ loginOptions }: { loginOptions: string }) {
 
   const params = useSearchParams();
   const [errorMessage, setErrorMessage] = useState('');
@@ -82,14 +82,16 @@ export default function LoginForm() {
 
   return (
     <div className="h-full w-full flex flex-col justify-center items-center">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+      <Form {...form} className={`${loginOptions === 'normal' ? '': 'w-full'}`}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className={`w-2/3 space-y-6 ${loginOptions === 'normal' ? '': 'space-y-0 w-full'}`}>
+        { loginOptions === 'normal' &&
+          <>
           <FormField
             control={form.control}
             name="username"
             render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "username">}) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>ชื่อผู้ใช้งาน</FormLabel>
                 <FormControl>
                   <Input placeholder="Username" {...field} onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setErrorMessage('');
@@ -105,7 +107,7 @@ export default function LoginForm() {
             name="password"
             render={({ field }: { field:  ControllerRenderProps<z.infer<typeof FormSchema>, "password">}) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>รหัสผ่าน</FormLabel>
                 <FormControl>
                   <PasswordInput
                     placeholder="••••••••"
@@ -119,15 +121,15 @@ export default function LoginForm() {
                 <FormMessage />
               </FormItem>
             )}
-          /> 
-          <div className="w-full flex justify-between items-center">
-            <Button type="submit">เข้าสู่ระบบ</Button>
-            <Link href={`/thaiid/?pathname=${params.get('pathname')?? '%2F'}`}>
-              <Button variant='outline' className="flex justify-center items-center">
-                <div>
+          /></>} 
+          <div className="flex flex-col justify-center items-center w-full ">
+            {loginOptions === 'normal' && <Button type="submit">เข้าสู่ระบบ</Button>}
+            {loginOptions === 'thaiid' && <Link className="w-full" href={`/thaiid/?pathname=${params.get('pathname')?? '%2F'}`}>
+              <Button variant='outline' className="flex justify-center items-center w-full">
+                <div className="text-xl">
                   เข้าสู่ระบบด้วย
                 </div>
-                <div className="h-4 w-10 relative">
+                <div className="h-6 w-20 relative">
                   <Image
                     src='/images/thaid_logo.png'
                     alt='thaiid'
@@ -138,7 +140,7 @@ export default function LoginForm() {
                   />
                 </div>
               </Button>
-            </Link>
+            </Link>}
           </div>
         </form>
       </Form>

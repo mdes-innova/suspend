@@ -1,46 +1,33 @@
+from .utils import get_tokens
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.permissions import AllowAny
-from decouple import config
-from django.http import JsonResponse
-from django.utils import timezone
 from rest_framework.views import APIView
-from django.db import transaction
-from decouple import config
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.token_blacklist.models import (
-    OutstandingToken,
-    BlacklistedToken,
-)
 from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
 import os
 import requests
 from django.utils.dateparse import parse_date
 import urllib.parse
+from .serializer import (CustomTokenObtainPairSerializer as
+                         TokenObtainPairSerializer)
 
 
-def current_time_view(request):
-    now = timezone.now().date()
-    return JsonResponse({'current_date': now.isoformat()})
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def login_options_view(request):
+    return Response({'login_options': os.environ.get('LOGIN_OPTIONS', 'normal')})
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class = TokenObtainPairSerializer
 
-    def get_permissions(self):
-        return super().get_permissions()
-
 
 class ThaiIdView(APIView):
-    """
-    Mint a fresh refresh token for `user` and revoke ALL previous ones.
-    Replace `AllowAny` and the user resolution with your condition/callback logic.
-    """
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -90,16 +77,15 @@ class ThaiIdView(APIView):
                 birthdate=birthdate_d
             )
 
-            new_refresh = RefreshToken.for_user(user)
-            new_access = new_refresh.access_token
+            tokens = get_tokens(user)
             if state:
                 resp = redirect(state)
             else:
                 resp = redirect("/")
-            
+
             resp.set_cookie(
                 key="access",
-                value=str(new_access),
+                value=str(tokens['access']),
                 max_age=int(60*4.5),
                 path="/",
                 secure=True,
@@ -108,8 +94,8 @@ class ThaiIdView(APIView):
             )
             resp.set_cookie(
                 key="refresh",
-                value=str(new_refresh),
-                max_age=int(60*60*23.9),
+                value=str(tokens['refresh']),
+                max_age=tokens['lifetime'] - 30,
                 path="/",
                 secure=True,
                 httponly=True,

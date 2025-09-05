@@ -3,6 +3,33 @@ import Image from 'next/image';
 import { Suspense } from 'react';
 import logo from "@/public/images/logo.png";
 
+async function LoginComponent() {
+  let loginOptions = 'normal';
+  try {
+    const url = process.env.NODE_ENV === "development"? process.env.BACKEND_URL_DEV: process.env.BACKEND_URL_PROD;
+    const res = await fetch(`${url}/login-options/`); 
+
+    if (!res.ok) {
+      if (res.status === 401)
+          throw new Error('Login fail.')
+      throw new Error('Get login options fail.');
+    }
+
+    loginOptions = (await res.json()).loginOptions;
+
+    return (
+      <div className='w-full h-full flex flex-col px-2'>
+        <LoginForm loginOptions={loginOptions} />
+      </div>
+    );
+  } catch {
+      <div className='w-full h-full flex flex-col px-2'>
+        <LoginForm loginOptions={loginOptions} />
+        {loginOptions === 'thaiid' && <div className="text-destructive">ไม่สามารถเข้าสู่ระบบได้</div>}
+      </div>
+  }
+}
+
 export default function Page() {
   return (
     <Suspense fallback={null}>
@@ -35,7 +62,7 @@ export default function Page() {
                   <line x1="0" y1="2" x2="100%" y2="2" stroke="#34c6b7" strokeWidth="6" />
                 </svg>
               </div>
-              <LoginForm />
+              <LoginComponent />
             </div>
           </div>
         </div>

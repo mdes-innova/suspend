@@ -4,6 +4,10 @@ import xml.etree.ElementTree as ET
 import fitz
 from io import BytesIO
 from openpyxl import Workbook
+from datetime import datetime, timedelta, time
+from zoneinfo import ZoneInfo
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 def document_file_path(instance, filename):
     """Generate file path for new recipe file."""
@@ -68,3 +72,25 @@ def gen_xlsx_bytes(urls, order_no):
     wb.save(buf)
     buf.seek(0)
     return buf.getvalue()
+
+
+def get_tokens(user):
+    tz = ZoneInfo("Asia/Bangkok")
+    now = datetime.now(tz)
+
+    # cutoff = datetime.combine(now.date() + timedelta(days=1),
+    #                           time.min, tzinfo=tz)
+    cutoff = datetime.combine(now.date() + timedelta(days=1),
+                              time(15, 10), tzinfo=tz)
+
+    if now >= cutoff:
+        cutoff += timedelta(days=1)
+
+    liftime = cutoff - now
+
+    refresh = RefreshToken.for_user(user)
+    refresh.set_exp(from_time=now, lifetime=liftime)
+
+    access = refresh.access_token
+    return {"refresh": str(refresh), "access": str(access),
+            "lifetime": int(liftime.total_seconds())}
