@@ -18,7 +18,7 @@ import { Date2Thai, Text2Thai } from "@/lib/utils";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/playlist-dialog";
 import ContentDialog from "../content-dialog";
 import { DialogFooter } from "../ui/dialog";
-import { setRowSelection} 
+import { setDocIds, setRowSelection} 
   from "../store/features/dialog-list-ui-slice";
 import { getDocumentList } from "../actions/document";
 import { Group, type Document } from "@/lib/types";
@@ -250,6 +250,7 @@ export default function DocumentList({ data, groupId }: { data: Document[] | und
             <div className="flex gap-x-1 justify-end items-center w-full">
                 <Dialog open={ openContent} onOpenChange={(open: boolean) => {
                     dispatch(setRowSelection({}));
+                    dispatch(setDocIds([]));
                     setOpenContent(open);
                 }}>
                     <DialogTrigger asChild>

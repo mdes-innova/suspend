@@ -3,7 +3,7 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
 import Image from 'next/image';
-import logo from "@/public/images/de.png";
+import logo from "@/public/images/de_logo.png";
 
 export function CustomTrigger() {
   const { toggleSidebar } = useSidebar();

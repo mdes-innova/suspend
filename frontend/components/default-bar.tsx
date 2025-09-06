@@ -8,6 +8,7 @@ import { getProfile } from './actions/user';
 import { isAuthError } from './exceptions/auth';
 import { RedirectToLogin } from './reload-page';
 import { RootState } from './store';
+import Link from 'next/link';
 
 
 export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
@@ -33,21 +34,18 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
          <div className="w-full min-h-dvh flex flex-col justify-start items-start relative">
             <div className="w-full h-36 max-h-36 bg-blue-400 flex justify-between py-0
             items-center px-4 max-lg:px-1 max-md:p-0">
-                <div className="w-32 h-32 max-lg:w-20 max-lg:h-20 block
+                <Link className="w-32 h-32 max-lg:w-20 max-lg:h-20 block
                     relative selection:none cursor-pointer max-md:hidden"
-                    onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                        e.preventDefault();
-                        if (window) window.location.href = `${process.env.NEXT_PUBLIC_FRONTEND}`;
-                    }}>
+                    href="/">
                     <Image 
                         src="/images/de.png"
                         alt="Home logo"
                         fill
-                        className="object-cover"
+                        className="object-contain"
                         sizes="100vw"
                         priority
                     />
-                </div>
+                </Link>
                 <div className="flex flex-col h-36 justify-center items-start mr-auto
                 pl-10 max-lg:pl-4 max-md:pl-2 max-md:mt-2 max-sm:mt-2">
                     <div className="text-2xl font-bold max-lg:text-sm">ระบบระงับการเผยแพร่ซึ่งข้อมูลคอมพิวเตอร์ที่มีความผิดตาม พ.ร.บ. คอมพิวเตอร์</div>
