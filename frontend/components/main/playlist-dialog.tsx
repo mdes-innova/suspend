@@ -74,6 +74,32 @@ const columns: ColumnDef<Group>[] = [
           </div>
       );
     },
+  },{
+    id: 'ผู้ใช้งาน',
+    accessorKey: "user",
+    header: ({ column }: { column: Column<Group> }) => {
+      return (
+        <div className='inline-flex gap-x-2 w-full '
+        >
+          ผู้ใช้งาน 
+          <ArrowUpDown size={16} className="cursor-pointer"
+          onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+            e.preventDefault();
+            column.toggleSorting(column.getIsSorted() === "asc");
+          }}/>
+        </div>
+      )
+    },
+    cell: ({ row }: { row: Row<Group> }) => {
+      const original = row.original;
+      const username = original?.user?.thaiid?
+        `${original?.user?.givenName} ${original?.user?.familyName}`: original?.user?.username?? '';
+      return (
+        <div>
+          {username}
+          </div>
+      );
+    },
   },
   {
     id: 'วันที่',
@@ -118,6 +144,11 @@ function GroupTable() {
       decs: true
     },
     {
+      name: 'user',
+      id: 'ผู้ใช้งาน',
+      decs: false
+    },
+    {
       name: 'name',
       id: 'ชื่อฉบับร่าง',
       decs: false 
@@ -131,6 +162,7 @@ function GroupTable() {
         []
     );
     const pagination = useAppSelector((state: RootState) => state.contentListUi.groupPagination); 
+    const user = useAppSelector((state: RootState) => state.userAuth.user);
     const [pageIndex, setPageIndex] = useState(pagination.pageIndex);
     const [pageSize, setPageSize] = useState(pagination.pageSize);
     const [columnVisibility, setColumnVisibility] =
@@ -142,7 +174,9 @@ function GroupTable() {
     const [q, setQ] = useState("");
     const table = useReactTable({
         data: tableData?? [],
-        columns,
+        columns: user?.isSuperuser?
+        columns:
+        columns?.filter((_, idx: number) => idx != 1),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
