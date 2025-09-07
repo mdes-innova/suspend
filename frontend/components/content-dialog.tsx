@@ -494,7 +494,7 @@ export default function ContentDialog() {
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="block max-h-[50vh] overflow-auto w-full">
+          <TableBody className="block h-[50vh] overflow-auto w-full">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row: Row<Document>) => {
                 const original = row.original;

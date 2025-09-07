@@ -1181,7 +1181,7 @@ export function PlaylistDialogLoading() {
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className="block max-h-[50vh] overflow-clip w-full">
+          <TableBody className="block h-[50vh] overflow-clip w-full">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row: Row<TempDataType>) => {
                 return (
