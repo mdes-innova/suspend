@@ -53,12 +53,12 @@ const playlistDialogUiSlice = createSlice({
           if (action.payload.info?.length) {
             if (action.payload.info.length == 1) 
               toast(action.payload.info[0], {
-                description: 'Playlist has been created.'});
+                description: 'สร้างฉบับร่างใหม่สำเร็จ'});
             else
                 Array.from({length: action.payload.info.length - 1}).forEach((_, idx: number) => {
                   if (action.payload.info)
-                    toast(action.payload.info[0], {
-                      description: action.payload.info[idx + 1] + " added."
+                    toast("ฉบับร่าง \"" + action.payload.info[0] + "\"", {
+                      description: "เพิ่ม " + action.payload.info[idx + 1]
                     });
                 });
           }
@@ -72,11 +72,11 @@ const playlistDialogUiSlice = createSlice({
           if (action.payload.info?.length) {
             if (action.payload.info.length == 1) 
               toast(action.payload.info[0], {
-                description: 'Playlist has been created.'});
+                description: 'สร้างฉบับร่างใหม่สำเร็จ'});
             else
                 Array.from({length: action.payload.info.length - 1}).forEach((_, idx: number) => {
                   if (action.payload.info)
-                    toast("ฉบับบร่าง " + action.payload.info[0], {
+                    toast("ฉบับบร่าง \"" + action.payload.info[0] + "\"", {
                       description: "เพิ่ม " + action.payload.info[idx + 1]
                     });
                 });

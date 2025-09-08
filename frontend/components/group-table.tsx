@@ -35,19 +35,12 @@ import { useAppDispatch, useAppSelector } from './store/hooks';
 import {useEffect, useRef} from 'react';
 import { getContent, RemoveGroup, RenameGroup } from "./actions/group";
 import { Datetime2Thai } from "@/lib/client/utils";
-import { setPagination, setRename, toggleDataChanged } from "./store/features/group-list-ui-slice";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetFooter,
-  SheetTitle,
-} from "@/components/ui/sheet"
+import { setPagination, toggleDataChanged } from "./store/features/group-list-ui-slice";
 import { Label } from "./ui/label";
 import { RootState } from "./store";
 import { isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "./ui/playlist-dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/playlist-dialog";
 import { LoadingGroupTable } from "./loading/content";
 
 function resolveUpdater<T>(updater: Updater<T>, previous: T): T {
@@ -184,25 +177,26 @@ function GroupActions({
   const dispatch = useAppDispatch();
   const [uiOpen, setUiOpen] = useState(false);
   const [deleteDailogOpen, setDeleteDailogOpen] = useState(false);
-  const rename = useAppSelector((state: RootState) => state.groupListUi.rename);
+  const [renameDailogOpen, setRenameDailogOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const [deleteErrorMsg, setDeleteErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
     return (
     <div className="w-full text-right flex justify-end">
       <Dialog open={deleteDailogOpen} onOpenChange={(open) => {
-        if (!open) setUiOpen(false);
-        setDeleteErrorMsg('');
+        setErrorMsg('');
         setDeleteDailogOpen(open);
       }}>
         <DialogContent>
-          <DialogTitle>
-            ลบฉบับร่าง
-          </DialogTitle>
+          <DialogHeader>
+            <DialogTitle>
+              ลบฉบับร่าง
+            </DialogTitle>
+          </DialogHeader>
           <DialogDescription>
             ท่านต้องการลบฉบับร่าง &quot;{name}&quot; หรือไม่?
           </DialogDescription>
-          <div className="text-destructive block h-8">{deleteErrorMsg}</div>
+          <div className="text-destructive block h-8">{errorMsg}</div>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">ยกเลิก</Button>
@@ -219,11 +213,48 @@ function GroupActions({
                 if (isAuthError(error)) 
                   RedirectToLogin(); 
                 else
-                  setDeleteErrorMsg(`ไม่สามารถลบฉบับร่าง "${name}" ได้`);
+                  setErrorMsg(`ไม่สามารถลบฉบับร่าง "${name}" ได้`);
               }
             }}
             >ยืนยัน</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={renameDailogOpen} onOpenChange={(open: boolean) => {
+        setRenameDailogOpen(open);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>เปลี่ยนชื่อฉบับร่าง</DialogTitle>
+          </DialogHeader>
+          <DialogDescription></DialogDescription>
+            <div className="grid flex-1 auto-rows-min gap-6 px-4">
+                <div className="grid gap-3">
+                    <Label htmlFor="sheet-demo-name">ชื่อ</Label>
+                    <Input id="sheet-demo-name" defaultValue={name} ref={nameRef}/>
+                </div>
+            </div>
+            <div className="text-destructive block h-8">{errorMsg}</div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant='outline'>ยกเลิก</Button>
+                </DialogClose>
+                <Button onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.preventDefault();
+                    if (nameRef?.current)
+                      try {
+                        await RenameGroup({name: nameRef?.current?.value, groupId: id});
+                        dispatch(toggleDataChanged());
+                        setRenameDailogOpen(false);
+                      } catch (error) {
+                        if (isAuthError(error))  
+                          RedirectToLogin();
+                        else
+                          setErrorMsg(`ไม่สามารถสร้างฉบับร่าง "${nameRef?.current?.value}" ได้`);
+                      }
+                }}>
+                  บันทึก</Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
       <DropdownMenu open={uiOpen} onOpenChange={setUiOpen}>
@@ -232,7 +263,7 @@ function GroupActions({
             variant="ghost"
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation();
-              setDeleteErrorMsg('');
+              setErrorMsg('');
               setDeleteDailogOpen(false);
               setUiOpen(true);
             }}
@@ -240,14 +271,13 @@ function GroupActions({
             <MoreHorizontal size={24} />
           </Button>
         </DropdownMenuTrigger>
-
         <DropdownMenuContent>
           <DropdownMenuItem
             onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-              e.stopPropagation();
               e.preventDefault();
-              dispatch(setRename(id));
-              dispatch(toggleDataChanged());
+              setErrorMsg('');
+              setDeleteDailogOpen(false);
+              setRenameDailogOpen(true);
               setUiOpen(false);
             }}
           >
@@ -259,7 +289,8 @@ function GroupActions({
           <DropdownMenuItem
           onClick={async (e: React.MouseEvent<HTMLDivElement>) => {
               e.preventDefault();
-              setDeleteErrorMsg('');
+              setErrorMsg('');
+              setRenameDailogOpen(false);
               setDeleteDailogOpen(true);
               setUiOpen(false);
             }}
@@ -268,38 +299,6 @@ function GroupActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-        <Sheet open={rename != -1} onOpenChange={(open: boolean) => {
-            if (!open) dispatch(setRename(-1));
-        }}>
-            <SheetContent>
-                <SheetTitle>เปลี่ยนชื่อฉบับร่าง</SheetTitle>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4">
-                    <div className="grid gap-3">
-                        <Label htmlFor="sheet-demo-name">ชื่อ</Label>
-                        <Input id="sheet-demo-name" defaultValue={name} ref={nameRef}/>
-                    </div>
-                </div>
-                <SheetFooter>
-                    <SheetClose asChild onClick={async(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.preventDefault();
-                        if (nameRef?.current)
-                          try {
-                            await RenameGroup({name: nameRef?.current?.value, groupId: rename});
-                          } catch (error) {
-                            if (isAuthError(error))  
-                              RedirectToLogin();
-                          }
-                        dispatch(toggleDataChanged());
-                        dispatch(setRename(-1));
-                    }}>
-                        <Button>บันทึก</Button>
-                    </SheetClose>
-                    <SheetClose asChild>
-                        <Button variant='destructive'>ยกเลิก</Button>
-                    </SheetClose>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
     </div>
   );
 }
@@ -327,6 +326,7 @@ export default function GroupTable() {
       decs: false
     },
   ]);
+  const dataChaged = useAppSelector((state: RootState) => state.groupListUi.dataChanged);
     const [sorting, setSorting] = useState<SortingState>([])
     const [tableData, setTableData] = useState<Group[] | null>(null);
     const dispatch = useAppDispatch();
@@ -408,7 +408,7 @@ export default function GroupTable() {
 
     getData();
 
-  }, [sorts, pageSize, pageIndex, q]);
+  }, [sorts, pageSize, pageIndex, q, dataChaged]);
 
   if (!tableData)
     return (
