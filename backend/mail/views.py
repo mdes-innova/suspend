@@ -7,6 +7,7 @@ from core.models import (
         Mail, MailStatus, Group, GroupFile, MailFile, MailGroup,
         ISP
     )
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework import status

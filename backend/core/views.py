@@ -1,4 +1,5 @@
-from .utils import get_tokens
+from .serializer import CustomTokenObtainPairSerializer
+from .utils import get_tokens, set_cookies
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -12,19 +13,41 @@ import os
 import requests
 from django.utils.dateparse import parse_date
 import urllib.parse
-from .serializer import (CustomTokenObtainPairSerializer as
-                         TokenObtainPairSerializer)
-
+from .permissions import IsAdminOrStaff
+from rest_framework.exceptions import AuthenticationFailed
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def login_options_view(request):
     return Response({'login_options': os.environ.get('LOGIN_OPTIONS', 'normal')})
 
+@api_view(['GET'])
+@permission_classes([IsAdminOrStaff])
+def set_tokens_view(request):
+    user = request.user
+    if not user:
+        raise AuthenticationFailed(
+            "User not found.", code="authorization")
+
+    if os.environ.get('LOGIN_OPTIONS', 'normal') == 'thaiid' and not\
+            getattr(user, "thaiid", False):
+        raise AuthenticationFailed(
+            "Your account isn't allowed to sign in.", code="authorization")
+    elif getattr(user, 'isp', None):
+        raise AuthenticationFailed(
+            "Your account isn't allowed to sign in.", code="authorization")
+
+    refresh = get_tokens(user)
+    access = refresh.access_token
+    resp = Response({'access': access, 'refresh': refresh})
+    set_cookies(refresh, access, resp)
+
+    return resp
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
-    serializer_class = TokenObtainPairSerializer
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class ThaiIdView(APIView):
@@ -77,30 +100,15 @@ class ThaiIdView(APIView):
                 birthdate=birthdate_d
             )
 
-            tokens = get_tokens(user)
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+
             if state:
                 resp = redirect(state)
             else:
                 resp = redirect("/")
 
-            resp.set_cookie(
-                key="access",
-                value=str(tokens['access']),
-                max_age=int(60*4.5),
-                path="/",
-                secure=True,
-                httponly=True,
-                samesite="Lax"
-            )
-            resp.set_cookie(
-                key="refresh",
-                value=str(tokens['refresh']),
-                max_age=tokens['lifetime'] - 30,
-                path="/",
-                secure=True,
-                httponly=True,
-                samesite="Lax"
-            )
+            set_cookies(refresh, access, resp)
             return resp
         except:
             if not state:

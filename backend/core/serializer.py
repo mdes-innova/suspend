@@ -17,13 +17,13 @@ class FixedExpiryRefreshToken(RefreshToken):
         self.payload["exp"] = int(cutoff.timestamp())
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        return FixedExpiryRefreshToken.for_user(user)
-
     def validate(self, attrs):
         data = super().validate(attrs)
         user = self.user
+
+        if not user:
+            raise AuthenticationFailed(
+                "User not found.", code="authorization")
 
         if os.environ.get('LOGIN_OPTIONS', 'normal') == 'thaiid' and not\
                 getattr(user, "thaiid", False):

@@ -89,3 +89,24 @@ def get_tokens(user):
     access = refresh.access_token
     return {"refresh": str(refresh), "access": str(access),
             "lifetime": int(lifetime.total_seconds())}
+
+
+def set_cookies(refresh, access, resp):
+    resp.set_cookie(
+        key="access",
+        value=str(access),
+        max_age=int(60*4.5),
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="Lax"
+    )
+    resp.set_cookie(
+        key="refresh",
+        value=str(refresh),
+        max_age=int(60*60*7.95),
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="Lax"
+    )

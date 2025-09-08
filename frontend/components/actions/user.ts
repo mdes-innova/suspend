@@ -247,7 +247,6 @@ export async function loginUser({
             maxAge: 60 * 4.5,
         });
 
-        const lifetime = getSecondsUntilMidnightBangkok();
         cookieStore.set({
             name: 'refresh',
             value: refresh,
@@ -255,7 +254,7 @@ export async function loginUser({
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: lifetime - 30,
+            maxAge: 60 * 60 * 7.95, 
         });
 
         const userRes = await fetch(`${url}/user/users/me/`, {

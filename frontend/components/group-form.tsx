@@ -27,7 +27,7 @@ import { getGroup, updateDocumentDate, updateDocumentNo, updateDocumentSecret,
   updateSection,
   saveGroup} from "./actions/group"
 import { Card } from "./ui/card";
-import { isAuthError } from '@/components/exceptions/auth';
+import { AuthError, isAuthError } from '@/components/exceptions/auth';
 import { RedirectToLogin } from "./reload-page"
 import { Textarea } from "./ui/textarea"
 import { useAppDispatch } from "./store/hooks"
@@ -36,6 +36,7 @@ import { createSection, getSections, removeSection } from "./actions/section"
 import { Label } from "./ui/label"
 import { getUsersFromIspList } from "./actions/user"
 import { usePathname } from 'next/navigation';
+import { getAccess } from "./actions/auth"
 
 
 const FormSchema = z.object({
@@ -263,6 +264,28 @@ export function GroupForm({
         kind: 'body',
         value: textareaValue
       });
+
+      const backendBaseUrl = process.env.NODE_ENV === "development"?
+        process.env.NEXT_PUBLIC_BACKEND_DEV: process.env.NEXT_PUBLIC_BACKEND_PROD;
+
+      const access = await getAccess();
+
+      const resSettokens = await fetch(
+        `${backendBaseUrl}/settokens/`,
+        {
+          headers: {
+            "Authorization": `Bearer ${access}`
+          }
+        }
+      );
+
+      if (!resSettokens.ok) {
+        if (resSettokens.status === 401)
+          throw new AuthError('Unauthorized user.');
+        else
+          throw new Error('Cannot set session.');
+      }
+
       const mailGroup = await createMailGroup({
         groupId
       });
