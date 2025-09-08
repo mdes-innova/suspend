@@ -11,7 +11,7 @@ export function CustomTrigger() {
   return (
     <Button
       onClick={toggleSidebar}
-      className="h-12 w-12 text-lg  max-md:p-0 max-md:m-0"
+      className="h-12 w-12 text-lg max-md:p-0 max-md:m-0 z-20"
       variant="outline"
       id="app-bar-trigger"
     >
