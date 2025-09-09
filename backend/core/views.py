@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import redirect
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 import os
 import requests
@@ -39,10 +40,27 @@ def set_tokens_view(request):
 
     refresh = RefreshToken.for_user(user)
     access = refresh.access_token
-    resp = Response({'access': str(access), 'refresh': str(refresh)})
-    set_cookies(refresh, access, resp)
+    response = JsonResponse({"access": str(access), "refresh": str(refresh)})
+    response.set_cookie(
+        key="access",
+        value=str(access),
+        max_age=int(60*4.5),
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="Lax"
+    )
+    response.set_cookie(
+        key="refresh",
+        value=str(refresh),
+        max_age=int(60*60*7.95),
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="Lax"
+    )
 
-    return resp
+    return response
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -107,9 +125,27 @@ class ThaiIdView(APIView):
                 resp = redirect(state)
             else:
                 resp = redirect("/")
-
-            set_cookies(refresh, access, resp)
+            
+            resp.set_cookie(
+                key="access",
+                value=str(access),
+                max_age=int(60*4.5),
+                path="/",
+                secure=True,
+                httponly=True,
+                samesite="Lax"
+            )
+            resp.set_cookie(
+                key="refresh",
+                value=str(refresh),
+                max_age=int(60*60*7.95),
+                path="/",
+                secure=True,
+                httponly=True,
+                samesite="Lax"
+            )
             return resp
+
         except:
             if not state:
                 resp = redirect("/login/?pathname=" +

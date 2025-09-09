@@ -285,6 +285,8 @@ export function GroupForm({
         else
           throw new Error('Cannot set session.');
       }
+      const jsonSettokens = await resSettokens.json();
+      console.log(jsonSettokens);
 
       const mailGroup = await createMailGroup({
         groupId

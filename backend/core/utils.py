@@ -110,3 +110,5 @@ def set_cookies(refresh, access, resp):
         httponly=True,
         samesite="Lax"
     )
+
+    return resp

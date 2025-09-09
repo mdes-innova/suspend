@@ -86,7 +86,13 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.username
         return f"User {self.id}"
 
-    def clean(self):
-        super().clean()
-        if self.username == "":
-            self.username = None
+    # def clean(self):
+    #     super().clean()
+    #     if self.username == "":
+    #         self.username = None
+    #     if self.family_name == "":
+    #         self.family_name = None
+    #     if self.given_name == "":
+    #         self.given_name = None
+    #     if self.birthdate == "":
+    #         self.birthdate = None

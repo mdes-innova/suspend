@@ -149,6 +149,7 @@ function NormalUserForm({ ispData }: { ispData: Isp[] }) {
       email,
       ispId: (isp != "" && userType === 'user')? parseInt(isp): undefined,
       isStaff: userType === 'user'? false: true,
+      thaiid: false,
     }
     try {
       await registerUser(extendedValues);
