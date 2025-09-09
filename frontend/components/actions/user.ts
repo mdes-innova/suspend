@@ -194,20 +194,6 @@ export async function registerUser(userRegisterParams: UserRegister) {
     }
 }
 
-function getSecondsUntilMidnightBangkok() {
-  const now = new Date();
-
-  const bangkokOffset = 7 * 60;
-  const utc = now.getTime() + now.getTimezoneOffset() * 60_000;
-  const bangkokNow = new Date(utc + bangkokOffset * 60_000);
-
-  const midnight = new Date(bangkokNow);
-  midnight.setHours(24, 0, 0, 0);
-
-  const diffMs = midnight.getTime() - bangkokNow.getTime();
-  return Math.floor(diffMs / 1000);
-}
-
 export async function loginUser({
     username,
     password,

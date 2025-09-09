@@ -37,9 +37,9 @@ def set_tokens_view(request):
         raise AuthenticationFailed(
             "Your account isn't allowed to sign in.", code="authorization")
 
-    refresh = get_tokens(user)
+    refresh = RefreshToken.for_user(user)
     access = refresh.access_token
-    resp = Response({'access': access, 'refresh': refresh})
+    resp = Response({'access': str(access), 'refresh': str(refresh)})
     set_cookies(refresh, access, resp)
 
     return resp
