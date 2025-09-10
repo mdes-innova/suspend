@@ -46,35 +46,6 @@ class UserSerializer(serializers.ModelSerializer):
         data['family_name'] = data.get('family_name', None) or None
         data['birthdate'] = data.get('birthdate', None) or None
         return super().to_internal_value(data)
-    
-    def validate(self, attrs):
-        """Validate the user data."""
-        username = attrs.get('username', None)
-        given_name = attrs.get('given_name', None)
-        family_name = attrs.get('family_name', None)
-        birthdate = attrs.get('birthdate', None)
-        thaiid = attrs.get('thaiid', False)
-
-        if thaiid:
-            if not (given_name and family_name and birthdate):
-                raise serializers.ValidationError(
-                    "given_name, family_name and birthdate are required for Thai ID users."
-                )
-            if username:
-                raise serializers.ValidationError(
-                    "username should not be provided for Thai ID users."
-                )
-        else:
-            if not username:
-                raise serializers.ValidationError(
-                    "username is required for non-Thai ID users."
-                )
-            if given_name or family_name or birthdate:
-                raise serializers.ValidationError(
-                    "given_name, family_name and birthdate should not be provided for non-Thai ID users."
-                )
-        
-        return attrs
 
     def create(self, validated_data):
         """Create and return a user with encrypted password."""

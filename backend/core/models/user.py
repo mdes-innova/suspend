@@ -16,21 +16,9 @@ username_validator = RegexValidator(
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
-        if extra_fields.get('thaiid'):
-            if not (extra_fields.get('given_name') and
-                    extra_fields.get('family_name') and
-                    extra_fields.get('birthdate')):
-                raise ValueError('ThaiID user needs given_name ' +
-                                 'family_name and birthdate.')
-        elif not extra_fields.get('thaiid'):
-            if not username:
-                raise ValueError('Username is required.')
         user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.full_clean()
-        if not extra_fields.get('thaiid'):
-            for k in ('given_name', 'family_name', 'birthdate'):
-                extra_fields[k] = None
         user.save(using=self._db)
         return user
 
