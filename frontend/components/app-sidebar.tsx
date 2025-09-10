@@ -98,12 +98,15 @@ export function AppSidebar() {
                   <DropdownMenuTrigger asChild>
                     <SidebarMenuButton>
                       {user?.thaiid? `${user?.givenName} ${user?.familyName}`: user?.username?? ''}
-                      <ChevronUp className="ml-auto" />
+                      <ChevronUp className="ml-auto"/>
                     </SidebarMenuButton>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     side="top"
-                    className="w-[--radix-popper-anchor-width]"
+                    align="start"
+                    sideOffset={0}
+                    alignOffset={0}
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-0"
                   >
                     <DropdownMenuLabel>บัญชีของฉัน</DropdownMenuLabel>
                     <DropdownMenuSeparator />
