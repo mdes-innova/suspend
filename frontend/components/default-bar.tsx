@@ -9,6 +9,7 @@ import { isAuthError } from './exceptions/auth';
 import { RedirectToLogin } from './reload-page';
 import { RootState } from './store';
 import Link from 'next/link';
+import { CustomTrigger } from './sidebar-trigger';
 
 
 export default function DefaultBar({ children }: { children?: Readonly<React.ReactNode> }) {
@@ -32,6 +33,7 @@ export default function DefaultBar({ children }: { children?: Readonly<React.Rea
 
     return (
          <div className="w-full min-h-dvh flex flex-col justify-start items-start relative">
+            <CustomTrigger />
             <div className="w-full h-36 max-h-36 bg-blue-400 flex justify-between py-0
             items-center px-4 max-lg:px-1 max-md:p-0">
                 <div className="w-32 h-32 max-lg:w-20 max-lg:h-20 block
