@@ -38,7 +38,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'is_staff', 'is_superuser', 'is_active', 'thaiid',
                   'birthdate', 'given_name', 'family_name']
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
-        read_only_fields = ['isp', 'is_superuser']
+        read_only_fields = ['isp', 'is_superuser', 'is_staff']
     
     def to_internal_value(self, data):
         data['username'] = data.get('username', None) or None

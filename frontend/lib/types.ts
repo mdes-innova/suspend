@@ -81,12 +81,7 @@ export type UserRegister = {
   username?: string,
   password?: string,
   email?: string,
-  isStaff: boolean,
-  ispId?: number,
-  givenName?: string | null,
-  familyName?: string | null,
-  birthdate?: string | null,
-  thaiid?: boolean | null
+  ispId?: number
 }
 
 export type IspFile = {
