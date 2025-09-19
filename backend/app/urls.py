@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import os
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView
@@ -36,9 +37,9 @@ urlpatterns = [
     path('api/thaiid/callback/', ThaiIdView.as_view(), name='thaiid_callback'),
     path('api/settokens/', set_tokens_view, name='set_tokens'),
     path('api/f2a/', include(tf_urls)),  # replaces the login view with a 2FA flow
-    path('api/admin/', admin.site.urls),
-    path('api/token/', CustomTokenObtainPairView.as_view(),
-         name='token_obtain_pair'),
+    # path('api/admin/', admin.site.urls),
+    # path('api/token/', CustomTokenObtainPairView.as_view(),
+    #      name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(),
          name='token_refresh'),
     path('api/login-options/', login_options_view, name='login_options'),
@@ -59,7 +60,9 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name='api-schema'),
         name='api-docs',
     )
-]
+] + ([path('api/token/', CustomTokenObtainPairView.as_view(),
+         name='token_obtain_pair'), ]\
+             if os.environ.get('LOGIN_OPTIONS', 'normal') != 'thaiid' else [])
 
 if settings.DEBUG:
     urlpatterns += static(
