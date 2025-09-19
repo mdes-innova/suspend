@@ -79,7 +79,7 @@ const columns: ColumnDef<Group>[] = [
     accessorKey: "user",
     header: ({ column }: { column: Column<Group> }) => {
       return (
-        <div className='inline-flex gap-x-2 w-full '
+        <div className='inline-flex gap-x-2 w-full'
         >
           ผู้ใช้งาน 
           <ArrowUpDown size={16} className="cursor-pointer"
