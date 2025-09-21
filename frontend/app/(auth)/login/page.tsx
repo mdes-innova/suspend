@@ -59,9 +59,9 @@ export default function Page() {
                 {/* <svg width="120" height="4" xmlns="http://www.w3.org/2000/svg">
                   <line x1="0" y1="2" x2="100%" y2="2" stroke="#34c6b7" strokeWidth="6" />
                 </svg> */}
-                <hr class="border-t-4 border-[#34c6b7] flex-[1]" />
+                <hr className="border-t-4 border-[#34c6b7] flex-[1]" />
                 <h1 className="text-3xl font-bold text-[#34c6b7] max-sm:text-xl flex-[1] text-center">เข้าสู่ระบบ</h1>
-                <hr class="border-t-4 border-[#34c6b7] flex-[1]" />
+                <hr className="border-t-4 border-[#34c6b7] flex-[1]" />
                 {/* <svg width="120" height="4" xmlns="http://www.w3.org/2000/svg">
                   <line x1="0" y1="2" x2="100%" y2="2" stroke="#34c6b7" strokeWidth="6" />
                 </svg> */}
