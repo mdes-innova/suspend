@@ -38,7 +38,9 @@ export default function Page() {
         <div className="flex items-center justify-center bg-background
           w-full max-md:flex max-md:flex-col max-md:gap-y-6">
           <div className="flex-1 flex flex-col justify-center items-center h-full">
-            <div className="w-[560px] h-[500px] relative max-lg:w-[360px] max-lg:h-[360px]">
+            <div className="w-[560px] h-[500px] relative max-lg:w-[360px] max-lg:h-[360px]
+            max-sm:w-[280px] max-sm:h-[280px]
+            ">
               <Image 
                 src={logo}
                 alt="Home logo"
