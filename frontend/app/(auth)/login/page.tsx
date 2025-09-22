@@ -33,8 +33,8 @@ async function LoginComponent() {
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <div className="min-h-screen flex flex-col justify-between max-md:gap-y-4 relative w-full">
-        <div className="block w-full h-16 bg-[#34c6b7]"></div>
+      <div className="min-h-screen flex flex-col justify-between max-md:gap-y-4 relative w-full max-sm:justify-center">
+        <div className="block w-full h-16 bg-[#34c6b7] max-sm:hidden"></div>
         <div className="flex items-center justify-center bg-background
           w-full max-md:flex max-md:flex-col max-md:gap-y-6">
           <div className="flex-1 flex flex-col justify-center items-center h-full">
@@ -70,7 +70,7 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="block w-full h-16 bg-[#34c6b7]"></div>
+        <div className="block w-full h-16 bg-[#34c6b7] max-sm:hidden"></div>
       </div>
 
     </Suspense>
