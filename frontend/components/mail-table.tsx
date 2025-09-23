@@ -128,7 +128,7 @@ const columns: ColumnDef<MailGroup>[] = [
     cell: ({ row }: { row: Row<MailGroup> }) => {
       const original = row.original;
       const user = original?.user;
-      if (user?.username)
+      if (!user?.thaiid)
         return (
           <div>
             {user?.username}
