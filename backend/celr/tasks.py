@@ -52,7 +52,6 @@ def update_data_task(self):
             "startorderdate": last_date.strftime("%Y-%m-%d"),  # type: ignore
             "endorderdate": now.strftime("%Y-%m-%d"),
         }
-        print(body)
         res = _http.post(
             f"{webd_url}/api/getcourtorder",
             headers={
