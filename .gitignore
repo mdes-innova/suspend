@@ -11,6 +11,7 @@ backend/pdfs/
 backend/local_settings.py
 backend/Dockerfile
 backend/scripts/
+backend/celerybeat-schedule
 
 # Django Migrations (optional)
 backend/**/migrations/__pycache__/

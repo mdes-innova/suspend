@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 import httpx
 import redis
+from zoneinfo import ZoneInfo
 
 # Reuse a small client pool; Celery worker is long-lived.
 _http = httpx.Client(timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=True)
@@ -43,12 +44,21 @@ def update_data_task(self):
         if not bearer_token or not webd_url:
             raise RuntimeError("WEBD_TOKEN/WEBD_URL not configured")
 
+        tz = ZoneInfo("Asia/Bangkok")
+        now = datetime.now(tz).date()
+        last_document = Document.objects.order_by("-order_date").first()
+        last_date = last_document.order_date if last_document else now
+        body = {
+            "startorderdate": last_date.strftime("%Y-%m-%d"),  # type: ignore
+            "endorderdate": now.strftime("%Y-%m-%d"),
+        }
         res = _http.post(
             f"{webd_url}/api/getcourtorder",
             headers={
                 "Authorization": f"Bearer {bearer_token}",
                 "Content-Type": "application/json",
             },
+            json=body
         )
         res.raise_for_status()
         body = res.json()
