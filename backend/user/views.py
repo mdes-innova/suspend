@@ -35,6 +35,39 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.delete()
     
     @action(
+        detail=False,
+        methods=['get'],
+        name='list-users'
+    )
+    def list_users(self, request):
+        """List all users."""
+        sorts = request.GET.getlist("sort")
+        decs = request.GET.getlist("decs")
+        page = request.GET.get("page", '0')
+        page_size = request.GET.get("pagesize", '20')
+        q = request.GET.get("q", '')
+        try:
+            sort_keys = {
+                'createdAt': 'created_at',
+                'name': 'document_no',
+                'section': 'section__name',
+                'user': 'user_name',
+                'sends': 'send_mails',
+                'confirms': 'confirm_rate'
+            }
+            for_sorts = []
+            for sort_i, sort in enumerate(sorts):
+                if decs[sort_i] == 'true':
+                    for_sorts.append(f'-{sort_keys[sort]}')
+                else:
+                    for_sorts.append(sort_keys[sort])
+            serializer = self.get_serializer(users, many=True)
+            return Response(serializer.data)
+        except Exception:
+            return Response({'error': 'Get users fail.'},
+                            status.HTTP_400_BADREQUEST)
+    
+    @action(
         detail=True,
         methods=['post'],
         url_path='update-user'

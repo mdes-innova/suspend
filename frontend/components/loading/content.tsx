@@ -1245,3 +1245,150 @@ export function PlaylistDialogLoading() {
     </div>
   )
 }
+
+export function LoadingUsersTable() {
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+        []
+    );
+    const columns = mailColumns;
+    const [columnVisibility, setColumnVisibility] =
+        useState<VisibilityState>({})
+    const [rowSelection, setRowSelection] = useState({}) 
+    const [pagination, setPagination] = useState({
+        pageIndex: 0,
+        pageSize: 100,
+    });
+    const table = useReactTable({
+        data: Array.from({length: 22}).map((_, idx: number) => {
+           return ({
+                id0: idx,
+                id1: idx,
+                id2: idx,
+                id3: idx,
+                id4: idx,
+                id5: idx
+            });
+        }),
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onPaginationChange: setPagination,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        state: {
+            pagination,
+            sorting,
+            columnFilters,
+            columnVisibility,
+            rowSelection,
+        },
+  })
+
+  useEffect(() => {
+    if (document) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+        if (document)
+            document.body.style.overflow = "";
+    };
+  }, []);
+
+    return (
+    <div className="w-full overflow-clip px-2">
+      <div className="flex items-center py-4">
+        <Input
+          className="max-w-sm"
+          disabled
+        />
+        <div className="ml-auto flex items-center gap-x-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto w-24"
+                disabled
+              >
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column: Column<TempDataType>) => column.getCanHide())
+                .map((column: Column<TempDataType>) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value: boolean) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="rounded-md border"
+      >
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup: HeaderGroup<TempDataType>) => (
+              <TableRow key={headerGroup.id} className="bg-transparent hover:bg-background">
+                {headerGroup.headers.map((header: Header<TempDataType, unknown>) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row: Row<TempDataType>) => {
+                return (
+                <TableRow
+                  key={row.id}
+                  className="cursor-default bg-transparent hover:bg-transparent"
+                >
+                  {row.getVisibleCells().map((cell: Cell<TempDataType, unknown>) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+    );
+}

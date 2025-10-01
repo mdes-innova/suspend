@@ -1,7 +1,7 @@
 'use client';
 
 import { type User } from "@/lib/types";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Avatar,
   AvatarFallback,
@@ -359,6 +359,37 @@ export function ProfileIspView({ orgUser, isIsps = false }:
           }
           {isIsps? <></>:<Label>{!user? '': user?.isp?.name?? ''}</Label>}
           <Label className="mt-2 italic">{user?.email?? ''}</Label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ProfileUserView({user}: {user?: User}) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const me: User | null = useAppSelector((state: RootState) => state.userAuth.user);
+  useEffect(() => {
+    if (user) setCurrentUser(user);
+    else setCurrentUser(me);
+  }, []);
+
+  if (!currentUser) return <></>;
+  return (
+    <div className="w-full h-full flex justify-start p-4 pt-10">
+      <div className="flex h-40 max-lg:h-32">
+        <div className="flex flex-col justify-center items-center">
+          <Avatar className="w-40 h-full p-1 max-lg:w-32">
+            <AvatarImage src="/images/avatars/user.png" alt="suspend-user-avatar" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+        </div>
+        <div className="flex flex-col justify-center items-start gap-y-1 px-4">
+          <Label className="text-2xl font-bold">
+              {currentUser?.thaiid? `${currentUser?.givenName} ${currentUser?.familyName}`: currentUser?.username?? ''}
+          </Label>
+          <Label>{currentUser?.isp? currentUser?.isp?.name: 'พนักงาน'}</Label>
+          <Label className="mt-2 italic">{currentUser?.email?? ''}</Label>
+          {currentUser?.phone? <Label className="mt-2 italic">โทร {currentUser?.phone?? ''}</Label>: <></>}
         </div>
       </div>
     </div>

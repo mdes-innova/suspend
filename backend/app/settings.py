@@ -31,9 +31,6 @@ SECRET_KEY = 'django-insecure-_g_jvl6r$f=0p^_o__9)9!&nu&@-7u5#j+(5&k+&+qhn9zd58*
 # DEBUG = True
 DEBUG = config('DEBUG', default=True)
 
-ALLOWED_HOSTS = ['*']
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -70,6 +67,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,11 +76,20 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_otp.middleware.OTPMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     # 'logs.middleware.RequestLoggingMiddleware'
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+ALLOWED_HOSTS = ["suspend.deinno.cloud", "localhost", "127.0.0.1", "frontend"]
+CORS_ALLOWED_ORIGINS = [
+    "https://suspend.deinno.cloud",
+    "http://localhost:3000",
+    "http://frontend:3000"
+    ]
+
+if os.getenv('DJANGO_ENV') == "development":
+    CORS_ALLOW_ALL_ORIGINS = True
+    ALLOWED_HOSTS = ["*"]
 
 ROOT_URLCONF = 'app.urls'
 

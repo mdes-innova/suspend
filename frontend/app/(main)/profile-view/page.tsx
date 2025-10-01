@@ -3,14 +3,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { isAuthError } from '@/components/exceptions/auth';
 import { getAccess } from "../page";
-import ProfileView from "@/components/profile-view";
+import { ProfileUserView } from "@/components/profile-view";
 
 async function Components() {
 
   try {
     await getAccess();
 
-    return <ProfileView />;
+    return <ProfileUserView />;
   } catch (error) {
     if (isAuthError(error)) {
       return <ReloadPage />;

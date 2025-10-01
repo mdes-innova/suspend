@@ -5,11 +5,19 @@ export interface ContentListUiState {
     pageIndex: number;
     pageSize: number;
   };
+  userTablePagination: {
+    pageIndex: number;
+    pageSize: number;
+  };
 }
 
 // Initial state with type annotation
 const initialState: ContentListUiState = {
   ispTablePagination: {
+    pageIndex: 0,
+    pageSize: 40
+  },
+  userTablePagination: {
     pageIndex: 0,
     pageSize: 40
   }
@@ -23,12 +31,16 @@ const utilsUiSlice = createSlice({
     setIspPagination(state: ContentListUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
       state.ispTablePagination = action.payload;
     },
+    setUserPagination(state: ContentListUiState, action: PayloadAction<{ pageIndex: number; pageSize: number }>) {
+      state.userTablePagination = action.payload;
+    },
   },
 });
 
 // Export actions and reducer
 export const {
-  setIspPagination
+  setIspPagination,
+  setUserPagination
 } = utilsUiSlice.actions;
 
 export default utilsUiSlice.reducer;

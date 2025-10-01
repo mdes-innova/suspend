@@ -52,9 +52,13 @@ class User(AbstractBaseUser, PermissionsMixin):
                                    blank=True, default=None)
     birthdate = models.DateField(null=True, default=None, blank=True)
     thaiid = models.BooleanField(default=False)
+    phone = models.CharField(max_length=20, null=True, unique=True,
+                             blank=True, default=None)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     email = models.EmailField(blank=True, null=True, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

@@ -52,7 +52,12 @@ export type User = {
   thaiid?: boolean,
   givenName?: string,
   familyName?: string,
-  birthdate?: string
+  birthdate?: string,
+  documentCount: number,
+  receivedDocumentCount: number,
+  receivedMailCount: number,
+  sendMailCount: number,
+  phone?: string,
 };
 
 export type File = {
