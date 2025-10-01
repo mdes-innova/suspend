@@ -80,11 +80,24 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
-ALLOWED_HOSTS = ["suspend.deinno.cloud", "localhost", "127.0.0.1", "frontend"]
+ALLOWED_HOSTS = [
+    "suspend.deinno.cloud", "localhost", "127.0.0.1",
+    "frontend", "backend"  # internal Docker DNS
+]
 CORS_ALLOWED_ORIGINS = [
     "https://suspend.deinno.cloud",
     "http://localhost:3000",
-    "http://frontend:3000"
+    "http://frontend:3000",
+]
+CSRF_TRUSTED_ORIGINS = ["https://suspend.deinno.cloud"]
+
+if os.getenv('DJANGO_ENV') == "development":
+    CORS_ALLOW_ALL_ORIGINS = True
+    ALLOWED_HOSTS = ["*"]
+    # Optional but helpful if you use cookie/session auth in dev:
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        "http://frontend:3000",
     ]
 
 if os.getenv('DJANGO_ENV') == "development":
