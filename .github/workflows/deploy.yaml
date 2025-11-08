@@ -11,5 +11,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Show branch name for verification
-        run: echo "${{ github.ref_name }}"
+      - name: Execute deployment commands on remote server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.HOST_SSH }}
+          username: ${{ secrets.USER_SSH }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/pok/suspend
+            rm -rf ./webblock > /dev/null 2>&1
+            git clone --branch main https://${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
+      # - name: Show branch name for verification
+      #   run: echo "${{ github.ref_name }}"
