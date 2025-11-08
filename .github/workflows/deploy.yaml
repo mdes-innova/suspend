@@ -73,6 +73,7 @@ jobs:
       DATABASE_VOLUME_NAME: ${{ secrets.DATABASE_VOLUME_NAME }}
       REDIS_IMAGE_TAG: ${{ secrets.REDIS_IMAGE_TAG }}
       BRIDGE_NETWORK_NAME: ${{ secrets.BRIDGE_NETWORK_NAME }}
+      NEXT_PUBLIC_FRONTEND_PROD: ${{ secrets.NEXT_PUBLIC_FRONTEND_PROD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -101,7 +102,8 @@ jobs:
             DATABASE_IMAGE_TAG,
             DATABASE_CONTAINER_NAME,
             DATABASE_VOLUME_NAME,
-            UPLOAD_VOLUME_NAME
+            UPLOAD_VOLUME_NAME,
+            NEXT_PUBLIC_FRONTEND_PROD
           script: |
             set -euo pipefail
 
@@ -138,7 +140,8 @@ jobs:
             --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
             docker container exec ${BACKEND_CONTAINER_NAME} sh -c "python manage.py migrate"
 
-            docker build -f ../Dockerfile --target frontend -t $FRONTEND_IMAGE_TAG .
+            docker build -f ../Dockerfile --build-arg NEXT_PUBLIC_FRONTEND_PROD=${NEXT_PUBLIC_FRONTEND_PROD} \
+            --target frontend -t $FRONTEND_IMAGE_TAG .
             docker container rm -f $FRONTEND_CONTAINER_NAME > /dev/null 2>&1 || true
             docker run -d --name $FRONTEND_CONTAINER_NAME -e NODE_ENV=production \
             --env-file ../.env --network $BRIDGE_NETWORK_NAME $FRONTEND_IMAGE_TAG
@@ -157,7 +160,9 @@ jobs:
 
             docker container exec $REDIS_CONTAINER_NAME sh -c 'redis-cli ping | grep -q PONG'
 
-            docker container rm -f $CERL_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $CERL_CONTAINER_NAME --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
-            docker container rm -f $CERLBEAT_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $CERLBEAT_CONTAINER_NAME --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+            docker container rm -f $CELERY_WORKER_CONTAINER_NAME > /dev/null 2>&1 || true
+            docker run -d --name $CELERY_WORKER_CONTAINER_NAME -e DJANGO_ENV=production \
+            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+            docker container rm -f $CELERY_BEAT_CONTAINER_NAME > /dev/null 2>&1 || true
+            docker run -d --name $CELERY_BEAT_CONTAINER_NAME -e DJANGO_ENV=production \
+            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
