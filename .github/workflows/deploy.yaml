@@ -122,7 +122,7 @@ jobs:
             --name ${DATABASE_CONTAINER_NAME} --env-file ../.env --network $BRIDGE_NETWORK_NAME $DATABASE_IMAGE_TAG
 
             for i in {1..30}; do
-            if docker exec "$DATABASE_CONTAINER_NAME" sh -c "pg_isready -h 127.0.0.1 -U $POSTGRES_USER >/dev/null 2>&1"; then
+              if docker exec "$DATABASE_CONTAINER_NAME" sh -c 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" >/dev/null 2>&1'; then
                 echo "PostgreSQL is up"
                 break
               fi
