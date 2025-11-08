@@ -130,7 +130,7 @@ jobs:
               sleep 2
             done
 
-            docker exec "$DATABASE_CONTAINER_NAME" sh -c 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER"
+            docker exec "$DATABASE_CONTAINER_NAME" sh -c 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER"'
 
             docker build -f ../Dockerfile --target backend -t $BACKEND_IMAGE_TAG .
             docker container rm -f $BACKEND_CONTAINER_NAME > /dev/null 2>&1 || true
