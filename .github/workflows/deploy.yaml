@@ -57,18 +57,92 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     environment: production
+    env:
+      COMMIT_SHA: ${{ github.sha }}
+      BACKEND_IMAGE_NAME: suspend_backend
+      FRONTEND_IMAGE_NAME: suspend_frontend
+      BACKEND_CONTAINER_NAME: suspend_backend
+      FRONTEND_CONTAINER_NAME: suspend_frontend
+      CERLBEAT_CONTAINER_NAME: suspend_cerlbeat
+      CERL_CONTAINER_NAME: suspend_cerl
+      REDIS_CONTAINER_NAME: suspend_redis
+      DATABASE_CONTAINER_NAME: suspend_db
+      DATABASE_IMAGE_TAG: postgres:15-alpine
+      DATABASE_VOLUME_NAME: suspend_db_data
+      REDIS_IMAGE_TAG: redis:7-alpine
+      BRIDGE_IMAGE_NAME: suspend_bridge
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set SHORT_SHA
+        run: echo "SHORT_SHA=${COMMIT_SHA::7}" >> "$GITHUB_ENV"
       - name: Execute deployment commands on remote server
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          SHORT_SHA: ${{ env.SHORT_SHA }}
         with:
           host: ${{ secrets.HOST_SSH }}
           username: ${{ secrets.USER_SSH }}
+          script_stop: true
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: >
+            SHORT_SHA,
+            BACKEND_IMAGE_NAME,
+            FRONTEND_IMAGE_NAME,
+            BACKEND_CONTAINER_NAME,
+            FRONTEND_CONTAINER_NAME,
+            BRIDGE_IMAGE_NAME,
+            CERL_CONTAINER_NAME,
+            CERLBEAT_CONTAINER_NAME,
+            REDIS_CONTAINER_NAME,
+            REDIS_IMAGE_TAG,
+            DATABASE_IMAGE_TAG,
+            DATABASE_CONTAINER_NAME,
+            DATABASE_VOLUME_NAME
           script: |
+            set -euo pipefail
+
+            BACKEND_IMAGE_TAG="${BACKEND_IMAGE_NAME}:${SHORT_SHA}"
+            FRONTEND_IMAGE_TAG="${FRONTEND_IMAGE_NAME}:${SHORT_SHA}"
+
             cd /home/ubuntu/pok/suspend
             rm -rf ./webblock > /dev/null 2>&1
             git clone --branch main https://${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
-      # - name: Show branch name for verification
-      #   run: echo "${{ github.ref_name }}"
+            cd webblock
+
+            docker network create $BRIDGE_NETWORK_NAME > /dev/null 2>&1
+            docker build -f ../Dockerfile -t --target backend $BACKEND_IMAGE_TAG .
+            docker container rm -f $BACKEND_CONTAINER_NAME > /dev/null 2>&1
+            docker run -d --name $BACKEND_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+
+            if docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}" | grep -w ${DATABASE_CONTAINER_NAME} >/dev/null; then
+              echo "Database is ready."
+            else
+              docker container rm -f ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1
+              docker run -d -v ${DATABASE_VOLUME_NAME}:/var/lib/postgresql/data --name ${DATABASE_CONTAINER_NAME} --env-file .env --network $BRIDGE_NETWORK_NAME $DATABASE_IMAGE_TAG
+            fi
+
+            docker container exec ${BACKEND_CONTAINER_NAME} sh -c "python manage.py migrate"
+
+            docker build -f ../Dockerfile -t --target frontend $FRONTEND_IMAGE_TAG .
+            docker container rm -f $FRONTEND_CONTAINER_NAME > /dev/null 2>&1
+            docker run -d --name $FRONTEND_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $FRONTEND_IMAGE_TAG
+
+            docker container rm -f $REDIS_CONTAINER_NAME > /dev/null 2>&1
+            docker run -d --name $REDIS_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $REDIS_IMAGE_TAG
+
+            for i in {1..30}; do
+              if docker container exec -T $REDIS_CONTAINER_NAME sh -c 'redis-cli ping | grep -q PONG' > /dev/null 2>&1; then
+              echo "Redis is up"
+                 break
+               fi
+               echo "Waiting for Redis... ($i)"
+               sleep 2
+            done
+
+            docker container exec -T $REDIS_CONTAINER_NAME sh -c 'redis-cli ping | grep -q PONG'
+
+            docker container rm -f $CERL_CONTAINER_NAME > /dev/null 2>&1
+            docker run -d --name $CERL_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+            docker container rm -f $CERLBEAT_CONTAINER_NAME > /dev/null 2>&1
+            docker run -d --name $CERLBEAT_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
