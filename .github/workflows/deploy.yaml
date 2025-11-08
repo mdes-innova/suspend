@@ -15,6 +15,7 @@ jobs:
       POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
       POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      NEXT_PUBLIC_FRONTEND_PROD: ${{ secrets.NEXT_PUBLIC_FRONTEND_PROD }}
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v2
