@@ -25,73 +25,84 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_g_jvl6r$f=0p^_o__9)9!&nu&@-7u5#j+(5&k+&+qhn9zd58*'
+SECRET_KEY = "django-insecure-_g_jvl6r$f=0p^_o__9)9!&nu&@-7u5#j+(5&k+&+qhn9zd58*"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = config('DEBUG', default=True)
+DEBUG = config("DEBUG", default=True)
 
 # Application definition
 
 INSTALLED_APPS = [
-    'core',
-    'user',
-    'document',
-    'tag',
-    'category',
-    'url',
-    'section',
-    'group',
+    "core",
+    "user",
+    "document",
+    "tag",
+    "category",
+    "url",
+    "section",
+    "group",
     # 'activity',
-    'mail',
-    'kind',
-    'celr',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'django_filters',
-    'drf_spectacular',
-    'rest_framework.authtoken',
-    'django_otp',
-    'django_otp.plugins.otp_totp',
-    'two_factor',
-    'django_otp.plugins.otp_static',
-    'corsheaders',
-    'django_celery_beat',
-    'django_cleanup.apps.CleanupConfig',
-    'rest_framework_simplejwt.token_blacklist',
+    "mail",
+    "kind",
+    "celr",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "django_filters",
+    "drf_spectacular",
+    "rest_framework.authtoken",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "two_factor",
+    "django_otp.plugins.otp_static",
+    "corsheaders",
+    "django_celery_beat",
+    "django_cleanup.apps.CleanupConfig",
+    "rest_framework_simplejwt.token_blacklist",
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django_otp.middleware.OTPMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_otp.middleware.OTPMiddleware",
     # 'logs.middleware.RequestLoggingMiddleware'
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
+URL_HOST = (
+    os.getenv("HOST_URL_PROD")
+    if os.getenv("DJANGO_ENV") == "production"
+    else "localhost"
+)
+URL_ORIGIN = (
+    os.getenv("HOST_URL_PROD")
+    if os.getenv("DJANGO_ENV") == "production"
+    else "localhost:3000"
+)
 ALLOWED_HOSTS = [
-    "suspend.deinno.cloud", "localhost", "127.0.0.1",
-    "frontend", "backend"  # internal Docker DNS
+    URL_HOST,
+    "127.0.0.1",
+    "frontend",
+    "backend",  # internal Docker DNS
 ]
 CORS_ALLOWED_ORIGINS = [
-    "https://suspend.deinno.cloud",
-    "http://localhost:3000",
+    URL_ORIGIN,
     "http://frontend:3000",
 ]
-CSRF_TRUSTED_ORIGINS = ["https://suspend.deinno.cloud"]
+CSRF_TRUSTED_ORIGINS = [URL_ORIGIN]
 
-if os.getenv('DJANGO_ENV') == "development":
+if os.getenv("DJANGO_ENV") == "development":
     CORS_ALLOW_ALL_ORIGINS = True
     ALLOWED_HOSTS = ["*"]
     # Optional but helpful if you use cookie/session auth in dev:
@@ -100,42 +111,44 @@ if os.getenv('DJANGO_ENV') == "development":
         "http://frontend:3000",
     ]
 
-if os.getenv('DJANGO_ENV') == "development":
+if os.getenv("DJANGO_ENV") == "development":
     CORS_ALLOW_ALL_ORIGINS = True
     ALLOWED_HOSTS = ["*"]
 
-ROOT_URLCONF = 'app.urls'
+ROOT_URLCONF = "app.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'app.wsgi.application'
+WSGI_APPLICATION = "app.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='postgres'),
-        'USER': config('POSTGRES_USER', default='postgres'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
-        'HOST': config('POSTGRES_HOST', default='db'),  # this is the Docker service name
-        'PORT': config('POSTGRES_PORT', default='5432'),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DB", default="postgres"),
+        "USER": config("POSTGRES_USER", default="postgres"),
+        "PASSWORD": config("POSTGRES_PASSWORD", default="postgres"),
+        "HOST": config(
+            "POSTGRES_HOST", default="db"
+        ),  # this is the Docker service name
+        "PORT": config("POSTGRES_PORT", default="5432"),
     }
 }
 
@@ -144,16 +157,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -161,9 +174,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -173,17 +186,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collectstatic
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # For dev
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")  # For collectstatic
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]  # For dev
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = "core.User"
 
 # REST_FRAMEWORK = {
 #     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -193,39 +206,37 @@ AUTH_USER_MODEL = 'core.User'
 # }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-        'core.permissions.IsAdminOrStaff',
-        'core.permissions.IsActiveUser'
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+        "core.permissions.IsAdminOrStaff",
+        "core.permissions.IsActiveUser",
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_RENDERER_CLASSES': [
-        'djangorestframework_camel_case.render.CamelCaseJSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": [
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-    'DEFAULT_PARSER_CLASSES': [
-        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser'
+    "DEFAULT_PARSER_CLASSES": [
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.UserRateThrottle'
-    ],
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
     # 'DEFAULT_THROTTLE_RATES': {
     #     'user': '10/hour'
     # }
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(hours=8),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': config('JWT_ALGORITHM', default='HS256'),
-    'SIGNING_KEY': os.getenv('DJANGO_SECRET_KEY'),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=8),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": config("JWT_ALGORITHM", default="HS256"),
+    "SIGNING_KEY": os.getenv("DJANGO_SECRET_KEY"),
 }
 
 CACHES = {
@@ -234,21 +245,17 @@ CACHES = {
         "LOCATION": "redis://redis:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
-SPECTACULAR_SETTINGS = {
-    'COMPONENT_SPLIT_REQUEST': True
-}
+SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
 
-LOGIN_URL = '/account/login/'
-LOGIN_REDIRECT_URL = '/admin/'
+LOGIN_URL = "/account/login/"
+LOGIN_REDIRECT_URL = "/admin/"
 
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
-CLEANUP_IGNORE = (
-    ("core.MailFile", "file"),
-)
+CLEANUP_IGNORE = (("core.MailFile", "file"),)
