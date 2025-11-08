@@ -7,6 +7,7 @@ on:
 
 jobs:
   test:
+    if: ${{ vars.ACTIVE_TEST_JOB == 'true' }}
     runs-on: ubuntu-latest
     environment: test
     env:
@@ -54,6 +55,7 @@ jobs:
         run: docker compose -f docker-compose-test.yaml down -v
 
   build_and_deploy:
+    if: ${{ vars.ACTIVE_DEPLOY_JOB == 'true' }}
     needs: [test]
     runs-on: ubuntu-latest
     environment: production
@@ -91,14 +93,15 @@ jobs:
             FRONTEND_IMAGE_NAME,
             BACKEND_CONTAINER_NAME,
             FRONTEND_CONTAINER_NAME,
-            BRIDGE_IMAGE_NAME,
-            CERL_CONTAINER_NAME,
-            CERLBEAT_CONTAINER_NAME,
+            BRIDGE_NETWORK_NAME,
+            CELERY_BEAT_CONTAINER_NAME,
+            CELERY_WORKER_CONTAINER_NAME,
             REDIS_CONTAINER_NAME,
             REDIS_IMAGE_TAG,
             DATABASE_IMAGE_TAG,
             DATABASE_CONTAINER_NAME,
-            DATABASE_VOLUME_NAME
+            DATABASE_VOLUME_NAME,
+            UPLOAD_VOLUME_NAME
           script: |
             set -euo pipefail
 
