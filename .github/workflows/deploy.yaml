@@ -109,3 +109,4 @@ jobs:
             FRONTEND_IMAGE_TAG="${FRONTEND_IMAGE_NAME}:${SHORT_SHA}"
 
             cd /home/ubuntu/pok/suspend
+            rm -rf ./webblock > /dev/null 2>&1
