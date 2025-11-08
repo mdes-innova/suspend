@@ -43,9 +43,8 @@ jobs:
           # Run backend tests (attach and fail fast on exit code)
           $COMPOSE up --build --abort-on-container-exit --exit-code-from backend backend
 
-          # Run frontend tests similarly (if separate)
-          $COMPOSE up --build --abort-on-container-exit --exit-code-from frontend frontend
-
+      - name: Build fronend
+        run: $COMPOSE up --build --abort-on-container-exit --exit-code-from frontend frontend
       - name: Show logs (always)
         if: always()
         run: docker compose -f docker-compose-test.yaml logs --no-color
