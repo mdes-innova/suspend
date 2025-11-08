@@ -93,12 +93,12 @@ URL_ORIGIN = (
 ALLOWED_HOSTS = [
     URL_HOST,
     "127.0.0.1",
-    "frontend",
-    "backend",  # internal Docker DNS
+    os.getenv("FRONTEND_HOST"),
+    os.getenv("BACKEND_HOST"),
 ]
 CORS_ALLOWED_ORIGINS = [
     URL_ORIGIN,
-    "http://frontend:3000",
+    os.getenv("FRONTEND_ORIGIN"),
 ]
 CSRF_TRUSTED_ORIGINS = [URL_ORIGIN]
 
@@ -108,7 +108,7 @@ if os.getenv("DJANGO_ENV") == "development":
     # Optional but helpful if you use cookie/session auth in dev:
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
-        "http://frontend:3000",
+        os.getenv("FRONTEND_ORIGIN"),
     ]
 
 if os.getenv("DJANGO_ENV") == "development":
