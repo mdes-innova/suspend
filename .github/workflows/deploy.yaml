@@ -1,0 +1,21 @@
+name: CI/CD Pipeline (Main Branch Only)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show branch name for verification
+        run: echo "Workflow triggered on branch: ${{ github.ref_name }}"
+
+      - name: Build and Push Docker Image (example)
+        run: |
+          docker build -t example-image .
+          docker push example-image
