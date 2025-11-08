@@ -110,9 +110,13 @@ jobs:
 
             cd /home/ubuntu/pok/suspend
             rm -rf ./webblock > /dev/null 2>&1
-            git clone --branch main https://${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
+            git clone --branch main https://\
+            ${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
             cd webblock
 
             docker network inspect $BRIDGE_NETWORK_NAME > /dev/null 2>&1 || docker network create $BRIDGE_NETWORK_NAME
 
-            docker run -d -v ${DATABASE_VOLUME_NAME}:/var/lib/postgresql/data --name ${DATABASE_CONTAINER_NAME} --env-file ../.env --network $BRIDGE_NETWORK_NAME $DATABASE_IMAGE_TAG
+            docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}"\
+            | grep -w ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1 ||\
+            docker run -d -v ${DATABASE_VOLUME_NAME}:/var/lib/postgresql/data\
+            --name ${DATABASE_CONTAINER_NAME} --env-file ../.env --network $BRIDGE_NETWORK_NAME $DATABASE_IMAGE_TAG
