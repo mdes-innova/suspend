@@ -118,6 +118,8 @@ jobs:
             if docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}" | grep -w ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1; then
               echo "Database is ready."
             else
+              echo "Database is not ready."
+              echo "Database is not ready."
               docker container rm -f ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1 || true
               docker run -d -v ${DATABASE_VOLUME_NAME}:/var/lib/postgresql/data --name ${DATABASE_CONTAINER_NAME} --env-file .env --network $BRIDGE_NETWORK_NAME $DATABASE_IMAGE_TAG
             fi
