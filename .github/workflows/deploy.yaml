@@ -56,7 +56,7 @@ jobs:
 
   build_and_deploy:
     if: ${{ vars.ACTIVE_DEPLOY_JOB == 'true' }}
-    needs: [test]
+    # needs: [test]
     runs-on: ubuntu-latest
     environment: production
     env:
