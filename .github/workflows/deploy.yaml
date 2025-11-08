@@ -134,12 +134,14 @@ jobs:
 
             docker build -f ../Dockerfile --target backend -t $BACKEND_IMAGE_TAG .
             docker container rm -f $BACKEND_CONTAINER_NAME > /dev/null 2>&1 || true
-            docker run -d --name $BACKEND_CONTAINER_NAME --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+            docker run -d --name $BACKEND_CONTAINER_NAME -e DJANGO_ENV=production \
+            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
             docker container exec ${BACKEND_CONTAINER_NAME} sh -c "python manage.py migrate"
 
             docker build -f ../Dockerfile --target frontend -t $FRONTEND_IMAGE_TAG .
             docker container rm -f $FRONTEND_CONTAINER_NAME > /dev/null 2>&1 || true
-            docker run -d --name $FRONTEND_CONTAINER_NAME --env-file ../.env --network $BRIDGE_NETWORK_NAME $FRONTEND_IMAGE_TAG
+            docker run -d --name $FRONTEND_CONTAINER_NAME -e NODE_ENV=production \
+            --env-file ../.env --network $BRIDGE_NETWORK_NAME $FRONTEND_IMAGE_TAG
 
             docker container rm -f $REDIS_CONTAINER_NAME > /dev/null 2>&1 || true
             docker run -d --name $REDIS_CONTAINER_NAME --env-file ../.env --network $BRIDGE_NETWORK_NAME $REDIS_IMAGE_TAG
