@@ -115,4 +115,4 @@ jobs:
 
             docker network inspect $BRIDGE_NETWORK_NAME > /dev/null 2>&1 || docker network create $BRIDGE_NETWORK_NAME
 
-            echo $DATABASE_CONTAINER_NAME
+            echo $DATABASE_CONTAINER_NAME > ../log.txt
