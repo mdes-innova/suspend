@@ -117,35 +117,3 @@ jobs:
             docker build -f ../Dockerfile --target backend -t $BACKEND_IMAGE_TAG .
             docker container rm -f $BACKEND_CONTAINER_NAME > /dev/null 2>&1
             docker run -d --name $BACKEND_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
-
-            if docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}" | grep -w ${DATABASE_CONTAINER_NAME} >/dev/null; then
-              echo "Database is ready."
-            else
-              docker container rm -f ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1
-              docker run -d -v ${DATABASE_VOLUME_NAME}:/var/lib/postgresql/data --name ${DATABASE_CONTAINER_NAME} --env-file .env --network $BRIDGE_NETWORK_NAME $DATABASE_IMAGE_TAG
-            fi
-
-            docker container exec ${BACKEND_CONTAINER_NAME} sh -c "python manage.py migrate"
-
-            docker build -f ../Dockerfile --target frontend -t $FRONTEND_IMAGE_TAG .
-            docker container rm -f $FRONTEND_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $FRONTEND_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $FRONTEND_IMAGE_TAG
-
-            docker container rm -f $REDIS_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $REDIS_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $REDIS_IMAGE_TAG
-
-            for i in {1..30}; do
-              if docker container exec -T $REDIS_CONTAINER_NAME sh -c 'redis-cli ping | grep -q PONG' > /dev/null 2>&1; then
-              echo "Redis is up"
-                 break
-               fi
-               echo "Waiting for Redis... ($i)"
-               sleep 2
-            done
-
-            docker container exec -T $REDIS_CONTAINER_NAME sh -c 'redis-cli ping | grep -q PONG'
-
-            docker container rm -f $CERL_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $CERL_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
-            docker container rm -f $CERLBEAT_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $CERLBEAT_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
