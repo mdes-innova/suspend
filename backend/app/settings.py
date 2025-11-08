@@ -95,6 +95,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     os.getenv("FRONTEND_HOST", "localhost"),
     os.getenv("BACKEND_HOST", "localhost"),
+    os.getenv("FRONTEND_HOST_PROD", "localhost"),
 ]
 CORS_ALLOWED_ORIGINS = [
     URL_ORIGIN,
