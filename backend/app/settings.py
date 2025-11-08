@@ -81,24 +81,24 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = False
 URL_HOST = (
-    os.getenv("HOST_URL_PROD")
+    os.getenv("HOST_URL_PROD", "localhost")
     if os.getenv("DJANGO_ENV") == "production"
     else "localhost"
 )
 URL_ORIGIN = (
-    os.getenv("HOST_URL_PROD")
+    os.getenv("HOST_URL_PROD", "http://localhost:3000")
     if os.getenv("DJANGO_ENV") == "production"
     else "http://localhost:3000"
 )
 ALLOWED_HOSTS = [
     URL_HOST,
     "127.0.0.1",
-    os.getenv("FRONTEND_HOST"),
-    os.getenv("BACKEND_HOST"),
+    os.getenv("FRONTEND_HOST", "localhost"),
+    os.getenv("BACKEND_HOST", "localhost"),
 ]
 CORS_ALLOWED_ORIGINS = [
     URL_ORIGIN,
-    os.getenv("FRONTEND_ORIGIN"),
+    os.getenv("FRONTEND_ORIGIN", "http://localhost:3000"),
 ]
 CSRF_TRUSTED_ORIGINS = [URL_ORIGIN]
 
@@ -108,7 +108,7 @@ if os.getenv("DJANGO_ENV") == "development":
     # Optional but helpful if you use cookie/session auth in dev:
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
-        os.getenv("FRONTEND_ORIGIN"),
+        os.getenv("FRONTEND_ORIGIN", "http://localhost:3000"),
     ]
 
 if os.getenv("DJANGO_ENV") == "development":
