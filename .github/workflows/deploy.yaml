@@ -109,11 +109,3 @@ jobs:
             FRONTEND_IMAGE_TAG="${FRONTEND_IMAGE_NAME}:${SHORT_SHA}"
 
             cd /home/ubuntu/pok/suspend
-            rm -rf ./webblock > /dev/null 2>&1
-            git clone --branch main https://${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
-            cd webblock
-
-            docker network create $BRIDGE_NETWORK_NAME > /dev/null 2>&1
-            docker build -f ../Dockerfile --target backend -t $BACKEND_IMAGE_TAG .
-            docker container rm -f $BACKEND_CONTAINER_NAME > /dev/null 2>&1
-            docker run -d --name $BACKEND_CONTAINER_NAME --env-file .env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
