@@ -61,18 +61,18 @@ jobs:
     environment: production
     env:
       COMMIT_SHA: ${{ github.sha }}
-      BACKEND_IMAGE_NAME: suspend_backend
-      FRONTEND_IMAGE_NAME: suspend_frontend
-      BACKEND_CONTAINER_NAME: suspend_backend
-      FRONTEND_CONTAINER_NAME: suspend_frontend
-      CERLBEAT_CONTAINER_NAME: suspend_cerlbeat
-      CERL_CONTAINER_NAME: suspend_cerl
-      REDIS_CONTAINER_NAME: suspend_redis
-      DATABASE_CONTAINER_NAME: suspend_db
-      DATABASE_IMAGE_TAG: postgres:15-alpine
-      DATABASE_VOLUME_NAME: suspend_db_data
-      REDIS_IMAGE_TAG: redis:7-alpine
-      BRIDGE_NETWORK_NAME: suspend_bridge
+      BACKEND_IMAGE_NAME: ${{ secrets.BACKEND_IMAGE_NAME }}
+      FRONTEND_IMAGE_NAME: ${{ secrets.FRONTEND_IMAGE_NAME }}
+      BACKEND_CONTAINER_NAME: ${{ secrets.BACKEND_CONTAINER_NAME }}
+      FRONTEND_CONTAINER_NAME: ${{ secrets.FRONTEND_CONTAINER_NAME }}
+      CERLBEAT_CONTAINER_NAME: ${{ secrets.CERLBEAT_CONTAINER_NAME }}
+      CERL_CONTAINER_NAME: ${{ secrets.CERL_CONTAINER_NAME }}
+      REDIS_CONTAINER_NAME: ${{ secrets.REDIS_CONTAINER_NAME }}
+      DATABASE_CONTAINER_NAME: ${{ secrets.DATABASE_CONTAINER_NAME }}
+      DATABASE_IMAGE_TAG: ${{ secrets.DATABASE_IMAGE_TAG }}
+      DATABASE_VOLUME_NAME: ${{ secrets.DATABASE_VOLUME_NAME }}
+      REDIS_IMAGE_TAG: ${{ secrets.REDIS_IMAGE_TAG }}
+      BRIDGE_NETWORK_NAME: ${{ secrets.BRIDGE_NETWORK_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
