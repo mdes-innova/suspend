@@ -115,7 +115,7 @@ jobs:
 
             docker network inspect $BRIDGE_NETWORK_NAME > /dev/null 2>&1 || docker network create $BRIDGE_NETWORK_NAME
 
-            if docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}" | grep -w ${DATABASE_CONTAINER_NAME} >/dev/null 2>&1; then
+            if docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}" | grep -w ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1; then
               echo "Database is ready."
             else
               docker container rm -f ${DATABASE_CONTAINER_NAME} > /dev/null 2>&1 || true
@@ -123,7 +123,7 @@ jobs:
             fi
 
             for i in {1..30}; do
-              if docker container exec -T ${DATABASE_CONTAINER_NAME} sh -lc 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" >/dev/null 2>&1'; then
+              if docker container exec -T ${DATABASE_CONTAINER_NAME} sh -lc 'pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" > /dev/null 2>&1'; then
                 echo "PostgreSQL is up"
                 break
               fi
