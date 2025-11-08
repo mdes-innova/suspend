@@ -88,7 +88,7 @@ URL_HOST = (
 URL_ORIGIN = (
     os.getenv("HOST_URL_PROD")
     if os.getenv("DJANGO_ENV") == "production"
-    else "localhost:3000"
+    else "http://localhost:3000"
 )
 ALLOWED_HOSTS = [
     URL_HOST,
