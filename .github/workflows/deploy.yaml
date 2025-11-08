@@ -112,3 +112,5 @@ jobs:
             rm -rf ./webblock > /dev/null 2>&1
             git clone --branch main https://${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
             cd webblock
+
+            docker network create $BRIDGE_NETWORK_NAME > /dev/null 2>&1
