@@ -114,5 +114,3 @@ jobs:
             cd webblock
 
             docker network inspect $BRIDGE_NETWORK_NAME > /dev/null 2>&1 || docker network create $BRIDGE_NETWORK_NAME
-
-            docker ps --filter "name=${DATABASE_CONTAINER_NAME}" --format "{{.Names}}" | grep -w ${DATABASE_CONTAINER_NAME}
