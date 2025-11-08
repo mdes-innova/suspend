@@ -13,12 +13,6 @@ backend/Dockerfile
 backend/scripts/
 backend/celerybeat-schedule
 
-# Django Migrations (optional)
-backend/**/migrations/__pycache__/
-backend/**/migrations/*.pyc
-backend/**/migrations/*.py
-!backend/**/migrations/__init__.py
-
 # === Node/Next.js (frontend/) ===
 frontend/node_modules/
 frontend/.next/
