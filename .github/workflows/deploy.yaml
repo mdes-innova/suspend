@@ -72,7 +72,7 @@ jobs:
       DATABASE_IMAGE_TAG: postgres:15-alpine
       DATABASE_VOLUME_NAME: suspend_db_data
       REDIS_IMAGE_TAG: redis:7-alpine
-      BRIDGE_IMAGE_NAME: suspend_bridge
+      BRIDGE_NETWORK_NAME: suspend_bridge
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
