@@ -162,7 +162,12 @@ jobs:
 
             docker container rm -f $CELERY_WORKER_CONTAINER_NAME > /dev/null 2>&1 || true
             docker run -d --name $CELERY_WORKER_CONTAINER_NAME -e DJANGO_ENV=production \
-            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG \
+            -w /app \
+            sh -c "celery -A app worker --loglevel=info"
+
             docker container rm -f $CELERY_BEAT_CONTAINER_NAME > /dev/null 2>&1 || true
             docker run -d --name $CELERY_BEAT_CONTAINER_NAME -e DJANGO_ENV=production \
-            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG
+            --env-file ../.env --network $BRIDGE_NETWORK_NAME $BACKEND_IMAGE_TAG \
+            -w /app \
+            sh -c "celery -A app beat --loglevel=info"
