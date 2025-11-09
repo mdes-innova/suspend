@@ -1,17 +1,23 @@
-from celery import shared_task
-from django.db import transaction
-from django.utils import timezone
-from core.models import Document
-from datetime import datetime
 import os
+from datetime import datetime, datetime_CAPI
+from zoneinfo import ZoneInfo
+
 import httpx
 import redis
-from zoneinfo import ZoneInfo
+from celery import shared_task
+from core.models import Document
+from django.db import transaction
+from django.utils import timezone
 
 # Reuse a small client pool; Celery worker is long-lived.
 _http = httpx.Client(timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=True)
 
-r = redis.StrictRedis(host=os.getenv("REDIS_HOST", "redis"), port=int(os.getenv("REDIS_PORT", "6379")), db=0)
+r = redis.StrictRedis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", "6379")),
+    db=0,
+)
+
 
 def _parse_date(d, fmt="%Y-%m-%d"):
     if not d:
@@ -22,6 +28,7 @@ def _parse_date(d, fmt="%Y-%m-%d"):
         dt = timezone.make_aware(dt)
     return dt
 
+
 def _parse_datetime(d, fmt="%Y-%m-%d %H:%M:%S"):
     if not d:
         return None
@@ -30,7 +37,13 @@ def _parse_datetime(d, fmt="%Y-%m-%d %H:%M:%S"):
         dt = timezone.make_aware(dt)
     return dt
 
-@shared_task(bind=True, autoretry_for=(httpx.RequestError,), retry_backoff=True, retry_kwargs={"max_retries": 5})
+
+@shared_task(
+    bind=True,
+    autoretry_for=(httpx.RequestError,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
+)
 def update_data_task(self):
     # Use redis-py lock helper for safety
     lock = r.lock("lock:update_data_task", timeout=300, blocking_timeout=1)  # 5 min TTL
@@ -47,7 +60,9 @@ def update_data_task(self):
         tz = ZoneInfo("Asia/Bangkok")
         now = datetime.now(tz).date()
         last_document = Document.objects.order_by("-order_date").first()
-        last_date = last_document.order_date if last_document else now
+        last_date = (
+            last_document.order_date if last_document else datetime.fromtimestamp(0, tz)
+        )
         body = {
             "startorderdate": last_date.strftime("%Y-%m-%d"),  # type: ignore
             "endorderdate": now.strftime("%Y-%m-%d"),
@@ -58,20 +73,26 @@ def update_data_task(self):
                 "Authorization": f"Bearer {bearer_token}",
                 "Content-Type": "application/json",
             },
-            json=body
+            json=body,
         )
         res.raise_for_status()
         body = res.json()
         incoming = body.get("urllist", []) or []
 
         # Build set of incoming order_ids (as int) — cheap and small compared to full table scan
-        incoming_ids = {int(item["order_id"]) for item in incoming if str(item.get("order_id", "")).strip().isdigit()}
+        incoming_ids = {
+            int(item["order_id"])
+            for item in incoming
+            if str(item.get("order_id", "")).strip().isdigit()
+        }
         if not incoming_ids:
             return "No incoming IDs"
 
         # Fetch only the IDs we might insert (memory-friendly)
         existing_ids = set(
-            Document.objects.filter(order_id__in=incoming_ids).values_list("order_id", flat=True)
+            Document.objects.filter(order_id__in=incoming_ids).values_list(
+                "order_id", flat=True
+            )
         )
         new_ids = incoming_ids - existing_ids
         if not new_ids:
@@ -100,9 +121,13 @@ def update_data_task(self):
                     orderblack_date=_parse_date(d.get("orderblack_date")),
                     isp_no=d.get("isp_no") or None,
                     isp_date=_parse_date(d.get("isp_date")),
-                    kind_id=int(d["group_id"]) if str(d.get("group_id", "")).strip().isdigit() else None,
+                    kind_id=int(d["group_id"])
+                    if str(d.get("group_id", "")).strip().isdigit()
+                    else None,
                     kind_name=d.get("group_name") or None,
-                    createdate=_parse_datetime(d.get("creatdate")),  # upstream field name kept
+                    createdate=_parse_datetime(
+                        d.get("creatdate")
+                    ),  # upstream field name kept
                 )
                 to_insert.append(doc)
             except Exception:
@@ -114,7 +139,9 @@ def update_data_task(self):
 
         # Bulk insert in batches to reduce memory/transaction overhead
         with transaction.atomic():
-            Document.objects.bulk_create(to_insert, ignore_conflicts=True, batch_size=500)
+            Document.objects.bulk_create(
+                to_insert, ignore_conflicts=True, batch_size=500
+            )
 
         return f"Inserted {len(to_insert)} new documents"
     finally:

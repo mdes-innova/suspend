@@ -255,7 +255,9 @@ SPECTACULAR_SETTINGS = {"COMPONENT_SPLIT_REQUEST": True}
 LOGIN_URL = "/account/login/"
 LOGIN_REDIRECT_URL = "/admin/"
 
-CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_BROKER_URL = (
+    f"redis://{os.getenv('REDIS_HOST', 'redis')}:{os.getenv('REDIS_PORT', '6379')}/0"
+)
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
