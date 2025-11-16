@@ -64,7 +64,7 @@ jobs:
             rm -rf ./suspend > /dev/null 2>&1
             git clone --branch main https://\
             ${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
-            cd webblock
+            cd suspend
 
             docker network inspect $BRIDGE_NETWORK_NAME > /dev/null 2>&1 || docker network create $BRIDGE_NETWORK_NAME
 
