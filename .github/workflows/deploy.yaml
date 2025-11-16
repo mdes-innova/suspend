@@ -61,7 +61,7 @@ jobs:
             FRONTEND_IMAGE_TAG="${FRONTEND_IMAGE_NAME}:${SHORT_SHA}"
 
             cd /home/ubuntu/pok/suspend
-            rm -rf ./webblock > /dev/null 2>&1
+            rm -rf ./suspend > /dev/null 2>&1
             git clone --branch main https://\
             ${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.REPO_OWNER }}/${{ secrets.REPO_NAME }}.git
             cd webblock
